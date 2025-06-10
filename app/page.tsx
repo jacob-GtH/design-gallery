@@ -4,13 +4,14 @@ import { fetchDesigns } from '@/lib/actions';
 import SplashScreen from '@/components/SplashScreen';
 import HeroSection from '@/components/HeroSection';
 
+
 export default async function Home() {
   const designs = await fetchDesigns();
 
   return (
     <div>
-      <SplashScreen />
       <main>
+        <SplashScreen />
 
         <HeroSection />
 
@@ -21,6 +22,7 @@ export default async function Home() {
             {designs.map((design) => (
               <DesignCard key={design.id} design={design} />
             ))}
+            <a href="/users">user</a>
           </div>
         </section>
       </main>
