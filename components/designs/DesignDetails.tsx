@@ -1,6 +1,6 @@
 // components/designs/DesignDetails.tsx
 import { IDesign } from '@/interfaces/Design';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 
 export default function DesignDetails({ design }: { design: IDesign }) {
     return (
