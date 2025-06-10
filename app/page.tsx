@@ -2,6 +2,7 @@
 import DesignCard from '@/components/designs/DesignCard';
 import { fetchDesigns } from '@/lib/actions';
 import SplashScreen from '@/components/SplashScreen';
+import RevealTransition from '@/components/RevealTransition';
 import HeroSection from '@/components/HeroSection';
 
 
@@ -12,7 +13,7 @@ export default async function Home() {
     <div>
       <main>
         <SplashScreen />
-
+        <RevealTransition />
         <HeroSection />
 
         <section className="container mx-auto px-4 py-16">
@@ -22,7 +23,7 @@ export default async function Home() {
             {designs.map((design) => (
               <DesignCard key={design.id} design={design} />
             ))}
-            <a href="/users">user</a>
+
           </div>
         </section>
       </main>

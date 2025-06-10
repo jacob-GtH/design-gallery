@@ -2,6 +2,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 export default function SplashScreen() {
@@ -30,6 +31,44 @@ export default function SplashScreen() {
                         }
                     }}
                 >
+                    <motion.div
+                        className="relative w-32 h-32 md:w-48 md:h-48"
+                        initial={{
+                            rotate: -15,
+                            scale: 0.8,
+                            opacity: 0
+                        }}
+                        animate={{
+                            rotate: [0, 15, -15, 0],
+                            scale: [1, 1.1, 1],
+                            opacity: 1
+                        }}
+                        transition={{
+                            rotate: {
+                                repeat: Infinity,
+                                duration: 2,
+                                ease: "easeInOut"
+                            },
+                            scale: {
+                                duration: 1.5,
+                                repeat: Infinity,
+                                repeatType: "reverse"
+                            },
+                            opacity: {
+                                duration: 0.8
+                            }
+                        }}
+                    >
+                        <Image
+                            src="/logo-for-web-jakop.svg" // تأكد من وجود الملف في مجلد public
+                            alt="DD.NYC Logo"
+                            width={192}
+                            height={192}
+                            priority
+                            className="object-contain"
+                        />
+                    </motion.div>
+
                     <motion.div
                         initial={{ scale: 0.8, opacity: 0, y: 20 }}
                         animate={{
