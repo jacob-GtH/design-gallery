@@ -9,7 +9,7 @@ export async function fetchDesigns(): Promise<IDesign[]> {
       title,
       "designer": designer->name,
       "imageUrl": mainImage.asset->url,
-      tags[]->title,
+      tags[]->{title},
       likes,
       _createdAt
     }[0...12]`;

@@ -21,6 +21,7 @@ export default function HeroSection() {
                         اكتشف أفضل التصاميم، تواصل مع الموهوبين، واعرض أعمالك للعالم
                     </p>
                     <div className="flex flex-wrap gap-4">
+                        <Button variant="primary">تصفح الأعمال</Button>
                         <Button variant="outline">انضم كمصمم</Button>
                     </div>
                 </motion.div>
