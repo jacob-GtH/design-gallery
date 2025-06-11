@@ -6,7 +6,7 @@ type ButtonProps = {
   children: React.ReactNode;
   variant?: 'primary' | 'outline';
   className?: string;
-} & React.ButtonHTMLAttributes<HTMLButtonElement>;
+} & React.ComponentPropsWithoutRef<typeof motion.button>;
 
 export const Button = ({
   children,

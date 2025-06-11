@@ -28,7 +28,7 @@ export default function DesignCard({ design }: { design: IDesign }) {
                     <p className="text-gray-600 mb-3">بواسطة {design.designer}</p>
 
                     <div className="flex flex-wrap gap-2 mb-4">
-                        {design.tags.slice(0, 3).map(tag => (
+                        {Array.isArray(design.tags) && design.tags.slice(0, 3).map(tag => (
                             <span
                                 key={tag}
                                 className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm"
@@ -36,11 +36,12 @@ export default function DesignCard({ design }: { design: IDesign }) {
                                 {tag}
                             </span>
                         ))}
+
                     </div>
 
                     <div className="flex items-center justify-between">
                         <span className="text-gray-500 text-sm">
-                            {design.createdAt?.toLocaleDateString('ar-SA')}
+                            {design.createdAt && new Date(design.createdAt).toLocaleDateString('ar-SA')}
                         </span>
                         <div className="flex items-center gap-1">
                             <span className="text-gray-800">❤️</span>

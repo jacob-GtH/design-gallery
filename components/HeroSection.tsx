@@ -1,70 +1,48 @@
 // components/HeroSection.tsx
-'use client';
+'use client'
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
 
 export default function HeroSection() {
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        // سيظهر بعد 3 ثواني (توقيت اختفاء SplashScreen)
-        const timer = setTimeout(() => {
-            setIsVisible(true);
-        }, 3200);
-
-        return () => clearTimeout(timer);
-    }, []);
-
     return (
-        <AnimatePresence>
-            {isVisible && (
+        <section className="relative h-screen bg-black text-white overflow-hidden">
+            <motion.div
+                className="absolute inset-0 z-0 bg-gradient-to-br from-purple-900/40 to-black"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.5 }}
+            />
+
+            <div className="relative z-10 flex flex-col justify-center items-center h-full text-center px-6">
+                <motion.h1
+                    className="text-5xl md:text-7xl font-bold leading-tight tracking-tight mb-6"
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                >
+                    معرض التصاميم الإبداعية
+                </motion.h1>
+
+                <motion.p
+                    className="text-lg md:text-2xl text-gray-300 max-w-2xl mb-8"
+                    initial={{ y: 30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 1 }}
+                >
+                    اكتشف أعمال المصممين الموهوبين من العالم العربي.
+                </motion.p>
+
                 <motion.div
+                    className="flex gap-4"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ duration: 0.8 }}
-                    className="relative bg-gradient-to-r from-blue-900 to-purple-800 text-white py-28"
+                    transition={{ delay: 0.6 }}
                 >
-                    <div className="container mx-auto px-4 relative z-10">
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, delay: 0.3 }}
-                            className="max-w-3xl"
-                        >
-                            <motion.h1
-                                className="text-4xl md:text-5xl font-bold mb-6"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1, transition: { delay: 0.5 } }}
-                            >
-                                منصة لعرض إبداعات المصممين العرب
-                            </motion.h1>
-                            <motion.p
-                                className="text-xl mb-8 opacity-90"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1, transition: { delay: 0.7 } }}
-                            >
-                                اكتشف أفضل التصاميم، تواصل مع الموهوبين، واعرض أعمالك للعالم
-                            </motion.p>
-                            <motion.div
-                                className="flex flex-wrap gap-4"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1, transition: { delay: 0.9 } }}
-                            >
-                                <Button variant="primary">تصفح الأعمال</Button>
-                                <Button variant="outline">انضم كمصمم</Button>
-                            </motion.div>
-                        </motion.div>
-                    </div>
-
-                    <motion.div
-                        className="absolute inset-0 bg-grid-white/[0.05] bg-[length:40px_40px]"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1, transition: { delay: 0.2 } }}
-                    />
+                    <Button variant="primary" className="text-lg px-6 py-3">ابدأ التصفح</Button>
+                    <Button variant="outline" className="text-lg px-6 py-3">انضم كمصمم</Button>
                 </motion.div>
-            )}
-        </AnimatePresence>
-    );
+            </div>
+        </section>
+    )
 }
