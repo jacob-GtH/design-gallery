@@ -5,32 +5,54 @@ import DesignCard from './designs/DesignCard';
 import { IDesign } from '@/interfaces/Design';
 
 export default function DesignsSection({ designs }: { designs: IDesign[] }) {
+    const containerVariants = {
+        hidden: {},
+        visible: {
+            transition: {
+                staggerChildren: 0.2,
+            },
+        },
+    };
+
+    const cardVariants = {
+        hidden: { opacity: 0, y: 30 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.6, ease: 'easeOut' },
+        },
+    };
+
     return (
-        <section className="relative py-24 overflow-hidden bg-white dark:bg-[#0a0a0a]">
+        <section className="relative py-24 overflow-hidden bg-gradient-to-tr from-purple-900/40 to-black dark:bg-[#0a0a0a]">
             <div className="container mx-auto px-4">
+                {/* العنوان */}
                 <motion.h2
-                    className="text-4xl md:text-5xl font-bold text-center mb-16 text-black dark:text-white"
+                    className="text-4xl md:text-5xl font-bold text-center mb-16 text-white"
                     initial={{ opacity: 0, y: 40 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    viewport={{ once: true }}
+                    transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
+                    viewport={{ amount: 0.5 }} // ✅ تتكرر الحركة عند دخول جزء من العنصر في الشاشة
                 >
                     أحدث التصاميم
                 </motion.h2>
 
+                {/* شبكة البطاقات */}
                 <motion.div
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"
+                    variants={containerVariants}
                     initial="hidden"
-                    whileInView="visible"
-                    transition={{ staggerChildren: 0.2 }}
-                    viewport={{ once: true }}
+                    whileInView="visible" // ✅ الحركة تتكرر عند دخول القسم مجددًا
+                    viewport={{ amount: 0.3 }} // لا نضع once:true لكي تتكرر
                 >
-                    {designs.map((design, index) => (
+                    {designs.map((design) => (
                         <motion.div
                             key={design.id}
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: index * 0.1 }}
+                            variants={cardVariants}
+                            whileHover={{
+                                scale: 1.03,
+                                transition: { type: 'spring', stiffness: 200 },
+                            }}
                         >
                             <DesignCard design={design} />
                         </motion.div>

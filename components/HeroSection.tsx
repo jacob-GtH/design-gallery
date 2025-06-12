@@ -14,7 +14,7 @@ export default function HeroSection() {
                 transition={{ duration: 1.5 }}
             />
 
-            <div className="relative z-10 flex flex-col justify-center items-center h-full text-center px-6">
+            <div className="relative z-0 flex flex-col justify-center items-center h-full text-center px-6">
                 <motion.h1
                     className="text-5xl md:text-7xl font-bold leading-tight tracking-tight mb-6"
                     initial={{ y: 50, opacity: 0 }}
@@ -25,7 +25,7 @@ export default function HeroSection() {
                 </motion.h1>
 
                 <motion.p
-                    className="text-lg md:text-2xl text-gray-300 max-w-2xl mb-8"
+                    className="text-lg md:text-2xl text-gray-300 max-w-2xl "
                     initial={{ y: 30, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3, duration: 1 }}
@@ -34,7 +34,7 @@ export default function HeroSection() {
                 </motion.p>
 
                 <motion.div
-                    className="flex gap-4"
+                    className="flex gap-4 mt-8"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.6 }}

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import Image from 'next/image'
 
 export async function GET() {
     const designs = [
@@ -18,8 +19,7 @@ export async function GET() {
             id: '123',
             title: 'تصميم رائع',
             designer: 'أحمد',
-            imageUrl: '/public/images/design1.jpg',
-            tags: ['جرافيك', 'شعارات'],
+            imageUrl: 'public/logo-for-web-jakop.svg',
             likes: 10,
             createdAt: '2024-05-01T00:00:00.000Z'
         }
