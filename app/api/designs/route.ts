@@ -1,29 +1,23 @@
-import { NextResponse } from 'next/server'
-import Image from 'next/image'
+// File: app/api/designs/route.ts
+import { NextResponse } from 'next/server';
+import { client } from '@/sanity/lib/client';
+import groq from 'groq';
+
+const query = groq`*[_type == "design"] | order(_createdAt desc){
+  _id,
+  title,
+  slug,
+"imageUrl": mainImage.asset->url,
+  category,
+  description
+}`;
 
 export async function GET() {
-    const designs = [
-        {
-            id: 1,
-            title: 'لوحة فنية رقمية',
-            image: 'public/images/design1.jpg',
-            description: 'تصميم رقمي رائع بألوان جريئة'
-        },
-        {
-            id: 2,
-            title: 'تصميم واجهة مستخدم',
-            image: '/public/images/design1.jpg',
-            description: 'واجهة احترافية لتطبيق موبايل'
-        },
-        {
-            id: '123',
-            title: 'تصميم رائع',
-            designer: 'أحمد',
-            imageUrl: 'public/logo-for-web-jakop.svg',
-            likes: 10,
-            createdAt: '2024-05-01T00:00:00.000Z'
-        }
-    ]
-
-    return NextResponse.json(designs)
+  try {
+    const designs = await client.fetch(query);
+    return NextResponse.json(designs);
+  } catch (error) {
+    console.error('❌ Failed to fetch designs:', error);
+    return NextResponse.json({ error: 'Failed to fetch designs' }, { status: 500 });
+  }
 }

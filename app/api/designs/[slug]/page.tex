@@ -1,0 +1,62 @@
+// app/designs/[slug]/page.tsx
+
+import { client } from '@/lib/sanity';
+import { groq } from 'next-sanity';
+import Image from 'next/image';
+import { notFound } from 'next/navigation';
+
+interface DesignPageProps {
+  params: {
+    slug: string;
+  };
+}
+
+const query = groq`
+  *[_type == "design" && slug.current == $slug][0]{
+    _id,
+    title,
+    description,
+    "imageUrl": mainImage.asset->url,
+    "designer": designer->name,
+    likes,
+    tags[]->{title}
+  }
+`;
+
+export default async function DesignPage({ params }: DesignPageProps) {
+  const design = await client.fetch(query, { slug: params.slug });
+
+  if (!design) {
+    notFound();
+  }
+
+  return (
+    <main className="max-w-4xl mx-auto px-4 py-12">
+      <h1 className="text-3xl font-bold mb-4">{design.title}</h1>
+      <p className="text-gray-600 mb-2">by {design.designer || 'مصمم مجهول'}</p>
+
+      {design.imageUrl && (
+        <div className="relative w-full h-96 mb-6">
+          <Image
+            src={design.imageUrl}
+            alt={design.title}
+            fill
+            className="object-cover rounded-xl"
+          />
+        </div>
+      )}
+
+      <p className="text-lg text-gray-800 mb-4">{design.description}</p>
+
+      {design.tags?.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {design.tags.map((tag: any) => (
+            <span key={tag.title} className="bg-gray-100 text-sm px-3 py-1 rounded-full">
+              #{tag.title}
+            </span>
+          ))}
+        </div>
+      )}
+    </main>
+  );
+}

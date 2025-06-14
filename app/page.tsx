@@ -8,6 +8,7 @@ import ServicesSection from '@/components/ServicesSection'
 import ContactSection from '@/components/ContactSection'
 import DesignsSection from '@/components/DesignsSection'
 import { motion } from 'framer-motion'
+import Footer from './footer/page'
 
 export default function Home() {
   const [splashDone, setSplashDone] = useState(false)
@@ -49,12 +50,7 @@ export default function Home() {
       <ServicesSection />
       <CaseStudiesSection />
       <ContactSection />
-
-
-
-      <footer className="bg-gradient-to-b from-black to-gray-800 text-gray-400 py-12 text-center text-sm">
-        © {new Date().getFullYear()} Design Gallery. جميع الحقوق محفوظة.
-      </footer>
+      <Footer />
     </main>
   )
 }

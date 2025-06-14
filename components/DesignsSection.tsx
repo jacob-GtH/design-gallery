@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import DesignCard from './designs/DesignCard';
 import { IDesign } from '@/interfaces/Design';
+import Link from 'next/dist/client/link';
 
 export default function DesignsSection({ designs }: { designs: IDesign[] }) {
     const containerVariants = {
@@ -58,7 +59,22 @@ export default function DesignsSection({ designs }: { designs: IDesign[] }) {
                         </motion.div>
                     ))}
                 </motion.div>
+                <AnimatedLink />
             </div>
         </section>
     );
+}
+
+function AnimatedLink() {
+  return (
+    <Link href="/designs" className="relative text-blue-600 inline-block">
+      شاهد التصاميم
+      <motion.span
+        className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 origin-left"
+        initial={{ scaleX: 0 }}
+        whileHover={{ scaleX: 1 }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+      />
+    </Link>
+  );
 }

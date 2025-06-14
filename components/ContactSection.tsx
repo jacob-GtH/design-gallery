@@ -1,7 +1,10 @@
+
 'use client'
+
 
 import { motion } from 'framer-motion'
 import { FiArrowLeft } from 'react-icons/fi'
+import Link from 'next/link'
 
 export default function ContactSection() {
     return (
@@ -69,23 +72,23 @@ export default function ContactSection() {
 
             {/* Animated floating elements فقاعات */}
             <motion.div
-                className="absolute top-20 left-20 w-16 h-16 rounded-full bg-purple-500 opacity-20"
+                className="absolute top-20 left-20 w-16 h-16  bg-purple-500 opacity-20"
                 animate={{
                     y: [0, -20, 0],
-                    scale: [1, 1.1, 1]
+                    scale: [1, 1.3, 1]
                 }}
                 transition={{
-                    duration: 8,
+                    duration: 10,
                     repeat: Infinity,
                     ease: "easeInOut"
                 }}
                 aria-hidden="true"
             />
             <motion.div
-                className="absolute bottom-20 right-20 w-24 h-24 rounded-full bg-white opacity-10"
+                className="absolute bottom-20 right-20 w-24 h-24 rounded-sm bg-white opacity-10"
                 animate={{
                     y: [0, 20, 0],
-                    scale: [1, 1.2, 1]
+                    scale: [1, 1.3, 1]
                 }}
                 transition={{
                     duration: 10,
