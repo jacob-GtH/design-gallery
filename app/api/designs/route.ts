@@ -1,6 +1,6 @@
 // File: app/api/designs/route.ts
 import { NextResponse } from 'next/server';
-import { client } from '@/sanity/lib/client';
+import { client } from '../../../lib/sanity.client';
 import groq from 'groq';
 
 const query = groq`*[_type == "design"] | order(_createdAt desc){

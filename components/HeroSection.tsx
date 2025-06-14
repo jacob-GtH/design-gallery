@@ -2,8 +2,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Button } from '@/components/ui/button'
-
+import{ Button } from './ui/Button'
 export default function HeroSection() {
     return (
         <section className="relative h-screen bg-black text-white overflow-hidden">

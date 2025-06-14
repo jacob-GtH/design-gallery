@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import SplashScreen from '@/components/SplashScreen'
-import HeroSection from '@/components/HeroSection'
-import CaseStudiesSection from '@/components/CaseStudiesSection'
-import ServicesSection from '@/components/ServicesSection'
-import ContactSection from '@/components/ContactSection'
-import DesignsSection from '@/components/DesignsSection'
+import SplashScreen from '../components/SplashScreen'
+import HeroSection from '../components/HeroSection'
+import CaseStudiesSection from '../components/CaseStudiesSection'
+import ServicesSection from '../components/ServicesSection'
+import ContactSection from '../components/ContactSection'
+import DesignsSection from '../components/DesignsSection'
 import { motion } from 'framer-motion'
 import Footer from './footer/page'
 
