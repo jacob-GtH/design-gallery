@@ -1,6 +1,6 @@
 // components/designs/DesignDetails.tsx
-import { IDesign } from '@/interfaces/Design';
-import { Button } from '@/components/ui/button';
+import { IDesign } from '../../interfaces/Design';
+import { Button } from '../ui/Button';
 
 export default function DesignDetails({ design }: { design: IDesign }) {
     return (
@@ -8,7 +8,7 @@ export default function DesignDetails({ design }: { design: IDesign }) {
             <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div className="relative h-96">
                     <img
-                        src={design.imageUrl}
+                        src={design.mediaUrl}
                         alt={design.title}
                         className="w-full h-full object-contain"
                     />

@@ -1,23 +1,69 @@
-// File: app/api/designs/route.ts
-import { NextResponse } from 'next/server';
-import { client } from '../../../lib/sanity.client';
-import groq from 'groq';
-
-const query = groq`*[_type == "design"] | order(_createdAt desc){
-  _id,
-  title,
-  slug,
-"imageUrl": mainImage.asset->url,
-  category,
-  description
-}`;
+import { NextRequest, NextResponse } from 'next/server'
+import { client } from '../../../lib/sanity.client'
 
 export async function GET() {
   try {
-    const designs = await client.fetch(query);
-    return NextResponse.json(designs);
+    const rawDesigns = await client.fetch(`*[_type == "design"] | order(_createdAt desc){
+      _id,
+      title,
+      description,
+      publishedAt,
+      likes,
+      "designer": designer->name,
+      "tags": tags[]->title,
+      media[]{
+        url,
+        type,
+        caption
+      }
+    }`)
+
+    const designs = rawDesigns.map((d: any) => ({
+      id: d._id,
+      title: d.title,
+      description: d.description,
+      publishedAt: d.publishedAt,
+      likes: d.likes ?? 0,
+      designer: d.designer,
+      tags: d.tags ?? [],
+      media: d.media ?? [],
+    }))
+
+    return NextResponse.json(designs)
   } catch (error) {
-    console.error('❌ Failed to fetch designs:', error);
-    return NextResponse.json({ error: 'Failed to fetch designs' }, { status: 500 });
+    console.error('❌ Failed to fetch designs:', error)
+    return NextResponse.json({ error: 'Failed to fetch designs' }, { status: 500 })
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const { title, description, media, designerId } = await req.json()
+
+    if (!title || !media || !Array.isArray(media) || media.length === 0 || !designerId) {
+      return NextResponse.json({ error: 'الحقول المطلوبة مفقودة' }, { status: 400 })
+    }
+
+    const newDesign = {
+      _type: 'design',
+      title,
+      description,
+      slug: {
+        _type: 'slug',
+        current: title.toLowerCase().replace(/\s+/g, '-').slice(0, 96),
+      },
+      media, // [{ url, type, caption }]
+      publishedAt: new Date().toISOString(),
+      designer: {
+        _type: 'reference',
+        _ref: designerId
+      }
+    }
+
+    const created = await client.create(newDesign)
+    return NextResponse.json(created)
+  } catch (error) {
+    console.error('❌ Failed to create design:', error)
+    return NextResponse.json({ error: 'Failed to create design' }, { status: 500 })
   }
 }

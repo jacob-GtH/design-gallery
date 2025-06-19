@@ -1,8 +1,8 @@
-// components/designs/DesignCard.tsx
+//  // components/designs/DesignCard.tsx
 'use client';
 
 import { motion } from 'framer-motion';
-import { IDesign } from '@/interfaces/Design';
+import { IDesign } from '../../interfaces/Design';
 import Link from 'next/link';
 
 export default function DesignCard({ design }: { design: IDesign }) {
@@ -15,17 +15,29 @@ export default function DesignCard({ design }: { design: IDesign }) {
         >
             <Link href={`/designs/${design.id}`}>
                 <div className="relative h-64">
-                    <img
-                        src={design.imageUrl}
-                        alt={design.title}
-                        className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
-                        loading="lazy"
-                    />
+                    {design.mediaType === 'image' ? (
+                        <img
+                            src={design.mediaUrl}
+                            alt={design.title}
+                            className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
+                            loading="lazy"
+                        />
+                    ) : (
+                        <video
+                            src={design.mediaUrl}
+                            className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
+                            autoPlay
+                            loop
+                            muted
+                        />
+                    )}
                 </div>
 
                 <div className="p-5">
                     <h3 className="font-bold text-xl mb-2">{design.title}</h3>
-                    <p className="text-gray-600 mb-3">بواسطة {design.designer}</p>
+                    {design.designer && (
+                        <p className="text-gray-600 mb-3">بواسطة {design.designer}</p>
+                    )}
 
                     <div className="flex flex-wrap gap-2 mb-4">
                         {Array.isArray(design.tags) && design.tags.slice(0, 3).map(tag => (
@@ -36,12 +48,11 @@ export default function DesignCard({ design }: { design: IDesign }) {
                                 {tag}
                             </span>
                         ))}
-
                     </div>
 
                     <div className="flex items-center justify-between">
                         <span className="text-gray-500 text-sm">
-                            {design.createdAt && new Date(design.createdAt).toLocaleDateString('ar-SA')}
+                            {design.publishedAt && new Date(design.publishedAt).toLocaleDateString('ar-SA')}
                         </span>
                         <div className="flex items-center gap-1">
                             <span className="text-gray-800">❤️</span>

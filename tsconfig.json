@@ -28,8 +28,24 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "app/admin/page.tsx"  ],
   "exclude": [
     "node_modules"
-  ]
+  ],
+
+      "baseUrl": ".",
+    "paths": {
+      "next-env.d.ts": [
+        "next-env.d.ts"
+      ],
+      ".next/types/**/*.ts": [
+        ".next/types/**/*.ts"
+      ],
+      "@**/*.ts": [
+        "**/*.ts"
+      ],
+      "@**/*.tsx": [
+        "**/*.tsx"
+      ]
+    }
 }

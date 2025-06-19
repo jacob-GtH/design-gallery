@@ -1,9 +1,11 @@
+//components/DesignsSection.tsx
 'use client';
 
 import { motion } from 'framer-motion';
 import DesignCard from './designs/DesignCard';
-import { IDesign } from '@/interfaces/Design';
+import { IDesign } from '../interfaces/Design';
 import Link from 'next/dist/client/link';
+
 
 export default function DesignsSection({ designs }: { designs: IDesign[] }) {
     const containerVariants = {

@@ -1,7 +1,7 @@
 // app/api/contact/route.ts
 import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
-import { validateInput } from '@/sanity/lib/validation'
+import { validateInput } from '../../../sanity/design-cms/lib/validation'
 
 export async function POST(req: Request) {
     // التحقق من نوع الطلب

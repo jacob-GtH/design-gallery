@@ -7,7 +7,16 @@ import category from './category'
 import tag from './tag'
 // import client from './client'
 // import testimonial from './testimonial'
-
+// types/index.d.ts
+export interface Design {
+  id: string
+  title: string
+  description?: string
+  mediaUrl: string
+  mediaType: 'image' | 'video'
+  publishedAt: string
+  updatedAt?: string
+}
 
   export const schemaTypes = [
     design,
