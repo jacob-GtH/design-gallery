@@ -15,8 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import "react-quill-new/dist/quill.snow.css";
 import dynamic from "next/dynamic";
-import { Any } from "@sanity/client/csm";
-dynamic;
+import { FloatingToolbar } from "../editor/FloatingToolbar";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), {
   ssr: false,
@@ -36,6 +35,7 @@ type MediaItem = {
   caption: "";
   uploadProgress?: number;
   showToolbar?: boolean;
+  showEditor?: boolean;
   timeoutId?: number;
 };
 
@@ -45,6 +45,7 @@ type FormState = {
   designerId: string;
   tags: string[];
   currentTagInput: string;
+  backgroundColor: string;
 };
 
 type DesignFormState = {
@@ -71,9 +72,19 @@ function formReducer(state: DesignFormState, action: any): DesignFormState {
     case "ADD_MEDIA":
       return {
         ...state,
-        mediaItems: [...state.mediaItems, ...action.items],
+        mediaItems: [
+          ...state.mediaItems,
+          ...action.items.map((item: MediaItem) => ({
+            ...item,
+            showToolbar: false,
+          })),
+        ],
         error: "",
       };
+
+    default:
+      return state;
+
     case "REMOVE_MEDIA":
       return {
         ...state,
@@ -111,6 +122,13 @@ function formReducer(state: DesignFormState, action: any): DesignFormState {
           ...state.formData,
           tags: state.formData.tags.filter((_, i) => i !== action.index),
         },
+      };
+    case "TOGGLE_EDITOR":
+      return {
+        ...state,
+        mediaItems: state.mediaItems.map((item, i) =>
+          i === action.index ? { ...item, showEditor: !item.showEditor } : item
+        ),
       };
     case "SET_DESIGNERS":
       return {
@@ -157,21 +175,12 @@ function formReducer(state: DesignFormState, action: any): DesignFormState {
           i === action.index ? { ...item, showToolbar: false } : item
         ),
       };
-    case "ADD_MEDIA":
+    case "LOAD_DRAFT":
       return {
         ...state,
-        mediaItems: [
-          ...state.mediaItems,
-          ...action.items.map((item: MediaItem) => ({
-            ...item,
-            showToolbar: false,
-          })),
-        ],
-        error: "",
+        formData: action.data.formData,
+        mediaItems: action.data.mediaItems,
       };
-
-    default:
-      return state;
   }
 }
 
@@ -182,6 +191,7 @@ const initialState: DesignFormState = {
     designerId: "",
     tags: [],
     currentTagInput: "",
+    backgroundColor: "#f9fafb",
   },
   mediaItems: [],
   designers: [],
@@ -190,12 +200,14 @@ const initialState: DesignFormState = {
   success: false,
   isDragging: false,
 };
+type DesignFormProps = {
+  onSuccess?: () => Promise<void> | void; // اجعلها اختيارية إذا أردت
+};
 
 // ============ المكون الرئيسي ============
-export default function DesignForm() {
+export default function DesignForm({ onSuccess }: DesignFormProps) {
   const editorRef = useRef<ReactQuill>(null);
-  const [toolbarFocused, setToolbarFocused] = useState(false);
-  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [toolbarFocused] = useState(false);
   const router = useRouter();
   const [state, dispatch] = useReducer(formReducer, initialState);
   const {
@@ -323,7 +335,6 @@ export default function DesignForm() {
   const handleCaptionChange = (
     index: number,
     value: string,
-    toolbar: BarProp
   ) => {
     dispatch({ type: "UPDATE_CAPTION", index, value });
   };
@@ -445,7 +456,7 @@ export default function DesignForm() {
 
       dispatch({ type: "SET_SUCCESS", value: true });
       localStorage.removeItem("designFormDraft");
-
+      if (onSuccess) await onSuccess();
       setTimeout(() => {
         router.refresh();
         dispatch({ type: "RESET" });
@@ -465,6 +476,7 @@ export default function DesignForm() {
     ) {
       dispatch({ type: "RESET" });
       localStorage.removeItem("designFormDraft");
+      setBgColor("#f9fafb");
     }
   };
 
@@ -497,7 +509,7 @@ export default function DesignForm() {
     icon: React.ReactNode;
     onClick: () => void;
     tooltip: string;
-    color: "blue" | "purple" | "gray" | "green";
+    color: "blue" | "purple" | "gray" | "green" | "red";
     disabled?: boolean;
   }) {
     const colorClasses = {
@@ -505,6 +517,7 @@ export default function DesignForm() {
       purple: "bg-purple-50 text-purple-600 hover:bg-purple-100",
       gray: "bg-gray-50 text-gray-600 hover:bg-gray-100",
       green: "bg-green-50 text-green-600 hover:bg-green-100",
+      red: "bg-red-300 text-red-600 hover:bg-red-400",
     };
 
     return (
@@ -534,46 +547,115 @@ export default function DesignForm() {
     </div>
   );
 
+  // color
+  const [bgColor, setBgColor] = useState<string>(() => {
+    return localStorage.getItem("designFormBgColor") || "#f9fafb"; // اللون الافتراضي
+  });
+  useEffect(() => {
+    localStorage.setItem("designFormBgColor", bgColor);
+  }, [bgColor]);
+
+  function isDarkColor(hex: string) {
+    const r = parseInt(hex.substr(1, 2), 16);
+    const g = parseInt(hex.substr(3, 2), 16);
+    const b = parseInt(hex.substr(5, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness < 128; // أقل من 128 تعتبر داكنة
+  }
+
   const MediaItemPreview = ({
     item,
     index,
   }: {
     item: MediaItem;
     index: number;
-  }) => (
-    <div className="relative group w-full overflow-hidden">
-      <div className="relative">
-        {item.type === "image" ? (
-          <img
-            src={item.previewUrl}
-            alt="معاينة التصميم"
-            className=" w-full h-auto object-contain mx-auto"
-          />
-        ) : (
-          <video
-            src={item.previewUrl}
-            controls
-            className="w-full h-auto object-contain mx-auto"
-          />
-        )}
+  }) => {
+    const videoRef = useRef<HTMLVideoElement | null>(null);
 
-        <button
-          onClick={() => removeMediaItem(index)}
-          className="absolute top-3 right-3 bg-white/80 text-gray-700 p-2 rounded-full hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100"
-        >
-          <FiTrash size={18} />
-        </button>
+    useEffect(() => {
+      if (item.type !== "video" || !videoRef.current) return;
 
-        {item.uploadProgress !== undefined && (
-          <ProgressBar progress={item.uploadProgress} />
-        )}
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          if (entry.isIntersecting) {
+            videoRef.current?.play();
+          } else {
+            videoRef.current?.pause();
+          }
+        },
+        {
+          threshold: 0.5, // يبدأ التشغيل عندما يظهر نصف الفيديو على الأقل
+        }
+      );
+
+      observer.observe(videoRef.current);
+
+      return () => {
+        observer.disconnect();
+      };
+    }, [item.type]);
+
+    return (
+      <div className="relative group w-full overflow-hidden">
+        <div className="relative">
+          {item.type === "image" ? (
+            <img
+              src={item.previewUrl}
+              alt="معاينة التصميم"
+              className="w-full h-auto object-contain mx-auto"
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              src={item.previewUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-auto object-contain mx-auto"
+            />
+          )}
+
+          <div className="absolute top-3 right-3 flex space-x-2">
+            {/* زر إظهار/إخفاء المحرر مع تلميح الأدوات */}
+            <div className="relative group/editor">
+              <button
+                onClick={() => dispatch({ type: "TOGGLE_EDITOR", index })}
+                className="bg-white/80 text-gray-700 p-2 rounded-full hover:bg-blue-500 hover:text-white transition-all opacity-0 group-hover:opacity-100"
+              >
+                <FiFileText size={18} />
+              </button>
+              <span className="absolute right-full mr-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover/editor:opacity-100 transition-opacity">
+                {item.showEditor ? "إخفاء المحرر" : "إظهار المحرر"}
+              </span>
+            </div>
+
+            {/* زر الحذف مع تلميح الأدوات */}
+            <div className="relative group/delete">
+              <button
+                onClick={() => removeMediaItem(index)}
+                className="bg-white/80 text-gray-700 p-2 rounded-full hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100"
+              >
+                <FiTrash size={18} />
+              </button>
+              <span className="absolute right-full mr-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover/delete:opacity-100 transition-opacity">
+                حذف الوسائط
+              </span>
+            </div>
+          </div>
+
+          {item.uploadProgress !== undefined && (
+            <ProgressBar progress={item.uploadProgress} />
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const EmptyDropZone = () => (
     <div
-      className={`flex flex-col items-center justify-center h-full border-2 ${
+      className={`flex flex-col p-10 items-center justify-center h-full border-2 ${
         isDragging
           ? "border-blue-500 bg-blue-50"
           : "border-dashed border-gray-300"
@@ -592,73 +674,6 @@ export default function DesignForm() {
   );
 
   // إعدادات محرر Quill
-  const FloatingToolbar = ({
-    editorRef,
-    modules,
-  }: {
-    editorRef: React.RefObject<ReactQuill>;
-    modules: Any;
-    setToolbarFocused: (value: boolean) => void; 
-  }) => {
-    const [visible, setVisible] = useState(false);
-
-    useEffect(() => {
-      const editor = editorRef.current?.getEditor();
-      if (!editor) return;
-
-      const handleFocus = () => setVisible(true);
-      const handleBlur = () => setVisible(false);
-
-      editor.on("focus", handleFocus);
-      editor.on("blur", handleBlur);
-
-      return () => {
-        editor.off("focus", handleFocus);
-        editor.off("blur", handleBlur);
-      };
-    }, []);
-
-    if (!visible) return null;
-
-    return (
-      <div
-        className="ql-toolbar ql-snow sticky top-0 z-10 bg-white p-2 border-b"
-        onMouseEnter={() => setToolbarFocused(true)}
-        onMouseLeave={() => setToolbarFocused(false)}
-      >
-        {modules.toolbar.map((group: any, i: number) => (
-          <span key={i} className="ql-formats">
-            {group.map((item: any, j: number) => {
-              if (typeof item === "string") {
-                return <button key={j} className={`ql-${item}`} />;
-              }
-              if (item.header) {
-                return (
-                  <select key={j} className="ql-header" defaultValue="">
-                    {item.header.map((level: any, k: number) => (
-                      <option key={k} value={level}>{`عنوان ${level}`}</option>
-                    ))}
-                  </select>
-                );
-              }
-              if (item.align) {
-                return (
-                  <select key={j} className="ql-align" defaultValue="">
-                    {["", "right", "center", "justify"].map((align, k) => (
-                      <option key={k} value={align}>
-                        {align || "محاذاة افتراضية"}
-                      </option>
-                    ))}
-                  </select>
-                );
-              }
-              return null;
-            })}
-          </span>
-        ))}
-      </div>
-    );
-  };
 
   const modules = useMemo(
     () => ({
@@ -672,7 +687,7 @@ export default function DesignForm() {
           { indent: "+1" },
         ],
         ["link", "image"],
-        [{ color: [] }, { background: [] }], // ← هذا السطر مهم
+        [{ color: [] }],
         ["clean"],
       ],
       clipboard: {
@@ -684,13 +699,15 @@ export default function DesignForm() {
 
   // ============ واجهة المستخدم ============
   return (
-    <div className="flex flex-col md:flex-row h-full pb-6 justify-center bg-gray-50">
+    <div
+      className="flex flex-col md:flex-row h-full pb-6 justify-center rounded-3xl"
+      style={{
+        backgroundColor: bgColor,
+        color: isDarkColor(bgColor) ? "white" : "black",
+      }}
+    >
       <div>
-        <FloatingToolbar
-          editorRef={editorRef}
-          modules={modules}
-          setToolbarFocused={setToolbarFocused} // ✅ أضف هذا السطر
-        />
+        <FloatingToolbar editorRef={editorRef} modules={modules} />
       </div>
       {/* المنطقة الرئيسية */}
       <div className="w-full md:w-3/4 p-6 overflow-y-auto mt-16">
@@ -714,7 +731,7 @@ export default function DesignForm() {
             placeholder="وصف المشروع..."
             value={formData.description}
             onChange={handleInputChange}
-            className="w-full p-2 mb-2 border-none text-center focus:outline-none bg-transparent min-h-[100px] text-gray-700"
+            className="w-full p-2 mb-2 border-none text-center focus:outline-none bg-transparent min-h-[60px] "
           />
 
           {/* معاينة الوسائط */}
@@ -743,15 +760,15 @@ export default function DesignForm() {
                     <ReactQuill
                       value={item.caption}
                       onChange={(value) => {
-                        handleCaptionChange(index, value, toolbar);
+                        handleCaptionChange(index, value);
                       }}
                       onFocus={() => dispatch({ type: "SHOW_TOOLBAR", index })}
                       onBlur={() => {
-                        if (!toolbarFocused) {
-                          dispatch({ type: "HIDE_TOOLBAR", index });
-                        } else {
-                          dispatch({ type: "SHOW_TOOLBAR", index });
-                        }
+                        setTimeout(() => {
+                          // إذا لم يكن التركيز على التول بار، أخفِ الشريط
+                          if (!toolbarFocused)
+                            dispatch({ type: "HIDE_TOOLBAR", index });
+                        }, 9000);
                       }}
                       onChangeSelection={(range) => {
                         if (range && range.length > 0) {
@@ -763,8 +780,8 @@ export default function DesignForm() {
                         toolbar: item.showToolbar ? modules.toolbar : false, // ← هنا التغيير
                       }}
                       theme="snow"
-                      placeholder="وصف هذه الوسائط..."
-                      className="border-none"
+                      placeholder=".."
+                      className="border-none !important"
                     />
                   </motion.div>
                 ))}
@@ -778,13 +795,16 @@ export default function DesignForm() {
               {formData.tags.map((tag, i) => (
                 <span
                   key={i}
-                  className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center"
+                  className="bg-gray-100 px-3 py-1 mt-1 rounded-full text-sm flex items-center"
+                  style={{
+                    color: isDarkColor(bgColor) ? "black" : "black",
+                  }}
                 >
                   #{tag}
                   <button
                     type="button"
                     onClick={() => handleRemoveTag(i)}
-                    className="ml-1 text-gray-400 hover:text-red-500"
+                    className="ml-1 hover:text-red-500"
                   >
                     &times;
                   </button>
@@ -811,7 +831,7 @@ export default function DesignForm() {
                 name="designerId"
                 value={formData.designerId}
                 onChange={handleInputChange}
-                className="bg-gray-100 px-3 py-1 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="bg-gray-100 px-3 py-1 text-gray-500   rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
                 {designers.map((d) => (
@@ -840,12 +860,12 @@ export default function DesignForm() {
         initial={{ x: 100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="fixed right-4 top-1 mt-4 transform -translate-y-1/2 bg-white p-4 rounded-xl shadow-lg space-y-4 border border-gray-100 z-10"
+        className="fixed right-2 top-1 mt-20 sm:right-4 sm:p-4 transform -translate-y-1/2 bg-white p-1 rounded-xl shadow-lg space-y-4 border border-gray-100 z-10"
       >
         {error && <Alert type="error" message={error} />}
         {success && <Alert type="success" message="تم رفع التصميم بنجاح" />}
 
-        <div className="flex flex-col items-center space-y-3">
+        <div className="flex flex-col items-center space-y-2 sm:space-y-2">
           <TooltipButton
             icon={<FiFileText size={20} />}
             onClick={() => document.getElementById("title-input")?.focus()}
@@ -876,7 +896,34 @@ export default function DesignForm() {
             color="green"
           />
 
-          <div className="h-px bg-gray-200 w-8"></div>
+          <div className="relative group">
+            <label
+              htmlFor="bg-color-picker"
+              className="p-3 rounded-full bg-gradient-to-br from-purple-500 to-red-500  hover:bg-red-100 cursor-pointer flex items-center justify-center"
+            >
+              <div
+                className="w-5 h-5 rounded-full border"
+                style={{ backgroundColor: bgColor }}
+              ></div>
+            </label>
+            <input
+              id="bg-color-picker"
+              type="color"
+              value={bgColor}
+              onChange={(e) => {
+                setBgColor(e.target.value);
+                dispatch({
+                  type: "UPDATE_FIELD",
+                  field: "backgroundColor",
+                  value: e.target.value,
+                });
+              }}
+              className="absolute opacity-0 w-0 h-0"
+            />
+            <span className="absolute right-full mr-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+              تغيير لون الخلفية
+            </span>
+          </div>
 
           <TooltipButton
             icon={
