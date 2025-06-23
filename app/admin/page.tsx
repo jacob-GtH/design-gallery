@@ -200,9 +200,9 @@ export default function AdminPage() {
                   await fetchDesigns();
                   setShowForm(false);
                   toast('نجاح', {
-                  description: 'تم إضافة التصميم بنجاح',
-                })
-                }} 
+                    description: 'تم إضافة التصميم بنجاح',
+                  });
+                }}
               />
               </div>
             </div>

@@ -8,6 +8,10 @@ export default nextConfig;
 // next.config.js
 module.exports = {
   images: {
-    domains: ['cdn.sanity.io', 'res.cloudinary.com'], // أضف مجالات الصور الخاصة بك
+    domains: ["cdn.sanity.io", "res.cloudinary.com"], // أضف مجالات الصور الخاصة بك
   },
+};
+module.exports = {
+
+
 };
