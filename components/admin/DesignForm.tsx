@@ -598,6 +598,7 @@ export default function DesignForm() {
   }: {
     editorRef: React.RefObject<ReactQuill>;
     modules: Any;
+    setToolbarFocused: (value: boolean) => void; 
   }) => {
     const [visible, setVisible] = useState(false);
 
@@ -620,7 +621,11 @@ export default function DesignForm() {
     if (!visible) return null;
 
     return (
-      <div className="ql-toolbar ql-snow sticky top-0 z-10 bg-white p-2 border-b">
+      <div
+        className="ql-toolbar ql-snow sticky top-0 z-10 bg-white p-2 border-b"
+        onMouseEnter={() => setToolbarFocused(true)}
+        onMouseLeave={() => setToolbarFocused(false)}
+      >
         {modules.toolbar.map((group: any, i: number) => (
           <span key={i} className="ql-formats">
             {group.map((item: any, j: number) => {
@@ -681,7 +686,11 @@ export default function DesignForm() {
   return (
     <div className="flex flex-col md:flex-row h-full pb-6 justify-center bg-gray-50">
       <div>
-        <FloatingToolbar editorRef={editorRef} modules={modules} />
+        <FloatingToolbar
+          editorRef={editorRef}
+          modules={modules}
+          setToolbarFocused={setToolbarFocused} // ✅ أضف هذا السطر
+        />
       </div>
       {/* المنطقة الرئيسية */}
       <div className="w-full md:w-3/4 p-6 overflow-y-auto mt-16">
