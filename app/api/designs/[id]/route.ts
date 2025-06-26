@@ -1,20 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { client } from '../../../../lib/sanity.client'
+import { NextRequest, NextResponse } from "next/server"
+import { client } from "@/sanity/design-cms/lib/client"
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { id } = params
+  const { id } = await params;
 
   try {
     const design = await client.fetch(
-      `*[_type == "design" && _id == $idParam][0]{
+      `*[_type == "design" && _id == $id][0]{
         _id,
         title,
         description,
         publishedAt,
         likes,
+        backgroundColor,
         "designer": designer->name,
         "tags": tags[]->title,
         media[] {
@@ -23,34 +24,18 @@ export async function GET(
           caption
         }
       }`,
-      { idParam: id }
-    )
+      { id }
+    );
 
-    if (!design) return NextResponse.json({ error: 'Design not found' }, { status: 404 })
+    if (!design) {
+      return NextResponse.json({ error: "التصميم غير موجود" }, { status: 404 });
+    }
 
-    return NextResponse.json(design)
-  } catch (error) {
-    console.error('❌ Failed to fetch design:', error)
-    return NextResponse.json({ error: 'Failed to fetch design' }, { status: 500 })
-  }
-}
-
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { title, description } = await request.json()
-
-    const updated = await client
-      .patch(params.id)
-      .set({ title, description })
-      .commit()
-
-    return NextResponse.json(updated)
-  } catch (error) {
-    console.error('❌ Error updating:', error)
-    return NextResponse.json({ error: 'Failed to update' }, { status: 500 })
+    const { _id, ...rest } = design;
+    return NextResponse.json({ id: _id, ...rest });
+  } catch (error: any) {
+    console.error("❌ Failed to fetch design:", error);
+    return NextResponse.json({ error: error.message || "خطأ غير متوقع" }, { status: 500 });
   }
 }
 
@@ -58,14 +43,40 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { id } = params
+  const { id } = await params;
 
   try {
-    await client.delete(id)
+    await client.delete(id);
+    return NextResponse.json({ message: "تم الحذف بنجاح" });
+  } catch (error: any) {
+    console.error("❌ Failed to delete:", error);
+    return NextResponse.json({ error: error.message || "فشل في الحذف" }, { status: 500 });
+  }
+}
 
-    return NextResponse.json({ message: 'تم حذف التصميم بنجاح' }, { status: 200 })
-  } catch (error) {
-    console.error('❌ فشل في الحذف:', error)
-    return NextResponse.json({ error: 'فشل في الحذف' }, { status: 500 })
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = await params;
+  const data = await req.json();
+
+  if (!data.title ) {
+    return NextResponse.json({ error: "الحقول المطلوبة غير مكتملة" }, { status: 400 });
+  }
+
+  try {
+    await client
+      .patch(id)
+      .set({
+        ...data,
+        publishedAt: data.publishedAt || new Date().toISOString(),
+      })
+      .commit();
+
+    return NextResponse.json({ message: "تم التحديث بنجاح" });
+  } catch (error: any) {
+    console.error("❌ Failed to update:", error);
+    return NextResponse.json({ error: error.message || "فشل في التحديث" }, { status: 500 });
   }
 }

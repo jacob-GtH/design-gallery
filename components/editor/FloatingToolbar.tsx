@@ -6,7 +6,7 @@ import { useEffect, useState, useMemo } from "react";
 import React from "react";
 
 interface FloatingToolbarProps {
-  editorRef: React.RefObject<ReactQuill>;
+  editorRef: React.RefObject<ReactQuill | null>;
   modules: {
     toolbar: Array<
       | string
@@ -42,20 +42,20 @@ export const FloatingToolbar = ({
           }
           if (item.header) {
             return (
-              <select
+                <select
                 key={j}
                 className="ql-header border rounded p-1 text-sm"
                 defaultValue=""
-              >
+                >
                 <option value="">Normal</option>
                 {(Array.isArray(item.header) ? item.header : []).map(
-                  (level, k) => (
-                    <option key={k} value={level}>
-                      Heading {level}
-                    </option>
+                  (level: number, k: number) => (
+                  <option key={k} value={level}>
+                    Heading {level}
+                  </option>
                   )
                 )}
-              </select>
+                </select>
             );
           }
           if (item.align) {
@@ -101,10 +101,14 @@ export const FloatingToolbar = ({
           const bounds = editor.getBounds(selection.index);
           const containerRect = editor.root.getBoundingClientRect();
 
-          setPosition({
+            if (!bounds) {
+            setIsVisible(false);
+            return;
+            }
+            setPosition({
             top: bounds.top + containerRect.top - 50,
             left: bounds.left + containerRect.left,
-          });
+            });
           setIsVisible(true);
         } catch (error) {
           console.error("Error updating toolbar position:", error);

@@ -5,9 +5,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { PlusCircle } from "lucide-react";
-import DesignForm from "../../components/admin/DesignForm";
-import { IDesign } from "../../interfaces/Design";
+import DesignForm from "@/components/admin/DesignForm";
+import { IDesign } from "@/interfaces/Design";
 import { toast } from "sonner";
+import DesignFormCore from "@/components/designform/DesignFormCore";
 
 const DesignCard = ({
   design,
@@ -16,54 +17,59 @@ const DesignCard = ({
   design: IDesign;
   onDelete: (id: string) => void;
 }) => (
-  <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border">
-    <div className="relative aspect-video">
-      {design.mediaType === "image" ? (
-        <Image
-          src={design.mediaUrl}
-          alt={design.title}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 33vw"
-        />
-      ) : (
-        <video
-          src={design.mediaUrl}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover"
-        />
-      )}
-    </div>
-    <div className="p-4">
-      <h3 className="font-semibold text-lg mb-1 line-clamp-1">
-        {design.title}
-      </h3>
-      <p className="text-gray-500 text-sm mb-3">
-        {new Date(design.publishedAt).toLocaleDateString("ar-SA", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })}
-      </p>
-      <div className="flex justify-between border-t pt-3">
-        <Link
-          href={`/admin/edit/${design.id}`}
-          className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
-        >
-          <span>✏️</span>
-          <span>تعديل</span>
-        </Link>
-        <button
-          onClick={() => onDelete(design.id)}
-          className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
-        >
-          <span>🗑️</span>
-          <span>حذف</span>
-        </button>
+  <div className=" bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border">
+    <Link href={`/designs/${design.id}`} className="block">
+      <div className="relative aspect-video">
+        {Array.isArray(design.media) && design.media[0]?.type === "image" ? (
+          <Image
+            src={design.media[0]?.url}
+            alt={design.title}
+            fill
+            unoptimized
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
+        ) : Array.isArray(design.media) && design.media[0]?.type === "video" ? (
+          <video
+            src={design.media[0]?.url}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          />
+        ) : null}
+        ;
+        <div className="p-4 bg-black/50  fixed text-white ">
+          <h3 className="font-semibold text-lg mb-1 line-clamp-1">
+            {design.title}
+          </h3>
+          <p className="text-sm mb-3">
+            {new Date(design.publishedAt).toLocaleDateString("ar-SA", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
+        </div>
       </div>
+    </Link>
+
+    <div className="flex justify-between border-t p-3">
+      <Link
+        href={`/admin/edit/${design.id}`}
+        className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+      >
+        <span>✏️</span>
+        <span>تعديل</span>
+      </Link>
+      <button
+        onClick={() => onDelete(design.id)}
+        className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
+      >
+        <span>🗑️</span>
+        <span>حذف</span>
+      </button>
     </div>
   </div>
 );
@@ -79,7 +85,7 @@ const LoadingSkeleton = () => (
   </div>
 );
 
-export default function AdminPage() {
+export default function CreateDesignPage() {
   const [designs, setDesigns] = useState<IDesign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -178,7 +184,7 @@ export default function AdminPage() {
               <p>لا توجد تصاميم متاحة حالياً</p>
               <button
                 onClick={() => setShowForm(true)}
-                className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                className="mt-3 bg-white tpo text-white px-4 py-2 rounded-lg hover:bg-blue-700"
               >
                 أضف تصميم جديد
               </button>
@@ -210,7 +216,8 @@ export default function AdminPage() {
                     ✕
                   </button>
                 </div>
-                <DesignForm
+                <DesignFormCore
+                  mode="create"
                   onSuccess={async () => {
                     await fetchDesigns();
                     setShowForm(false);

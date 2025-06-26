@@ -1,3 +1,4 @@
+// Remove $schema property if present to avoid schema loading errors
 {
   "compilerOptions": {
     "target": "ES2017",

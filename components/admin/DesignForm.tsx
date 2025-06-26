@@ -10,12 +10,15 @@ import {
   FiImage,
   FiTag,
 } from "react-icons/fi";
+import { toast } from "sonner";
 import { FileTextIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import "react-quill-new/dist/quill.snow.css";
 import dynamic from "next/dynamic";
+import { IDesign } from "@/interfaces/Design";
 import { FloatingToolbar } from "../editor/FloatingToolbar";
+import { Button } from "../ui/Button";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), {
   ssr: false,
@@ -29,14 +32,16 @@ type Designer = {
 };
 
 type MediaItem = {
+  id: string;
   file: File;
   previewUrl: string;
   type: "image" | "video";
-  caption: "";
+  caption: string;
   uploadProgress?: number;
   showToolbar?: boolean;
   showEditor?: boolean;
   timeoutId?: number;
+  uploadedUrl?: string; // رابط مرفوع مسبقاً
 };
 
 type FormState = {
@@ -57,9 +62,34 @@ type DesignFormState = {
   success: boolean;
   isDragging: boolean;
 };
+type FormAction =
+  | { type: "UPDATE_FIELD"; field: keyof FormState; value: any }
+  | { type: "ADD_MEDIA"; items: MediaItem[] }
+  | { type: "REMOVE_MEDIA"; index: number }
+  | { type: "UPDATE_CAPTION"; index: number; value: string }
+  | { type: "UPDATE_PROGRESS"; index: number; progress: number }
+  | { type: "ADD_TAG"; tag: string }
+  | { type: "REMOVE_TAG"; index: number }
+  | { type: "TOGGLE_EDITOR"; index: number }
+  | { type: "SET_DESIGNERS"; designers: Designer[] }
+  | { type: "SET_LOADING"; loading: boolean }
+  | { type: "SET_ERROR"; message: string }
+  | { type: "SET_SUCCESS"; value: boolean }
+  | { type: "SET_DRAGGING"; value: boolean }
+  | { type: "RESET" }
+  | { type: "SHOW_TOOLBAR"; index: number }
+  | { type: "HIDE_TOOLBAR"; index: number }
+  | {
+      type: "LOAD_DRAFT";
+      data: { formData: FormState; mediaItems: MediaItem[] };
+    }
+  | { type: "UPDATE_MEDIA_UPLOADED_URL"; index: number; url: string };
 
 // ============ ال reducer لإدارة الحالة ============
-function formReducer(state: DesignFormState, action: any): DesignFormState {
+function formReducer(
+  state: DesignFormState,
+  action: FormAction
+): DesignFormState {
   switch (action.type) {
     case "UPDATE_FIELD":
       return {
@@ -130,6 +160,14 @@ function formReducer(state: DesignFormState, action: any): DesignFormState {
           i === action.index ? { ...item, showEditor: !item.showEditor } : item
         ),
       };
+    case "UPDATE_MEDIA_UPLOADED_URL":
+      return {
+        ...state,
+        mediaItems: state.mediaItems.map((item, i) =>
+          i === action.index ? { ...item, uploadedUrl: action.url } : item
+        ),
+      };
+
     case "SET_DESIGNERS":
       return {
         ...state,
@@ -191,7 +229,7 @@ const initialState: DesignFormState = {
     designerId: "",
     tags: [],
     currentTagInput: "",
-    backgroundColor: "#f9fafb",
+    backgroundColor: "",
   },
   mediaItems: [],
   designers: [],
@@ -200,25 +238,22 @@ const initialState: DesignFormState = {
   success: false,
   isDragging: false,
 };
-type DesignFormProps = {
-  onSuccess?: () => Promise<void> | void; // اجعلها اختيارية إذا أردت
-};
+interface DesignFormProps {
+  initialData?: IDesign;
+  onSuccess: () => void;
+}
 
 // ============ المكون الرئيسي ============
-export default function DesignForm({ onSuccess }: DesignFormProps) {
-  const editorRef = useRef<ReactQuill>(null);
-  const [toolbarFocused] = useState(false);
+export default function DesignForm({
+  initialData,
+  onSuccess,
+}: DesignFormProps) {
   const router = useRouter();
+  const editorRef = useRef<ReactQuill>(null);
   const [state, dispatch] = useReducer(formReducer, initialState);
-  const {
-    formData,
-    mediaItems,
-    designers,
-    loading,
-    error,
-    success,
-    isDragging,
-  } = state;
+  const { formData, mediaItems, designers, error, success, isDragging } = state;
+  const [toolbarFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // ============ التأثيرات الجانبية ============
   useEffect(() => {
@@ -228,18 +263,51 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
         const res = await fetch("/api/designers");
         if (!res.ok) throw new Error("Failed to fetch designers");
         const data = await res.json();
+
         dispatch({ type: "SET_DESIGNERS", designers: data });
+
+        // تحميل بيانات التعديل إن وجدت
+        if (initialData) {
+          dispatch({
+            type: "LOAD_DRAFT",
+            data: {
+              formData: {
+                title: initialData.title || "",
+                description: initialData.description || "",
+                designerId: initialData.designer || "",
+                tags: initialData.tags || [],
+                currentTagInput: "",
+                backgroundColor:
+                  "backgroundColor" in initialData &&
+                  (initialData as any).backgroundColor
+                    ? (initialData as any).backgroundColor
+                    : "#f9fafb",
+              },
+              mediaItems: (initialData.media || []).map(
+                (m: any, idx: number) => ({
+                  id: `${
+                    m.url || "uploaded"
+                  }-${idx}-${Date.now()}-${Math.random()}`,
+                  file: new File([], m.url || "uploaded"), // dummy file object
+                  previewUrl: m.url,
+                  type: m.type,
+                  caption: m.caption || "",
+                  uploadedUrl: m.url,
+                  showToolbar: false,
+                })
+              ),
+            },
+          });
+        } else {
+          // تحميل المسودة من localStorage
+          const savedData = localStorage.getItem("designFormDraft");
+          if (savedData) {
+            const { formData, mediaItems } = JSON.parse(savedData);
+            dispatch({ type: "LOAD_DRAFT", data: { formData, mediaItems } });
+          }
+        }
       } catch {
         dispatch({ type: "SET_ERROR", message: "فشل في تحميل قائمة المصممين" });
-      }
-    };
-
-    // تحميل المسودة المحفوظة
-    const loadDraft = () => {
-      const savedData = localStorage.getItem("designFormDraft");
-      if (savedData) {
-        const { formData, mediaItems } = JSON.parse(savedData);
-        dispatch({ type: "LOAD_DRAFT", data: { formData, mediaItems } });
       }
     };
 
@@ -258,6 +326,30 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
+  // تحميل المسودة المحفوظة
+  const loadDraft = () => {
+    const savedDataRaw = localStorage.getItem("designFormDraft");
+    if (!savedDataRaw) return;
+
+    try {
+      const savedData = JSON.parse(savedDataRaw);
+      const maxAge = 24 * 60 * 60 * 1000; // 24 ساعة
+      if (Date.now() - savedData.timestamp < maxAge) {
+        dispatch({
+          type: "LOAD_DRAFT",
+          data: {
+            formData: savedData.formData,
+            mediaItems: savedData.mediaItems,
+          },
+        });
+      } else {
+        localStorage.removeItem("designFormDraft"); // مسودة قديمة
+      }
+    } catch {
+      localStorage.removeItem("designFormDraft"); // بيانات تالفة
+    }
+  };
+
   // حفظ المسودة كل 10 ثواني
   useEffect(() => {
     const saveInterval = setInterval(() => {
@@ -265,6 +357,7 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
         localStorage.setItem(
           "designFormDraft",
           JSON.stringify({
+            timestamp: Date.now(),
             formData,
             mediaItems,
           })
@@ -316,6 +409,7 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
     });
 
     const newItems = validFiles.map((file) => ({
+      id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
       file,
       previewUrl: URL.createObjectURL(file),
       type: file.type.startsWith("video")
@@ -332,10 +426,7 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
   };
 
   // ============ معالجة النموذج ============
-  const handleCaptionChange = (
-    index: number,
-    value: string,
-  ) => {
+  const handleCaptionChange = (index: number, value: string) => {
     dispatch({ type: "UPDATE_CAPTION", index, value });
   };
 
@@ -349,7 +440,7 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
     >
   ) => {
     const { name, value } = e.target;
-    dispatch({ type: "UPDATE_FIELD", field: name, value });
+    dispatch({ type: "UPDATE_FIELD", field: name as keyof FormState, value });
     dispatch({ type: "SET_ERROR", message: "" });
   };
 
@@ -370,6 +461,15 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
 
     for (const [index, item] of mediaItems.entries()) {
       try {
+        if (item.uploadedUrl) {
+          // إذا الملف مرفوع مسبقاً استخدم الرابط
+          uploaded.push({
+            url: item.uploadedUrl,
+            type: item.type,
+            caption: item.caption,
+          });
+          continue;
+        }
         const data = new FormData();
         data.append("file", item.file);
         data.append(
@@ -380,6 +480,19 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
         dispatch({ type: "UPDATE_PROGRESS", index, progress: 0 });
 
         const cloud = await uploadWithProgress(data, item.type, index);
+        // تخزين الرابط في الحالة لتجنب الرفع المكرر
+        dispatch({
+          type: "UPDATE_CAPTION",
+          index,
+          value: item.caption, // نحتفظ بالتعليق كما هو
+        });
+        // تحديث عنصر الوسائط ليحتوي على الرابط
+        dispatch({
+          type: "UPDATE_MEDIA_UPLOADED_URL",
+          index,
+          url: cloud.secure_url,
+        });
+
         uploaded.push({
           url: cloud.secure_url,
           type: item.type,
@@ -430,10 +543,12 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
     const validation = validateForm();
     if (validation) {
       dispatch({ type: "SET_ERROR", message: validation });
+      setLoading(false);
       return;
     }
 
@@ -443,28 +558,29 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
     try {
       const uploadedMedia = await uploadMediaItems();
 
-      const res = await fetch("/api/designs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          media: uploadedMedia,
-        }),
-      });
+      const res = await fetch(
+        initialData ? `/api/designs/${initialData.id}` : "/api/designs",
+        {
+          method: initialData ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...formData,
+            media: uploadedMedia,
+            publishedAt: new Date().toISOString(),
+          }),
+        }
+      );
 
       if (!res.ok) throw new Error(await res.text());
 
-      dispatch({ type: "SET_SUCCESS", value: true });
+      toast.success(initialData ? "تم التحديث بنجاح" : "تم الإضافة بنجاح");
       localStorage.removeItem("designFormDraft");
-      if (onSuccess) await onSuccess();
-      setTimeout(() => {
-        router.refresh();
-        dispatch({ type: "RESET" });
-      }, 2000);
+
+      if (onSuccess) await onSuccess(); // استخدم await إذا كانت async
     } catch (err) {
-      dispatch({ type: "SET_ERROR", message: "❌ حدث خطأ أثناء رفع التصميم" });
+      toast.error("حدث خطأ أثناء الحفظ");
     } finally {
-      dispatch({ type: "SET_LOADING", loading: false });
+      setLoading(false); // أو dispatch حسب حالتك
     }
   };
 
@@ -678,7 +794,8 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
   const modules = useMemo(
     () => ({
       toolbar: [
-        [{ header: [1, 2, false] }],
+        [{ header: [1, 2] }],
+        [{ header: false }],
         ["bold", "italic", "underline", "strike", "blockquote"],
         [
           { list: "ordered" },
@@ -707,7 +824,12 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
       }}
     >
       <div>
-        <FloatingToolbar editorRef={editorRef} modules={modules} />
+        <FloatingToolbar
+          editorRef={editorRef}
+          modules={modules}
+          activeIndex={0}
+          editorReady={true}
+        />
       </div>
       {/* المنطقة الرئيسية */}
       <div className="w-full md:w-3/4 p-6 overflow-y-auto mt-16">
@@ -750,7 +872,7 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
               <AnimatePresence>
                 {mediaItems.map((item, index) => (
                   <motion.div
-                    key={item.previewUrl + index}
+                    key={item.previewUrl}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: 50 }}
@@ -830,10 +952,17 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
               <select
                 name="designerId"
                 value={formData.designerId}
-                onChange={handleInputChange}
+                onChange={(e) =>
+                  dispatch({
+                    type: "UPDATE_FIELD",
+                    field: "designerId",
+                    value: e.target.value,
+                  })
+                }
                 className="bg-gray-100 px-3 py-1 text-gray-500   rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
               >
+                {" "}
+                <option value="">اختر مصممًا</option>
                 {designers.map((d) => (
                   <option key={d._id} value={d._id}>
                     {d.name}
@@ -860,12 +989,12 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
         initial={{ x: 100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="fixed right-2 top-1 mt-20 sm:right-4 sm:p-4 transform -translate-y-1/2 bg-white p-1 rounded-xl shadow-lg space-y-4 border border-gray-100 z-10"
+        className="fixed right-2 top-1 mt-20 sm:right-4  transform -translate-y-1/2 space-y-4  z-10"
       >
         {error && <Alert type="error" message={error} />}
         {success && <Alert type="success" message="تم رفع التصميم بنجاح" />}
 
-        <div className="flex flex-col items-center space-y-2 sm:space-y-2">
+        <div className="flex flex-col items-center space-y-2 sm:p-4 bg-white p-1 border border-gray-100 shadow-lg rounded-xl sm:space-y-2">
           <TooltipButton
             icon={<FiFileText size={20} />}
             onClick={() => document.getElementById("title-input")?.focus()}
@@ -909,7 +1038,8 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
             <input
               id="bg-color-picker"
               type="color"
-              value={bgColor}
+                value={formData.backgroundColor}
+
               onChange={(e) => {
                 setBgColor(e.target.value);
                 dispatch({
@@ -926,26 +1056,31 @@ export default function DesignForm({ onSuccess }: DesignFormProps) {
           </div>
 
           <TooltipButton
-            icon={
-              loading ? (
-                <FiLoader className="animate-spin" size={20} />
-              ) : (
-                <FiUpload size={20} />
-              )
-            }
-            onClick={handleSubmit}
-            tooltip={loading ? "جاري الرفع..." : "نشر التصميم"}
-            color="blue"
-            disabled={loading}
-          />
-
-          <TooltipButton
             icon={<FiRepeat size={20} />}
             onClick={resetForm}
             tooltip="إعادة تعيين"
             color="gray"
           />
         </div>
+        <Button
+          type="submit"
+          onClick={handleSubmit}
+          variant="primary"
+          className="flex items-center justify-center m-auto "
+        >
+          {loading ? (
+            <FiLoader className="animate-spin" size={20} />
+          ) : (
+            <FiUpload size={20} />
+          )}
+          <span className="sr-only">
+            {loading
+              ? "جاري الرفع..."
+              : initialData
+              ? "نشر التصميم"
+              : "حفظ التعديلات"}
+          </span>
+        </Button>
       </motion.form>
     </div>
   );

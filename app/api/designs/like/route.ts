@@ -1,6 +1,6 @@
 // app/api/designs/like/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { client } from '@/lib/sanity';
+import { client } from '@/sanity/design-cms/lib/client';
 
 export async function POST(req: NextRequest) {
   const { id } = await req.json();

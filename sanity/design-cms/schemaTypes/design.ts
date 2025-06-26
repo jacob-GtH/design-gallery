@@ -8,7 +8,7 @@ export default {
       name: 'title',
       title: 'Title',
       type: 'string',
-      validation: (Rule: { required: () => any }) => Rule.required()
+      validation: (Rule: {required: () => any}) => Rule.required(),
     },
     {
       name: 'slug',
@@ -16,17 +16,19 @@ export default {
       type: 'slug',
       options: {
         source: 'title',
-        maxLength: 96
+        maxLength: 96,
       },
-      validation: (Rule: { required: () => any }) => Rule.required()
+      validation: (Rule: {required: () => any}) => Rule.required(),
     },
     {
       name: 'designer',
       title: 'Designer',
       type: 'reference',
-      to: [{ type: 'designer' }],
-      validation: (Rule: { required: () => any }) => Rule.required()
+      to: [{type: 'designer'}],
+      validation: (Rule: {required: () => any}) => Rule.required(),
     },
+
+    // خاص بالصوره مع الخصائص المضافه اليها
     {
       name: 'media',
       title: 'Media Files',
@@ -39,7 +41,7 @@ export default {
               name: 'url',
               title: 'Media URL',
               type: 'url',
-              validation: (Rule: any) => Rule.required()
+              validation: (Rule: any) => Rule.required(),
             },
             {
               name: 'type',
@@ -47,66 +49,74 @@ export default {
               type: 'string',
               options: {
                 list: [
-                  { title: 'Image', value: 'image' },
-                  { title: 'Video', value: 'video' }
-                ]
+                  {title: 'Image', value: 'image'},
+                  {title: 'Video', value: 'video'},
+                ],
               },
-              validation: (Rule: any) => Rule.required()
+              validation: (Rule: any) => Rule.required(),
             },
             {
               name: 'caption',
               title: 'Caption',
-              type: 'string'
-            }
-          ]
-        }
+              type: 'string',
+            },
+          ],
+        },
       ],
-      validation: (Rule: any) => Rule.required()
+      validation: (Rule: any) => Rule.required(),
     },
+
     {
       name: 'categories',
       title: 'Categories',
       type: 'array',
-      of: [{ type: 'reference', to: [{ type: 'category' }] }]
+      of: [{type: 'reference', to: [{type: 'category'}]}],
     },
     {
       name: 'tags',
       title: 'Tags',
       type: 'array',
-      of: [{ type: 'reference', to: [{ type: 'tag' }] }]
+      of: [{type: 'reference', to: [{type: 'tag'}]}],
     },
     {
       name: 'description',
       title: 'Description',
       type: 'text',
-      rows: 4
+      rows: 4,
     },
     {
       name: 'likes',
       title: 'Likes',
       type: 'number',
-      initialValue: 0
+      initialValue: 0,
     },
+    {
+      name: 'backgroundColor',
+      title: 'backgroundColor',
+      type: 'string',
+      validation: (Rule: {required: () => any}) => Rule.required(),
+    },
+
     {
       name: 'publishedAt',
       title: 'Published At',
       type: 'datetime',
-      initialValue: (new Date()).toISOString()
-    }
+      initialValue: new Date().toISOString(),
+    },
   ],
   preview: {
     select: {
       title: 'title',
       designer: 'designer.name',
-      media: 'media'
+      media: 'media',
     },
     prepare(value: any) {
       const designer = value?.designer
       return {
         title: value.title,
         subtitle: designer ? `by ${designer}` : '',
-        media: Array.isArray(value.media) && value.media.length > 0 ? value.media[0].url : undefined
+        media: Array.isArray(value.media) && value.media.length > 0 ? value.media[0] : undefined,
       }
-    }
-  }
+    },
+  },
 }

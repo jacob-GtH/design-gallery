@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { client } from '../../../lib/sanity.client';
+import { client } from '@/sanity/design-cms/lib/client';
 
 export async function GET() {
   try {

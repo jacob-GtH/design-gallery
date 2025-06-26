@@ -10,4 +10,5 @@ export default {
       type: 'string',
     },
   ],
+  validation: (Rule: {required: () => any}) => Rule.required(),
 }
