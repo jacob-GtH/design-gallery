@@ -5,7 +5,7 @@ export type MediaType = "image" | "video";
 
 export type MediaItem = {
   id: string;
-  file?: File;
+  file: File;
   previewUrl: string;
   type: MediaType;
   caption: string;
@@ -14,6 +14,7 @@ export type MediaItem = {
   showEditor?: boolean;
   timeoutId?: number;
   uploadedUrl?: string;
+  
 };
 
 export type Designer = {
@@ -28,4 +29,7 @@ export type FormState = {
   tags: string[];
   backgroundColor: string;
   mediaItems: MediaItem[];
+  designers: Designer[];
+  currentTagInput: string;
+  error: string;
 };

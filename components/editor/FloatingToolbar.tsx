@@ -32,30 +32,23 @@ export const FloatingToolbar = ({
       <span key={i} className="ql-formats flex items-center">
         {group.map((item: any, j: number) => {
           if (typeof item === "string") {
-            return (
-              <button
-                key={j}
-                className={`ql-${item} p-1 hover:bg-gray-100 rounded`}
-                title={item.charAt(0).toUpperCase() + item.slice(1)}
-              />
-            );
           }
           if (item.header) {
             return (
-                <select
+              <select
                 key={j}
                 className="ql-header border rounded p-1 text-sm"
                 defaultValue=""
-                >
+              >
                 <option value="">Normal</option>
                 {(Array.isArray(item.header) ? item.header : []).map(
                   (level: number, k: number) => (
-                  <option key={k} value={level}>
-                    Heading {level}
-                  </option>
+                    <option key={k} value={level}>
+                      Heading {level}
+                    </option>
                   )
                 )}
-                </select>
+              </select>
             );
           }
           if (item.align) {
@@ -101,14 +94,14 @@ export const FloatingToolbar = ({
           const bounds = editor.getBounds(selection.index);
           const containerRect = editor.root.getBoundingClientRect();
 
-            if (!bounds) {
+          if (!bounds) {
             setIsVisible(false);
             return;
-            }
-            setPosition({
+          }
+          setPosition({
             top: bounds.top + containerRect.top - 50,
             left: bounds.left + containerRect.left,
-            });
+          });
           setIsVisible(true);
         } catch (error) {
           console.error("Error updating toolbar position:", error);
@@ -151,9 +144,12 @@ export const FloatingToolbar = ({
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.15 }}
           className="fixed z-[100] bg-white shadow-lg rounded-lg border border-gray-200 p-2"
-          style={{}}
+          style={{
+            top: `${position.top}px`,
+            left: `${position.left}px`,
+          }}
         >
-          <div className="ql-toolbar ql-snow flex flex-wrap gap-1">
+          <div className="ql-toolbar ql-snow  flex-wrap gap-1">
             {toolbarContent}
           </div>
         </motion.div>

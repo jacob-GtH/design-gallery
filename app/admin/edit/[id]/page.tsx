@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { IDesign } from "@/interfaces/Design";
 import DesignFormPage from "@/components/designform/DesignFormPage";
 import { toast } from "sonner";
-import { Edit } from "lucide-react";
 
 export default function EditPage() {
   const { id } = useParams(); // الحصول على 'id' من الرابط
@@ -14,7 +13,7 @@ export default function EditPage() {
   const [design, setDesign] = useState<IDesign | null>(null);
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
+  useEffect(() => {
     const fetchDesign = async () => {
       const res = await fetch(`/api/designs/${id}`);
       if (res.ok) {
@@ -33,11 +32,11 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-6 lg:px-40">
       <DesignFormPage
-      mode={Edit}
+        mode="edit"
         initialData={design}
         onSuccess={() => {
           toast("تم التحديث", { description: "تم تعديل التصميم بنجاح" });
-          router.push("/designs/${design.id}");
+          router.push(`/designs/${design.id}`);
         }}
       />
     </div>

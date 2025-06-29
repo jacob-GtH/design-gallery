@@ -17,7 +17,7 @@ type Props = {
   dispatch: React.Dispatch<any>;
   bgColor: string;
   setBgColor: (color: string) => void;
-  handleSubmit: () => void;
+  handleSubmit: (e: React.FormEvent) => Promise<void>;
   loading: boolean;
   error: string;
   success: boolean;
@@ -26,61 +26,61 @@ type Props = {
 };
 
 const Alert = ({
-    type,
-    message,
-  }: {
-    type: "error" | "success";
-    message: string;
-  }) => (
-    <div
-      className={`p-3 rounded-md ${
-        type === "error"
-          ? "bg-red-50 text-red-700 border-l-4 border-red-500"
-          : "bg-green-50 text-green-700 border-l-4 border-green-500"
-      }`}
-    >
-      {message}
-    </div>
-  );
+  type,
+  message,
+}: {
+  type: "error" | "success";
+  message: string;
+}) => (
+  <div
+    className={`p-3 rounded-md ${
+      type === "error"
+        ? "bg-red-50 text-red-700 border-l-4 border-red-500"
+        : "bg-green-50 text-green-700 border-l-4 border-green-500"
+    }`}
+  >
+    {message}
+  </div>
+);
 
 function TooltipButton({
-    icon,
-    onClick,
-    tooltip,
-    color,
-    disabled = false,
-  }: {
-    icon: React.ReactNode;
-    onClick: () => void;
-    tooltip: string;
-    color: "blue" | "purple" | "gray" | "green" | "red";
-    disabled?: boolean;
-  }) {
-    const colorClasses = {
-      blue: "bg-blue-50 text-blue-600 hover:bg-blue-100",
-      purple: "bg-purple-50 text-purple-600 hover:bg-purple-100",
-      gray: "bg-gray-50 text-gray-600 hover:bg-gray-100",
-      green: "bg-green-50 text-green-600 hover:bg-green-100",
-      red: "bg-red-300 text-red-600 hover:bg-red-400",
-    };
+  icon,
+  onClick,
+  tooltip,
+  color,
+  disabled = false,
+}: {
+  icon: React.ReactNode;
+  onClick: () => void;
+  tooltip: string;
+  color: "blue" | "purple" | "gray" | "green" | "red";
+  disabled?: boolean;
+}) {
+  const colorClasses = {
+    blue: "bg-blue-50 text-blue-600 hover:bg-blue-100",
+    purple: "bg-purple-50 text-purple-600 hover:bg-purple-100",
+    gray: "bg-gray-50 text-gray-600 hover:bg-gray-100",
+    green: "bg-green-50 text-green-600 hover:bg-green-100",
+    red: "bg-red-300 text-red-600 hover:bg-red-400",
+  };
 
-    return (
-      <div className="relative group">
-        <button
-          onClick={onClick}
-          disabled={disabled}
-          className={`p-3 rounded-full transition-colors ${
-            colorClasses[color]
-          } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
-        >
-          {icon}
-        </button>
-        <span className="absolute right-full mr-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-          {tooltip}
-        </span>
-      </div>
-    );
-  }
+  return (
+    <div className="relative group">
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className={`p-3 rounded-full transition-colors ${colorClasses[color]} ${
+          disabled ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+      >
+        {icon}
+      </button>
+      <span className="absolute right-full mr-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+        {tooltip}
+      </span>
+    </div>
+  );
+}
 
 export default function DesignFloatingToolbar({
   formData,
@@ -98,12 +98,11 @@ export default function DesignFloatingToolbar({
     <motion.form
       onSubmit={(e) => {
         e.preventDefault();
-        handleSubmit();
       }}
       initial={{ x: 100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ delay: 0.2 }}
-      className="fixed right-2 top-1 mt-20 sm:right-4 transform -translate-y-1/2 space-y-4 z-10"
+      className="fixed z-[100] right-2 top-1 mt-20 sm:right-4 transform -translate-y-1/2 space-y-4"
     >
       {error && <Alert type="error" message={error} />}
       {success && <Alert type="success" message="تم رفع التصميم بنجاح" />}
@@ -177,6 +176,7 @@ export default function DesignFloatingToolbar({
 
       <Button
         type="submit"
+        onClick={handleSubmit}
         variant="primary"
         className="flex items-center justify-center m-auto"
       >

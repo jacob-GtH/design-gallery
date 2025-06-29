@@ -112,9 +112,6 @@ function formReducer(
         error: "",
       };
 
-    default:
-      return state;
-
     case "REMOVE_MEDIA":
       return {
         ...state,
@@ -219,6 +216,9 @@ function formReducer(
         formData: action.data.formData,
         mediaItems: action.data.mediaItems,
       };
+
+    default:
+      return state;
   }
 }
 
@@ -1038,8 +1038,7 @@ export default function DesignForm({
             <input
               id="bg-color-picker"
               type="color"
-                value={formData.backgroundColor}
-
+              value={formData.backgroundColor}
               onChange={(e) => {
                 setBgColor(e.target.value);
                 dispatch({

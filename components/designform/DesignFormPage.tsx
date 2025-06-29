@@ -16,10 +16,10 @@ export default function DesignFormPage({
   onSuccess?: () => void;
 }) {
   return (
-    <div className="design-form-page">
+    <div className="design-form-page overflow-y-auto">
       <h1 className="text-2xl font-bold mb-4">
         {mode === "create"
-          ? "إضافة تصميم جديد"
+          ? ""
           : mode === "edit"
           ? "تعديل التصميم"
           : "عرض التصميم"}

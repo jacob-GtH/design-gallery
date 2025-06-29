@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { FloatingToolbar } from "../editor/FloatingToolbar"; // تأكد من المسار الصحيح
 import MediaItemPreview from "./subcomponents/MediaItemPreview";
 import EmptyDropZone from "./subcomponents/EmptyDropZone";
 // import { isDarkColor } from "@/lib/utils";
 import { Designer } from "./Types";
-
+import { useMemo } from "react";
 import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
+import { FloatingToolbar } from "../editor/FloatingToolbar";
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
 type Mode = "create" | "edit" | "view";
@@ -15,12 +16,12 @@ interface DesignEditorBodyProps {
   mode: Mode;
   bgColor: string;
   formData: any;
+  editorRef: any;
   handleInputChange: (e: React.ChangeEvent<any>) => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   mediaItems: any[];
   handleCaptionChange: (index: number, value: string) => void;
   dispatch: any;
-  editorRef: React.RefObject<ReactQuill | null>;
   toolbarFocused: boolean;
   designers: Designer[];
   handleRemoveTag: (i: number) => void;
@@ -30,12 +31,13 @@ interface DesignEditorBodyProps {
 const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
   mode,
   formData,
+  editorRef,
   handleInputChange,
   handleFileChange,
   mediaItems,
   handleCaptionChange,
   dispatch,
-  editorRef,
+  bgColor,
   toolbarFocused,
   designers,
   handleRemoveTag,
@@ -73,6 +75,14 @@ const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
     }
   };
 
+  function isDarkColor(hex: string) {
+    const r = parseInt(hex.substr(1, 2), 16);
+    const g = parseInt(hex.substr(3, 2), 16);
+    const b = parseInt(hex.substr(5, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness < 128; // أقل من 128 تعتبر داكنة
+  }
+
   const modules = useMemo(
     () => ({
       toolbar: [
@@ -85,7 +95,7 @@ const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
           { indent: "-1" },
           { indent: "+1" },
         ],
-        ["link", "image"],
+        [{ link: [] }],
         [{ color: [] }],
         ["clean"],
       ],
@@ -95,201 +105,170 @@ const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
     }),
     []
   );
-  
-  const [bgColor] = useState<string>(() => {
-    return localStorage.getItem("designFormBgColor") || "#f9fafb"; // اللون الافتراضي
-  });
-  useEffect(() => {
-    localStorage.setItem("designFormBgColor", bgColor);
-  }, [bgColor]);
-
-  function isDarkColor(hex: string) {
-    const r = parseInt(hex.substr(1, 2), 16);
-    const g = parseInt(hex.substr(3, 2), 16);
-    const b = parseInt(hex.substr(5, 2), 16);
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness < 128; // أقل من 128 تعتبر داكنة
-  }
 
   return (
-    <div
-      className="flex flex-col md:flex-row h-full pb-6 justify-center rounded-3xl"
-      style={{
-        backgroundColor: bgColor,
-        color: isDarkColor(bgColor) ? "white" : "black",
-      }}
-    >
-      <div>
-        <FloatingToolbar
-          editorRef={editorRef}
-          modules={modules}
-          activeIndex={0}
-          editorReady={true}
+    <div className="w-full md:w-3/4 p-6 overflow-y-auto mb-4 mt-4">
+      <div></div>
+      <div className="max-w-4xl mx-auto">
+        <input
+          id="title-input"
+          type="text"
+          name="title"
+          placeholder="اسم المشروع..."
+          value={formData.title}
+          onChange={handleInputChange}
+          className="w-full text-3xl font-bold p-2 mb-4 text-center border-none focus:outline-none bg-transparent"
+          required
+          readOnly={isReadOnly}
         />
-      </div>
 
-      <div className="w-full md:w-3/4 p-6 overflow-y-auto mt-16">
-        <div className="max-w-4xl mx-auto">
+        <textarea
+          id="description-input"
+          name="description"
+          placeholder="وصف المشروع..."
+          value={formData.description}
+          onChange={handleInputChange}
+          className="w-full p-2 mb-2 border-none text-center focus:outline-none bg-transparent min-h-[60px]"
+          readOnly={isReadOnly}
+        />
+
+        <div className="space-y-0">
           <input
-            id="title-input"
-            type="text"
-            name="title"
-            placeholder="اسم المشروع..."
-            value={formData.title}
-            onChange={handleInputChange}
-            className="w-full text-3xl font-bold p-2 mb-4 text-center border-none focus:outline-none bg-transparent"
-            required
-            readOnly={isReadOnly}
+            id="file-upload"
+            type="file"
+            accept="image/*,video/*"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+            disabled={isReadOnly}
           />
-
-          <textarea
-            id="description-input"
-            name="description"
-            placeholder="وصف المشروع..."
-            value={formData.description}
-            onChange={handleInputChange}
-            className="w-full p-2 mb-2 border-none text-center focus:outline-none bg-transparent min-h-[60px]"
-            readOnly={isReadOnly}
-          />
-
-          <div className="space-y-0">
-            <input
-              id="file-upload"
-              type="file"
-              accept="image/*,video/*"
-              multiple
-              onChange={handleFileChange}
-              className="hidden"
+          {mediaItems.length === 0 ? (
+            <EmptyDropZone
+              isDragging={isDragging}
+              handleDragOver={handleDragOver}
+              handleDragLeave={handleDragLeave}
+              handleDrop={handleDrop}
               disabled={isReadOnly}
             />
-            {mediaItems.length === 0 ? (
-              <EmptyDropZone
-                isDragging={isDragging}
-                handleDragOver={handleDragOver}
-                handleDragLeave={handleDragLeave}
-                handleDrop={handleDrop}
-                disabled={isReadOnly}
-              />
-            ) : (
-              <AnimatePresence>
-                {mediaItems.map((item, index) => (
-                  <motion.div
-                    key={item.previewUrl}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: 50 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <MediaItemPreview
-                      item={item}
-                      index={index}
-                      readonly={isReadOnly}
-                      dispatch={dispatch}
-                      removeMediaItem={(idx: number) => {
-                        dispatch({ type: "REMOVE_MEDIA_ITEM", index: idx });
-                      }}
-                    />
-                    <ReactQuill
-                      value={item.caption}
-                      onChange={(value) => handleCaptionChange(index, value)}
-                      readOnly={isReadOnly}
-                      onFocus={() => dispatch({ type: "SHOW_TOOLBAR", index })}
-                      onBlur={() =>
-                        setTimeout(() => {
-                          if (!toolbarFocused) {
-                            dispatch({ type: "HIDE_TOOLBAR", index });
-                          }
-                        }, 9000)
-                      }
-                      onChangeSelection={(range) => {
-                        if (range && range.length > 0) {
-                          dispatch({ type: "SHOW_TOOLBAR", index });
-                        }
-                      }}
-                      modules={{
-                        ...modules,
-                        toolbar: item.showToolbar ? modules.toolbar : false,
-                      }}
-                      theme="snow"
-                      className="border-none !important"
-                    />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            )}
-          </div>
-
-          <div className="mb-8">
-            <div className="flex flex-wrap gap-2 mb-2">
-              {formData.tags.map((tag: string, i: number) => (
-                <span
-                  key={i}
-                  className="bg-gray-100 px-3 py-1 mt-1 rounded-full text-sm flex items-center"
-                  style={{
-                    color: isDarkColor(bgColor) ? "black" : "black",
-                  }}
+          ) : (
+            <AnimatePresence>
+              {mediaItems.map((item, index) => (
+                <motion.div
+                  key={item.previewUrl}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: 50 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  #{tag}
-                  {!isReadOnly && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(i)}
-                      className="ml-1 hover:text-red-500"
-                    >
-                      &times;
-                    </button>
-                  )}
-                </span>
+                  <MediaItemPreview
+                    item={item}
+                    index={index}
+                    readonly={isReadOnly}
+                    dispatch={dispatch}
+                    removeMediaItem={(idx: number) => {
+                      dispatch({ type: "REMOVE_MEDIA", index: idx });
+                    }}
+                  />
+                  <ReactQuill
+                    value={item.caption}
+                    onChange={(value) => handleCaptionChange(index, value)}
+                    readOnly={isReadOnly}
+                    onFocus={() => dispatch({ type: "SHOW_TOOLBAR", index })}
+                    onBlur={() =>
+                      setTimeout(() => {
+                        if (!toolbarFocused) {
+                          dispatch({ type: "HIDE_TOOLBAR", index });
+                        }
+                      }, 9000)
+                    }
+                    onChangeSelection={(range) => {
+                      if (range && range.length > 0) {
+                        dispatch({ type: "SHOW_TOOLBAR", index });
+                      }
+                    }}
+                    modules={{
+                      ...modules,
+                      toolbar: item.showToolbar ? modules.toolbar : false,
+                    }}
+                    theme="snow"
+                    className="border-none !important"
+                  />
+                </motion.div>
               ))}
-            </div>
-            {!isReadOnly && (
-              <input
-                id="tag-input"
-                type="text"
-                name="currentTagInput"
-                placeholder="أضف علامة (اضغط Enter)"
-                value={formData.currentTagInput}
-                onChange={handleInputChange}
-                onKeyDown={handleAddTag}
-                className="bg-gray-100 px-3 py-1 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            )}
-          </div>
+            </AnimatePresence>
+          )}
+        </div>
 
-          <div className="mt-8 pt-4 border-t border-gray-200">
-            <div className="flex items-center space-x-4 mb-3">
-              <span className="text-gray-500">المصمم:</span>
-              <select
-                name="designerId"
-                value={formData.designerId}
-                onChange={(e) =>
-                  dispatch({
-                    type: "UPDATE_FIELD",
-                    field: "designerId",
-                    value: e.target.value,
-                  })
-                }
-                className="bg-gray-100 px-3 py-1 text-gray-500 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isReadOnly}
+        {/* <div className="mb-8">
+          <div className="flex flex-wrap gap-2 mb-2">
+            {formData.tags.map((tag: string, i: number) => (
+              <span
+                key={i}
+                className="bg-gray-100 px-3 py-1 mt-1 rounded-full text-sm flex items-center"
+                style={{
+                  color: isDarkColor(bgColor) ? "white" : "black",
+                }}
               >
-                <option value="">اختر مصممًا</option>
-                {designers.map((d) => (
-                  <option key={d._id} value={d._id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <p className="text-sm text-gray-500">
-              تاريخ الإنشاء:{" "}
-              {new Date().toLocaleDateString("ar-EG", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
+                #{typeof tag === "string" ? tag : tag.title}
+                {!isReadOnly && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTag(i)}
+                    className="ml-1 hover:text-red-500"
+                  >
+                    &times;
+                  </button>
+                )}
+              </span>
+            ))}
           </div>
+          {!isReadOnly && (
+            <input
+              id="tag-input"
+              type="text"
+              name="currentTagInput"
+              placeholder="أضف علامة (اضغط Enter)"
+              value={formData.currentTagInput}
+              onChange={handleInputChange}
+              onKeyDown={handleAddTag}
+              className="bg-gray-100 px-3 py-1 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          )}
+        </div> */}
+
+        <div className="mt-8 pt-4 border-t border-gray-200">
+          <div className="flex items-center space-x-4 mb-3">
+            <span className="text-gray-500">المصمم:</span>
+            <select
+              name="designerId"
+              value={formData.designerId}
+              onChange={(e) =>
+                dispatch({
+                  type: "UPDATE_FIELD",
+                  field: "designerId",
+                  value: e.target.value,
+                })
+              }
+              className="bg-gray-100 px-3 py-1 text-gray-500 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isReadOnly}
+            >
+              <option value="">اختر مصممًا</option>
+              {designers.map((d) => (
+                <option key={d._id} value={d._id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="text-sm text-gray-500">
+            تاريخ الإنشاء:{" "}
+            {new Date().toLocaleDateString("ar-EG", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
         </div>
       </div>
     </div>
@@ -297,10 +276,3 @@ const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
 };
 
 export default DesignEditorBody;
-function useMemo<T>(factory: () => T, deps: React.DependencyList): T {
-  return React.useMemo(factory, deps);
-}
-function useEffect(arg0: () => void, arg1: string[]) {
-  
-}
-
