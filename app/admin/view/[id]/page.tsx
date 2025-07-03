@@ -32,12 +32,8 @@ export default function EditPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-6 lg:px-40">
       <DesignFormPage
-        mode="edit"
+        mode="view"
         initialData={design}
-        onSuccess={() => {
-          toast("تم التحديث", { description: "تم تعديل التصميم بنجاح" });
-          router.push(`/admin/view/${design.id}`);
-        }}
         onClose={() => router.push("/admin")}
       />
     </div>

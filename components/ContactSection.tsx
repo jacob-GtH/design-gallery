@@ -4,7 +4,6 @@
 
 import { motion } from 'framer-motion'
 import { FiArrowLeft } from 'react-icons/fi'
-import Link from 'next/link'
 
 export default function ContactSection() {
     return (
@@ -17,10 +16,9 @@ export default function ContactSection() {
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 0.1 }}
                 transition={{ duration: 1 }}
-                className="absolute inset-0 bg-[url('/images/grid-pattern.svg')] bg-center"
+                className="absolute inset-0 bg-[url('/images/grid-pattern.svg')] bg-center "
                 aria-hidden="true"
             />
-
             <div className="container mx-auto px-4 text-center relative z-10">
                 <motion.div
                     initial={{ opacity: 0, y: 40 }}

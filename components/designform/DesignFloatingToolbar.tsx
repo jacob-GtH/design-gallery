@@ -23,6 +23,7 @@ type Props = {
   success: boolean;
   initialData?: any;
   resetForm: () => void;
+  mode?: "create" | "edit" | "view";
 };
 
 const Alert = ({
@@ -49,13 +50,13 @@ function TooltipButton({
   tooltip,
   color,
   disabled = false,
-}: {
+}: { 
   icon: React.ReactNode;
   onClick: () => void;
   tooltip: string;
   color: "blue" | "purple" | "gray" | "green" | "red";
   disabled?: boolean;
-}) {
+}) { 
   const colorClasses = {
     blue: "bg-blue-50 text-blue-600 hover:bg-blue-100",
     purple: "bg-purple-50 text-purple-600 hover:bg-purple-100",
@@ -92,8 +93,12 @@ export default function DesignFloatingToolbar({
   error,
   success,
   initialData,
+  mode,
   resetForm,
 }: Props) {
+  
+  if (mode === "view") return null;
+  
   return (
     <motion.form
       onSubmit={(e) => {

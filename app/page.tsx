@@ -56,7 +56,7 @@ export default function Home() {
           <ServicesSection />
           <CaseStudiesSection />
           <ContactSection />
-          <Footer />
+          {/* <Footer /> */}
         
       </Suspense>
     </main>

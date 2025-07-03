@@ -19,7 +19,7 @@ const EmptyDropZone = ({
   handleDrop,
 }: EmptyDropZoneProps) => (
   <div
-    className={`flex flex-col p-10 items-center justify-center h-full border-2 ${
+    className={`flex flex-col p-16 m-20 space-y-2 items-center justify-center h-full border-2 ${
       isDragging
         ? "border-blue-500 bg-blue-50"
         : "border-dashed border-gray-300"

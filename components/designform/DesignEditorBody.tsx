@@ -7,7 +7,6 @@ import { Designer } from "./Types";
 import { useMemo } from "react";
 import dynamic from "next/dynamic";
 import "react-quill-new/dist/quill.snow.css";
-import { FloatingToolbar } from "../editor/FloatingToolbar";
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
 type Mode = "create" | "edit" | "view";
@@ -75,18 +74,10 @@ const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
     }
   };
 
-  function isDarkColor(hex: string) {
-    const r = parseInt(hex.substr(1, 2), 16);
-    const g = parseInt(hex.substr(3, 2), 16);
-    const b = parseInt(hex.substr(5, 2), 16);
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness < 128; // أقل من 128 تعتبر داكنة
-  }
-
   const modules = useMemo(
     () => ({
       toolbar: [
-        [{ header: [1, 2] }],
+        [{ header: [1, 2, 3, 4] }],
         [{ header: false }],
         ["bold", "italic", "underline", "strike", "blockquote"],
         [
@@ -107,9 +98,9 @@ const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
   );
 
   return (
-    <div className="w-full md:w-3/4 p-6 overflow-y-auto mb-4 mt-4">
-      <div></div>
-      <div className="max-w-4xl mx-auto">
+    <div className="w-full md:w-full py-6 overflow-y-auto ">
+      
+      <div className="max-w-7xl mx-auto">
         <input
           id="title-input"
           type="text"
@@ -132,7 +123,7 @@ const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
           readOnly={isReadOnly}
         />
 
-        <div className="space-y-0">
+        <div className="space-y-0 ">
           <input
             id="file-upload"
             type="file"
@@ -191,7 +182,7 @@ const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
                       toolbar: item.showToolbar ? modules.toolbar : false,
                     }}
                     theme="snow"
-                    className="border-none !important"
+                    className="no-border-quill"
                   />
                 </motion.div>
               ))}
@@ -236,7 +227,7 @@ const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
           )}
         </div> */}
 
-        <div className="mt-8 pt-4 border-t border-gray-200">
+        <div className="mt-1 m-20 p-4 border-gray-200">
           <div className="flex items-center space-x-4 mb-3">
             <span className="text-gray-500">المصمم:</span>
             <select

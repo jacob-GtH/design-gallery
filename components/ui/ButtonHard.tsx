@@ -20,8 +20,8 @@ export default function FloatingAddButton({
       onMouseLeave={() => setIsHovered(false)}
       animate={
         isHovered
-          ? { scale: 2 } // عند التمرير لا يوجد نبض
-          : { scale: [1.5, 1.08, 1] } // نبضة فقط
+          ? { scale: 1.5 } // عند التمرير لا يوجد نبض
+          : { scale: [1, 1.18, 1] } // نبضة فقط
       }
       transition={{
         duration: 1,
@@ -30,7 +30,7 @@ export default function FloatingAddButton({
         ease: "easeInOut",
       }}
       whileTap={{ scale: 0.95 }}
-      className="fixed bottom-14 right-16 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors flex items-center gap-2 z-50"
+      className="fixed right-20 bottom-20 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:PlusCircle transition-colors items-center gap-2 z-50"
       
     >
       <PlusCircle size={24} />

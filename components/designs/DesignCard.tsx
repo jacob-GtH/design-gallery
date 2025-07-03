@@ -1,68 +1,52 @@
-//  // components/designs/DesignCard.tsx
 "use client";
 
-import { motion } from "framer-motion";
-import { IDesign } from "../../interfaces/Design";
+import { IDesign } from "@/interfaces/Design";
+import Image from "next/image";
 import Link from "next/link";
+import { FiUser, FiUserCheck, FiUserMinus, FiUsers } from "react-icons/fi";
 
-export default function DesignCard({ design }: { design: IDesign }) {
+export default function DesignCardOverlay({ design }: { design: IDesign }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.03 }}
-      className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100"
-    >
-      <Link href={`/designs/${design.id}`}>
-        <div className="relative h-64">
-          {design.mediaType === "image" ? (
-            <img
-              src={design.mediaUrl}
-              alt={design.title}
-              className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
-              loading="lazy"
-            />
-          ) : (
-            <video
-              src={design.mediaUrl}
-              className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
-              autoPlay
-              loop
-              muted
-            />
-          )}
-        </div>
+    <div className="relative h-[500px] rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-black">
+      {/* صورة التصميم */}
+      {Array.isArray(design.media) && design.media[0].type === "image" ? (
+        <Image
+          src={design.media[0].url}
+          alt={design.title}
+          fill
+          unoptimized
+          className="object-cover"
+        />
+      ) : (
+        <video
+          src={design.media[0]?.url}
+          muted
+          loop
+          playsInline
+          autoPlay
+          className="w-full h-full object-cover"
+        />
+      )}
 
-        <div className="p-5">
-          <h3 className="font-bold text-xl mb-2">{design.title}</h3>
-          {design.designer && (
-            <p className="text-gray-600 mb-3">بواسطة {design.designer}</p>
-          )}
+      {/* التفاصيل فوق الصورة */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6 flex flex-col justify-end">
+        <h3 className="text-white text-xl font-bold">{design.title}</h3>
+        <h3 className="text-gray-600/50 text-xl font-bold">
+          {design.description}
+        </h3>
 
-          <div className="flex flex-wrap gap-2 mb-4">
-            {Array.isArray(design.tags) &&
-              design.tags.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm"
-                >
-                  {tag}
-                </span>
-              ))}
-          </div>
+        {design.designer && (
+          <span className="flex items-center text-gray-300 text-sm gap-1">
+            <FiUser />
+            {typeof design.designer === "object" && design.designer !== null
+              ? design.designer.name
+              : "مصمم مجهول"}{" "}
+          </span>
+        )}
+      </div>
 
-          <div className="flex items-center justify-between">
-            <span className="text-gray-500 text-sm">
-              {design.publishedAt &&
-                new Date(design.publishedAt).toLocaleDateString("ar-SA")}
-            </span>
-            <div className="flex items-center gap-1">
-              <span className="text-gray-800">❤️</span>
-              <span>{design.likes}</span>
-            </div>
-          </div>
-        </div>
-      </Link>
-    </motion.div>
+      {/* رابط للعرض الكامل */}
+      <Link href={`/designs/${design.id}`} className="absolute inset-0" />
+    </div>
   );
 }

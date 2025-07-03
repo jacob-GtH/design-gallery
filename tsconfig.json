@@ -29,7 +29,9 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx",
-    "app/admin/page.tsx"
+    "app/admin/page.tsx",
+    "app/api/designs/[slug]/page.sx",
+    "sanity/design-cms/lib/sanity.client.tes"
   ],
   "exclude": ["node_modules"],
 

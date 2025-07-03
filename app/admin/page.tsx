@@ -7,40 +7,39 @@ import { Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { IDesign } from "@/interfaces/Design";
 import { motion } from "framer-motion";
-import { PlusCircle } from "lucide-react";
 import { toast } from "sonner";
 import DesignFormPage from "@/components/designform/DesignFormPage";
 import FloatingAddButton from "@/components/ui/ButtonHard";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 export default function HomePage() {
   const [designs, setDesigns] = useState<IDesign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const confirmDelete = async () => {
-  if (!deleteTargetId) return;
+    if (!deleteTargetId) return;
 
-  try {
-    const res = await fetch(`/api/designs/${deleteTargetId}`, {
-      method: "DELETE",
-    });
+    try {
+      const res = await fetch(`/api/designs/${deleteTargetId}`, {
+        method: "DELETE",
+      });
 
-    if (!res.ok) throw new Error("فشل في الحذف");
+      if (!res.ok) throw new Error("فشل في الحذف");
 
-    toast("تم الحذف", { description: "تم حذف التصميم بنجاح" });
+      toast("تم الحذف", { description: "تم حذف التصميم بنجاح" });
 
-    setDesigns((prev) =>
-      prev.filter((design) => design.id !== deleteTargetId)
-    );
-    setDeleteTargetId(null);
-  } catch (err) {
-    toast("خطأ", { description: "حدث خطأ أثناء الحذف" });
-  }
-};
-
+      setDesigns((prev) =>
+        prev.filter((design) => design.id !== deleteTargetId)
+      );
+    } catch (err) {
+      toast("خطأ", { description: "حدث خطأ أثناء الحذف" });
+    } finally {
+      setDeleteTargetId(null);
+    }
+  };
 
   const fetchDesigns = async () => {
     try {
@@ -161,65 +160,32 @@ export default function HomePage() {
       )}
 
       {showForm && (
-        <div className="fixed inset-0 h-full bg-black bg-opacity-50 justify-center lg:px-56 sm:px-24 py-3 z-50">
-          <div className="bg-white h-full rounded-xl shadow-lg p-6">
-            <div className="bg-white h-full overflow-y-auto ">
-              <div className="fixed right-8 top-5 justify-end items-center p-4">
-                <button
-                  onClick={() => setShowForm(false)}
-                  className="text-white hover:text-red-500 text-2xl font-bold"
-                  title="إغلاق"
-                >
-                  ✕
-                </button>
-              </div>
-              <DesignFormPage
-                mode="create"
-                onSuccess={async () => {
-                  await fetchDesigns();
-                  setShowForm(false);
-                  toast("نجاح", {
-                    description: "تم إضافة التصميم بنجاح",
-                  });
-                }}
-              />
-            </div>
-          </div>
-        </div>
+        <DesignFormPage
+          mode="create"
+          onSuccess={async () => {
+            await fetchDesigns();
+            setShowForm(false);
+            toast("نجاح", {
+              description: "تم إضافة التصميم بنجاح",
+            });
+          }}
+          onClose={() => setShowForm(false)} // 👈 تمرير الزر للإغلاق
+        />
       )}
 
       {/* زر الإضافة العائم */}
 
       <FloatingAddButton onClick={() => setShowForm(true)} />
 
-        {deleteTargetId && (
-  <div className="fixed inset-0 z-[100] bg-black bg-opacity-50 flex items-center justify-center">
-    <motion.div
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      exit={{ scale: 0.8, opacity: 0 }}
-      className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full text-center space-y-4"
-    >
-      <h3 className="text-lg font-semibold text-gray-800">تأكيد الحذف</h3>
-      <p className="text-gray-600">هل أنت متأكد من حذف هذا التصميم؟ لا يمكن التراجع عن هذا الإجراء.</p>
-      <div className="flex justify-center gap-4 mt-4">
-        <button
-          onClick={() => setDeleteTargetId(null)}
-          className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300"
-        >
-          إلغاء
-        </button>
-        <button
-          onClick={confirmDelete}
-          className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
-        >
-          حذف
-        </button>
-      </div>
-    </motion.div>
-  </div>
-)}
-
+      <ConfirmModal
+        isOpen={!!deleteTargetId}
+        title="هل أنت متأكد؟"
+        description="سيتم حذف هذا التصميم نهائياً."
+        confirmText="نعم، احذف"
+        cancelText="إلغاء"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTargetId(null)}
+      />
     </main>
   );
 }

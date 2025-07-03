@@ -1,9 +1,6 @@
 // components/DesignForm/DesignFormCore.tsx
 "use client";
 import { fetchDesigners } from "./designerService";
-import { FloatingToolbar } from "../editor/FloatingToolbar";
-import { TagInput } from "./subcomponents/TagInput";
-import { MediaItemComponent } from "./subcomponents/MediaItem";
 import React, { useEffect, useReducer, useRef, useState } from "react";
 import { IDesign } from "@/interfaces/Design";
 import { DesignFormViewMode, Designer, MediaItem, FormState } from "./Types";
@@ -11,11 +8,9 @@ import DesignFloatingToolbar from "./DesignFloatingToolbar";
 import DesignEditorBody from "./DesignEditorBody";
 import ReactQuill from "react-quill-new";
 import { motion, number } from "framer-motion";
-import { useMemo } from "react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 
-import { format } from "node:path";
 
 // Define the Designer type if not already imported
 
@@ -298,11 +293,7 @@ export default function DesignFormCore({
     }
   }
 
-  function setBgColor(color: string): void {
-    if (mode === "view" && "edit") return;
-    setBgColorState(color);
-    dispatch({ type: "SET_FIELD", field: "backgroundColor", value: color });
-  }
+
 
   // ============ رفع الملفات ============
   const uploadMediaItems = async () => {
@@ -489,12 +480,25 @@ export default function DesignFormCore({
     handleChange(name as keyof Omit<FormState, "mediaItems">, value);
   };
 
-  const [bgColor, setBgColorState] = useState<string>(() => {
-    return localStorage.getItem("designFormBgColor") || "#f9fafb"; // اللون الافتراضي
-  });
-  useEffect(() => {
-    localStorage.setItem("designFormBgColor", bgColor);
-  }, [bgColor]);
+const [bgColor, setBgColor] = useState("#f9fafb");
+
+useEffect(() => {
+  const local = localStorage.getItem("backgroundColor");
+  if (initialData?.backgroundColor) {
+    setBgColor(initialData.backgroundColor);
+    dispatch({ type: "SET_FIELD", field: "backgroundColor", value: initialData.backgroundColor });
+  } else if (local) {
+    setBgColor(local);
+    dispatch({ type: "SET_FIELD", field: "backgroundColor", value: local });
+  }
+}, [initialData]);
+
+// function handleBgChange(color: string) {
+//   setBgColor(color);
+//   localStorage.setItem("backgroundColor", color);
+//   dispatch({ type: "SET_FIELD", field: "backgroundColor", value: color });
+// }
+
 
   function isDarkColor(hex: string) {
     const r = parseInt(hex.substr(1, 2), 16);
@@ -506,10 +510,10 @@ export default function DesignFormCore({
 
   return (
     <motion.div
-      className="flex flex-col md:flex-row h-full pb-0 mb-10 justify-center rounded-3xl"
+      className="flex flex-col  md:flex-row h-full justify-center"
       style={{
-        backgroundColor: backgroundColor,
-        color: isDarkColor(backgroundColor) ? "white" : "black",
+        backgroundColor: bgColor ,
+        color: isDarkColor(bgColor) ? "white" : "black",
       }}
     >
       <DesignEditorBody
@@ -539,6 +543,7 @@ export default function DesignFormCore({
         success={success}
         initialData={initialData}
         resetForm={resetForm}
+        mode={mode}
       />
     </motion.div>
   );
