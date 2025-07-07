@@ -13,6 +13,8 @@ export interface IDesign {
     type: "image" | "video";
     caption?: string;
   }[];
+  rating?: number;
+  viewsCount?: number
 }
 
 export interface IDesignSanityRaw {
