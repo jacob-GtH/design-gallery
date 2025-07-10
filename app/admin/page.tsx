@@ -8,8 +8,8 @@ import Image from "next/image";
 import { IDesign } from "@/interfaces/Design";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import DesignFormPage from "@/components/designform/DesignFormPage";
-import FloatingAddButton from "@/components/ui/ButtonHard";
+import DesignFormPage from "@/components/admin/DesignFormPage";
+import FloatingAddButton from "@/components/ui/ButtonHart";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 
 export default function HomePage() {

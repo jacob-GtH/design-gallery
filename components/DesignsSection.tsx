@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import DesignCard from "./designs/DesignCard";
-import { IDesign } from "../interfaces/Design";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 
 interface DesignsSectionProps {
-  designs: IDesign[];
+  designs: any[];
+  
 }
 
 export default function DesignsSection({ designs }: DesignsSectionProps) {

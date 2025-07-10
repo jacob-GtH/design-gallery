@@ -11,18 +11,12 @@ import DesignsSection from "../components/DesignsSection";
 import Footer from "./footer/page";
 import LoadingSpinner from "../components/loadingSpinner";
 import ErrorMessage from "@/components/ErrorMessage";
-
-interface Design {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-}
+import { IDesign } from "@/interfaces/Design";
 
 export default function Home() {
   const [splashDone, setSplashDone] = useState(false);
   const [startAnimation, setStartAnimation] = useState(false);
-  const [designs, setDesigns] = useState<Design[]>([]);
+  const [designs, setDesigns] = useState<IDesign[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,9 +69,9 @@ export default function Home() {
           {!splashDone && (
             <motion.div
               key="splash-screen"
-              initial={{ y: 0 }}
+              initial={{ y: '0%' }}
               exit={{ y: "-100%" }}
-              transition={{ delay: 1, duration: 4.9, ease: [0.76, 0, 0.24, 1] }}
+              transition={{ delay: 0.3, duration: 1.2, ease: [0.76, 0, 0.24, 1] }}
               className="fixed inset-0 z-[9999]"
             >
               <SplashScreen onComplete={handleSplashComplete} />
@@ -90,7 +84,7 @@ export default function Home() {
               key="main-content"
               initial={{ y: "100%" }}
               animate={{ y: '0%' }}
-              transition={{ delay: 0.7, duration: 3.2, ease: [0.76, 0, 0.24, 1] }}
+              transition={{  duration: 1.2, ease: [0.76, 0, 0.24, 1] }}
               className="relative z-10 bg-gray-900"
             >
               <HeroSection animateStart={startAnimation} />

@@ -34,13 +34,13 @@ export default function FloatingDock() {
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50"
+          className="fixed bottom-1.5 md:bottom-4 left-1/2 mix-blend-difference -translate-x-1/2 z-50"
           initial={{ opacity: 0, scale: 0.8, y: 100 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 100 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         >
-          <div className="flex flex-row gap-6 items-center -translate-x-1/2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-3 px-4 shadow-2xl shadow-black/20 hover:bg-white/15 transition-all duration-300">
+          <div className="flex flex-row gap-2 md:gap-6 items-center -translate-x-1/2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-1.5 md:p-3 px-2 md:px-4 shadow-2xl shadow-black/20 hover:bg-white/15 transition-all duration-300">
             {apps.map((app, index) => (
               <motion.button
                 key={index}
@@ -48,7 +48,7 @@ export default function FloatingDock() {
                   app.action?.();
                   setActiveApp(index);
                 }}
-                className={`relative p-4 bg-white/5 hover:bg-white/20 rounded-2xl transition-all duration-300 text-white shadow-lg hover:shadow-xl`}
+                className={`relative p-3 md:p-4 bg-white/5 hover:bg-white/20 rounded-2xl transition-all duration-300 text-white shadow-lg hover:shadow-xl`}
                 onMouseEnter={() => setHovered(index)}
                 onMouseLeave={() => setHovered(null)}
                 animate={{

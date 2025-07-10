@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { IDesign } from "@/interfaces/Design";
-import DesignFormPage from "@/components/designform/DesignFormPage";
+import DesignFormPage from "@/components/admin/DesignFormPage";
 import { toast } from "sonner";
 
 export default function EditPage() {
@@ -26,7 +26,7 @@ export default function EditPage() {
     if (id) fetchDesign();
   }, [id]);
 
-   if (loading) return loading
+  if (loading) return loading;
   if (!design) return <p className="p-4 text-red-500">تعذر تحميل التصميم</p>;
 
   return (

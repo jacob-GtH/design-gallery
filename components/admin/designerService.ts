@@ -1,6 +1,6 @@
 // services/designerService.ts
 
-import { Designer } from "@/components/designform/Types";
+import { Designer } from "@/components/admin/Types";
 
 export async function fetchDesigners(): Promise<Designer[]> {
   const res = await fetch("/api/designers");

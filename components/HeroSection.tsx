@@ -7,7 +7,7 @@ export default function HeroSection({ animateStart }: { animateStart: boolean })
       className="relative h-screen text-white overflow-hidden"
       initial={{ y: "100%" }}
       animate={animateStart ? { y: 0 } : {}} // يبدأ فقط إذا وصلت الإشارة من splash
-      transition={{ duration: 3.2, ease: [0.76, 0, 0.24, 1] }}
+      transition={{ duration: 1.2, ease: [0.76, 0, 0.24, 1] }}
     >
       <motion.div
         className="absolute inset-0 z-0"

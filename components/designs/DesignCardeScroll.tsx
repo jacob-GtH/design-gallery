@@ -66,9 +66,9 @@ export default function DesignFooterMotion({ relatedDesigns }: { relatedDesigns:
       animate={controls}
       initial={{ y: 100, opacity: 0 }}
       transition={{ duration: 0.5, ease: "easeInOut" }}
-      className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/90 to-transparent px-4 py-6"
+      className="fixed bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/90 to-transparent px-4 py-6"
     >
-      <h2 className="text-white text-lg font-semibold mb-2">تصاميم أخرى لنفس المصمم</h2>
+      <h2 className="text-white/50 text-lg font-semibold ml-2 mb-2">Other Designs</h2>
       <div
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide"
@@ -99,7 +99,7 @@ export default function DesignFooterMotion({ relatedDesigns }: { relatedDesigns:
                 />
               )}
             </div>
-            <p className="mt-2 text-sm text-white truncate">{related.title}</p>
+            <p className="mt-2 ml-2 text-sm text-white truncate">{related.title}</p>
           </Link>
         ))}
       </div>

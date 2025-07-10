@@ -67,11 +67,14 @@ export const defaultApps: App[] = [
     name: "الشبكة",
     icon: <FiGrid size={24} />,
     color: "#EC4899",
+    action: () => (window.location.href = "/designs"),
   },
   {
     name: "البريد",
     icon: <FiMail size={24} />,
     color: "#F97316",
     badge: 3,
+    isActive: false,
+    action: () => (window.location.href = "/contact"),
   },
 ];

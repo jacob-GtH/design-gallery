@@ -29,7 +29,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           key={"splash-screen"}
           initial={{ y: 0 }}
           exit={{ y: "-100%" }}
-          transition={{ delay: 1, duration: 4.3, ease: [0.76, 0, 0.24, 1] }}
+          transition={{ delay: 0.3, duration: 1.2, ease: [0.76, 0, 0.24, 1] }}
           className="fixed inset-0 z-[9999] bg-gray-900 flex flex-col items-center justify-center backdrop-blur-sm"
         >
           {/* الشعار */}

@@ -4,8 +4,9 @@ export type DesignFormViewMode = "create" | "edit" | "view";
 export type MediaType = "image" | "video";
 
 export type MediaItem = {
+  _key: string;
   id: string;
-  file: File;
+  file: File | null; // File object or null if not uploaded
   previewUrl: string;
   type: MediaType;
   caption: string;
@@ -25,11 +26,12 @@ export type Designer = {
 export type FormState = {
   title: string;
   description: string;
-  designerId: string;
+  designerId: string | { _id: string; name: string };
   tags: string[];
   backgroundColor: string;
   mediaItems: MediaItem[];
   designers: Designer[];
   currentTagInput: string;
   error: string;
+  loading: boolean;
 };

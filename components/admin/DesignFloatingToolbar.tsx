@@ -50,13 +50,13 @@ function TooltipButton({
   tooltip,
   color,
   disabled = false,
-}: { 
+}: {
   icon: React.ReactNode;
   onClick: () => void;
   tooltip: string;
   color: "blue" | "purple" | "gray" | "green" | "red";
   disabled?: boolean;
-}) { 
+}) {
   const colorClasses = {
     blue: "bg-blue-50 text-blue-600 hover:bg-blue-100",
     purple: "bg-purple-50 text-purple-600 hover:bg-purple-100",
@@ -96,9 +96,8 @@ export default function DesignFloatingToolbar({
   mode,
   resetForm,
 }: Props) {
-  
   if (mode === "view") return null;
-  
+
   return (
     <motion.form
       onSubmit={(e) => {
@@ -137,7 +136,7 @@ export default function DesignFloatingToolbar({
         <TooltipButton
           icon={<FiTag size={20} />}
           onClick={() => document.getElementById("tag-input")?.focus()}
-          tooltip="إضافة علامة"
+          tooltip="إضافة علامة (قيد التطوير)"
           color="green"
         />
 

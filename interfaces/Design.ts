@@ -3,7 +3,7 @@ export interface IDesign {
   id: string;
   title: string;
   description?: string;
-  background: string;
+  backgroundColor: string;
   publishedAt?: string;
   likes?: number;
   designer: { _id: string; name: string } | string;

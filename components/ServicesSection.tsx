@@ -51,7 +51,7 @@ export default function ServicesSection() {
     }
 
     const getButtonClasses = (index) => {
-        const baseClasses = 'transition-all duration-300 cursor-pointer  text-left min-w-max md:min-w-0 flex items-center space-x-3 px-4 py-4 ml-8 rounded-lg transform hover:scale-105'
+        const baseClasses = 'transition-all duration-300 cursor-pointer  text-left min-w-max md:min-w-0 flex items-center  py-3 2xl:py-4 ml-8 rounded-lg transform hover:scale-105'
         
         if (index === activeIndex) {
             return `${baseClasses}  text-gray-500 `
@@ -73,10 +73,10 @@ export default function ServicesSection() {
             id="services"
             className="min-h-screen w-full flex items-center px-6 md:px-16 py-20 overflow-hidden"
         >
-            <div className="flex flex-col md:flex-row w-full h-full max-w-8xl mx-auto gap-8 md:gap-16">
+            <div className="flex flex-col md:flex-row w-full h-full max-w-8xl mx-auto  md:gap-16">
 
                 {/* Sidebar Titles */}
-                <div className="w-full md:w-1/3 flex flex-row md:flex-col justify-start md:justify-center gap-4 md:gap-4 overflow-x-auto pb-4 md:pb-0">
+                <div className="w-full md:w-1/3 flex flex-row md:flex-col justify-start md:justify-center gap-1 md:gap-4 overflow-x-auto pb-4 md:pb-0">
                     {services.map((service, index) => (
                         <button
                             key={service.id}
@@ -86,7 +86,7 @@ export default function ServicesSection() {
                         >
                             <div className="flex flex-row">
                                 <span className="text-3xl  mx-2 my-1 opacity-60">0{index + 1}</span>
-                                <span className="text-5xl">{service.title}</span>
+                                <span className="text-3xl lg:text-4xl 2xl:text-5xl">{service.title}</span>
                             </div>
                         </button>
                     ))}
@@ -114,7 +114,7 @@ export default function ServicesSection() {
                             ))}
                         </div>
 
-                        <p className="text-lg text-gray-700 leading-relaxed mb-8">
+                        <p className="text-lg  leading-relaxed mb-8">
                             {services[activeIndex].content}
                         </p>
 
