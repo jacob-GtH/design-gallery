@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 
 export default function SectionCaseStudies() {
-  const [visibleItems, setVisibleItems] = useState(new Set());
+  const [visibleItems, setVisibleItems] = useState<Set<string>>(new Set());
 
   const caseStudies = [
     {
@@ -46,17 +46,24 @@ export default function SectionCaseStudies() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const id = entry.target.getAttribute("data-id");
+          const id = entry.target.getAttribute("data-id");
+
+          if (entry.isIntersecting && id) {
             setVisibleItems((prev) => {
               const newSet = new Set(prev);
-              newSet.add(id);
+              newSet.add(id); // عند الدخول
+              return newSet;
+            });
+          } else if (!entry.isIntersecting && id) {
+            setVisibleItems((prev) => {
+              const newSet = new Set(prev);
+              newSet.delete(id); // عند الخروج من الشاشة نحذف العنصر
               return newSet;
             });
           }
         });
       },
-      { threshold: 0.3 }
+      { threshold: 0.5 } // 50% من العنصر ظاهر
     );
 
     const elements = document.querySelectorAll("[data-case-study]");
@@ -64,50 +71,6 @@ export default function SectionCaseStudies() {
 
     return () => observer.disconnect();
   }, []);
-
-  function TypeWriter({
-    text = "",
-    speed = 50,
-    delay = 0,
-    className = "",
-    tag = "p",
-  }: {
-    text?: string;
-    speed?: number;
-    delay?: number;
-    className?: string;
-    tag?: React.ElementType;
-  }) {
-    const [displayedText, setDisplayedText] = useState("");
-    const [started, setStarted] = useState(false);
-
-    useEffect(() => {
-      const startTimer = setTimeout(() => {
-        setStarted(true);
-      }, delay);
-
-      return () => clearTimeout(startTimer);
-    }, [delay]);
-
-    useEffect(() => {
-      if (!started) return;
-
-      let index = 0;
-      const interval = setInterval(() => {
-        if (index < text.length) {
-          setDisplayedText(text.substring(0, index + 1));
-          index++;
-        } else {
-          clearInterval(interval);
-        }
-      }, speed);
-
-      return () => clearInterval(interval);
-    }, [started, text, speed]);
-
-    const Tag = tag as React.ElementType;
-    return <Tag className={className}>{displayedText}</Tag>;
-  }
 
   return (
     <section
@@ -133,6 +96,7 @@ export default function SectionCaseStudies() {
             key={study.id}
             initial={{ opacity: 0, y: 100 }}
             whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.5 }}
             transition={{
               duration: 1,
               delay: index * 0.1,
@@ -145,76 +109,59 @@ export default function SectionCaseStudies() {
             } items-center mb-10 gap-16`}
           >
             {/* الصورة */}
-            <div
-              className={`relative w-full  md:w-2/3 h-[450px] md:h-[700px] lg:h-[900px] rounded-xl overflow-hidden shadow-lg transition-all duration-700 ${
-                visibleItems.has(study.id.toString())
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-10"
-              }`}
+            <motion.div
+              className="relative w-full md:w-2/3 h-[450px] md:h-[700px] lg:h-[900px] rounded-xl overflow-hidden shadow-lg"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1 }}
+              viewport={{ once: false, amount: 0.5 }}
             >
               <img
                 src={study.imageUrl}
                 alt={`دراسة حالة - ${study.title}`}
                 className="w-full h-full object-cover"
               />
-            </div>
+            </motion.div>
 
-            {/* النص */}
-            <div className="w-full md:w-1/2 flex flex-col justify-center text-right">
-              {visibleItems.has(study.id.toString()) && (
-                <>
-                  <TypeWriter
-                    text={study.title}
-                    speed={50}
-                    delay={500}
-                    tag="h3"
-                    className="text-3xl md:text-3xl font-bold text-gray-400 mb-4"
-                  />
+            {/* النصوص */}
+            <div className="w-full md:w-1/2 flex flex-col justify-center text-right space-y-4">
+              <motion.h3
+                className="text-3xl font-bold text-gray-400"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.9, duration: 0.8 }}
+                viewport={{ once: false, amount: 0.5 }}
+              >
+                {study.title}
+              </motion.h3>
 
-                  <TypeWriter
-                    text={study.description}
-                    speed={30}
-                    delay={2000}
-                    className="text-gray-500 mb-6 text-2xl leading-relaxed"
-                  />
+              <motion.p
+                className="text-gray-500 text-2xl leading-relaxed"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.5, duration: 0.8 }}
+                viewport={{ once: false, amount: 0.5 }}
+              >
+                {study.description}
+              </motion.p>
 
-                  <div className="text-gray-500 text-lg space-y-2 mb-6">
-                    {study.results.map((result, i) => (
-                      <TypeWriter
-                        key={i}
-                        text={`✓ ${result}`}
-                        speed={40}
-                        delay={3500 + i * 800}
-                        className="block"
-                      />
-                    ))}
-                  </div>
-
-                  {/* <div
-                  className={`transition-all duration-500 ${
-                    visibleItems.has(study.id.toString())
-                      ? "opacity-100"
-                      : "opacity-0"
-                  }`}
-                  style={{
-                    transitionDelay: `${
-                      3500 + study.results.length * 800 + 500
-                    }ms`,
-                  }}
-                >
-                  <motion.button
+              {/* النتائج */}
+              <div className="text-gray-500 text-lg space-y-2">
+                {study.results.map((result, i) => (
+                  <motion.div
+                    key={i}
                     initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     transition={{
-                      delay: (3500 + study.results.length * 800 + 500) / 1000,
+                      delay: 2 + i * 0.7,
+                      duration: 0.6,
                     }}
-                    className="text-white bg-black px-5 py-2 rounded-md w-max hover:bg-gray-800 transition-colors"
+                    viewport={{ once: false, amount: 0.5 }}
                   >
-                    عرض التفاصيل
-                  </motion.button>
-                </div> */}
-                </>
-              )}
+                    ✓ {result}
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </motion.div>
         );
