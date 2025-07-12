@@ -1,17 +1,9 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { FiFileText, FiTrash, FiTrash2 } from "react-icons/fi";
-import { MediaItem } from "../Types"; // تأكد من وجود هذا النوع
+import { FiFileText, FiTrash2 } from "react-icons/fi";
+import { Props } from "../Types"; // تأكد من وجود هذا النوع
 //import ProgressBar from './ProgressBar'; // مسار مكون ProgressBar إن وُجد
-
-type Props = {
-  item: MediaItem;
-  index: number;
-  readonly: boolean;
-  dispatch: React.Dispatch<any>;
-  removeMediaItem: (index: number) => void;
-};
 
 const MediaItemPreview = ({
   item,

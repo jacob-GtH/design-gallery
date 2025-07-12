@@ -17,11 +17,13 @@ import {
 interface DesignCardProps {
   design: IDesign;
   priority?: boolean;
+  
 }
 
 export default function DesignCard({
-  design,
+  design, 
   priority = false,
+
 }: DesignCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -69,13 +71,12 @@ export default function DesignCard({
 
   return (
     <motion.div
-      className="relative group cursor-pointer"
+      className="relative pl-4 group cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      whileHover={{ scale: 1.02 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="relative h-[400px] md:h-[500px] rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-gray-900">
+      <div className="relative h-[300px] md:h-[500px] 2xl:h-[600px] rounded-xl overflow-hidden shadow-lg  border-gray-800 bg-gray-900">
         {/* محتوى الميديا */}
         {!hasMedia ? (
           // حالة عدم وجود ميديا
@@ -108,7 +109,7 @@ export default function DesignCard({
                 src={firstMedia.url}
                 alt={design.title || "تصميم"}
                 fill
-                className={`object-cover transition-all duration-500 ${
+                className={`object-cover w-full h-full transition-all duration-500 ${
                   imageLoaded ? "opacity-100" : "opacity-0"
                 } ${isHovered ? "scale-105" : "scale-100"}`}
                 onLoad={() => setImageLoaded(true)}

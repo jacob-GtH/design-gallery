@@ -1,13 +1,7 @@
 // components/DesignForm/subcomponents/TagInput.tsx
 
 import React, { useState } from "react";
-
-type TagInputProps = {
-  tags: string[];
-  onAdd: (tag: string) => void;
-  onRemove: (index: number) => void;
-  disabled?: boolean;
-};
+import { TagInputProps } from "../Types"
 
 export function TagInput({ tags, onAdd, onRemove, disabled }: TagInputProps) {
   const [input, setInput] = useState("");

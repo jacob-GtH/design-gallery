@@ -16,7 +16,6 @@ export default function DesignsSection({ designs }: DesignsSectionProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // التحقق من وجود designs
   if (!designs || designs.length === 0) {
     return (
       <section className="relative h-screen py-24 bg-gradient-to-tr from-purple-900/40 to-black">
@@ -27,29 +26,26 @@ export default function DesignsSection({ designs }: DesignsSectionProps) {
     );
   }
 
-  // إنشاء التكرار الثلاثي بشكل آمن
   const infiniteDesigns = [...designs, ...designs, ...designs];
 
-  // دالة بدء التحريك التلقائي
   const startAutoScroll = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
-    
+
     intervalRef.current = setInterval(() => {
       const container = scrollRef.current;
       if (!container) return;
 
       const cardWidth = container.children[0]?.clientWidth || 0;
-      const gap = 40; // 10 * 4 = 40px
+      const gap = 40;
       const scrollAmount = cardWidth + gap;
 
-      container.scrollBy({ 
-        left: scrollAmount, 
-        behavior: "smooth" 
+      container.scrollBy({
+        left: scrollAmount,
+        behavior: "smooth",
       });
     }, 3000);
   }, []);
 
-  // دالة إيقاف التحريك
   const stopAutoScroll = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -57,8 +53,7 @@ export default function DesignsSection({ designs }: DesignsSectionProps) {
     }
   }, []);
 
-  // دالة التحريك اليدوي
-  const scrollToDesign = useCallback((direction: 'prev' | 'next') => {
+  const scrollToDesign = useCallback((direction: "prev" | "next") => {
     const container = scrollRef.current;
     if (!container) return;
 
@@ -67,14 +62,13 @@ export default function DesignsSection({ designs }: DesignsSectionProps) {
     const scrollAmount = cardWidth + gap;
 
     container.scrollBy({
-      left: direction === 'next' ? scrollAmount : -scrollAmount,
-      behavior: 'smooth'
+      left: direction === "next" ? scrollAmount : -scrollAmount,
+      behavior: "smooth",
     });
   }, []);
 
-  // تبديل التشغيل/الإيقاف
   const togglePlayPause = useCallback(() => {
-    setIsPlaying(prev => {
+    setIsPlaying((prev) => {
       if (prev) {
         stopAutoScroll();
         return false;
@@ -89,7 +83,7 @@ export default function DesignsSection({ designs }: DesignsSectionProps) {
     const container = scrollRef.current;
     if (!container) return;
 
-    // تعيين الموضع الأولي
+    // ✅ الموضع الابتدائي باستخدام requestAnimationFrame
     const setupInitialPosition = () => {
       const cardWidth = container.children[0]?.clientWidth || 0;
       const gap = 40;
@@ -97,31 +91,33 @@ export default function DesignsSection({ designs }: DesignsSectionProps) {
       container.scrollLeft = sectionWidth;
     };
 
-    // إعداد الموضع الأولي
-    setTimeout(setupInitialPosition, 100);
+    requestAnimationFrame(setupInitialPosition);
 
-    // بدء التحريك التلقائي
     if (isPlaying) {
       startAutoScroll();
     }
 
-    // معالجة الـ scroll
     const handleScroll = () => {
-      const scrollLeft = container.scrollLeft;
       const cardWidth = container.children[0]?.clientWidth || 0;
       const gap = 40;
       const sectionWidth = (cardWidth + gap) * designs.length;
-      
-      // إعادة تعيين الموضع للـ infinite scroll
+      const scrollLeft = container.scrollLeft;
+
+      // ✅ الحفاظ على الانزلاق اللانهائي
       if (scrollLeft <= 1) {
         container.scrollLeft = sectionWidth;
       } else if (scrollLeft >= sectionWidth * 2 - 1) {
         container.scrollLeft = sectionWidth;
       }
+
+      // ✅ تحديث currentIndex
+      const relativeIndex = Math.round(
+        (scrollLeft % sectionWidth) / (cardWidth + gap)
+      );
+      setCurrentIndex(relativeIndex);
     };
 
     container.addEventListener("scroll", handleScroll);
-
     return () => {
       stopAutoScroll();
       container.removeEventListener("scroll", handleScroll);
@@ -129,7 +125,7 @@ export default function DesignsSection({ designs }: DesignsSectionProps) {
   }, [designs.length, isPlaying, startAutoScroll, stopAutoScroll]);
 
   return (
-    <section className="relative min-h-screen py-24 bg-gradient-to-tr ">
+    <section className="relative min-h-screen py-4 ">
       {/* العنوان */}
       <div className="relative mb-16">
         <motion.h2
@@ -146,13 +142,13 @@ export default function DesignsSection({ designs }: DesignsSectionProps) {
       {/* أزرار التحكم */}
       <div className="flex justify-center gap-4 mb-8">
         <button
-          onClick={() => scrollToDesign('prev')}
+          onClick={() => scrollToDesign("prev")}
           className="p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors"
           aria-label="التصميم السابق"
         >
-          <ChevronRight size={24} />
+          <ChevronLeft size={24} />
         </button>
-        
+
         <button
           onClick={togglePlayPause}
           className="p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors"
@@ -160,38 +156,38 @@ export default function DesignsSection({ designs }: DesignsSectionProps) {
         >
           {isPlaying ? <Pause size={24} /> : <Play size={24} />}
         </button>
-        
+
         <button
-          onClick={() => scrollToDesign('next')}
+          onClick={() => scrollToDesign("next")}
           className="p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors"
           aria-label="التصميم التالي"
         >
-          <ChevronLeft size={24} />
+          <ChevronRight size={24} />
         </button>
       </div>
 
       {/* حاوية التصاميم */}
       <div className="relative">
-        <div 
+        <div
           ref={scrollRef}
           className="flex gap-10 overflow-x-hidden scrollbar-hide px-8 pb-8"
-          style={{ scrollSnapType: 'x mandatory' }}
+          style={{ scrollSnapType: "x mandatory" }}
           onMouseEnter={stopAutoScroll}
           onMouseLeave={() => isPlaying && startAutoScroll()}
         >
           {infiniteDesigns.map((design, index) => (
             <motion.div
               key={`${design.id}-${index}`}
-              initial={{ opacity: 0, y: -100 }}
+              initial={{ opacity: 0, y: 0 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ 
-                duration: 1, 
-                delay: (index % designs.length) * 0.1, 
-                ease: "easeOut" 
+              transition={{
+                duration: 1,
+                delay: (index % designs.length) * 0.1,
+                ease: "easeOut",
               }}
               viewport={{ amount: 0.3 }}
-              className="relative w-[400px] md:w-[500px] lg:w-[600px] xl:w-[700px] flex-shrink-0"
-              style={{ scrollSnapAlign: 'start' }}
+              className="relative w-[400px] md:w-[700px] xl:w-[900px] flex-shrink-0"
+              style={{ scrollSnapAlign: "start" }}
             >
               <DesignCard design={design} />
             </motion.div>
@@ -204,10 +200,10 @@ export default function DesignsSection({ designs }: DesignsSectionProps) {
         {designs.map((_, index) => (
           <div
             key={index}
-            className={`w-14 h-1 rounded-full transition-colors ${
-              index === currentIndex % designs.length 
-                ? 'bg-white' 
-                : 'bg-white/30'
+            className={`w-6 md:w-14 h-1 rounded-full transition-colors ${
+              index === currentIndex % designs.length
+                ? "bg-white"
+                : "bg-white/30"
             }`}
           />
         ))}

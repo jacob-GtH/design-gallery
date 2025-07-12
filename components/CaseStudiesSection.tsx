@@ -1,4 +1,5 @@
 import DesignsPage from "@/app/designs/page";
+import React from "react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 
@@ -64,13 +65,19 @@ export default function SectionCaseStudies() {
     return () => observer.disconnect();
   }, []);
 
-  const TypeWriter = ({
-    text,
+  function TypeWriter({
+    text = "",
     speed = 50,
     delay = 0,
     className = "",
     tag = "p",
-  }) => {
+  }: {
+    text?: string;
+    speed?: number;
+    delay?: number;
+    className?: string;
+    tag?: React.ElementType;
+  }) {
     const [displayedText, setDisplayedText] = useState("");
     const [started, setStarted] = useState(false);
 
@@ -98,9 +105,9 @@ export default function SectionCaseStudies() {
       return () => clearInterval(interval);
     }, [started, text, speed]);
 
-    const Tag = tag;
+    const Tag = tag as React.ElementType;
     return <Tag className={className}>{displayedText}</Tag>;
-  };
+  }
 
   return (
     <section
@@ -116,69 +123,74 @@ export default function SectionCaseStudies() {
         </p>
       </div>
 
-      {caseStudies.map((study, index) => (
-        <motion.div
-          key={study.id}
-          initial={{ opacity: 0, y: 100 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 1,
-            delay: (index) * 0.1,
-            ease: "easeOut",
-          }}
-          data-case-study
-          data-id={study.id}
-          className={`w-full flex flex-col md:flex-row ${
-            index % 2 !== 0 ? "md:flex-row-reverse" : ""
-          } items-center gap-8`}
-        >
-          {/* الصورة */}
-          <div
-            className={`relative w-full  md:w-2/3 h-[800px] rounded-xl overflow-hidden shadow-lg transition-all duration-700 ${
-              visibleItems.has(study.id.toString())
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-10"
-            }`}
+      {caseStudies.map((study, index) => {
+        const baseDelay = index * 0.5;
+        const descDelay = baseDelay + 1.5;
+        const resultDelay = descDelay + 1;
+
+        return (
+          <motion.div
+            key={study.id}
+            initial={{ opacity: 0, y: 100 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 1,
+              delay: index * 0.1,
+              ease: "easeOut",
+            }}
+            data-case-study
+            data-id={study.id}
+            className={`w-full flex flex-col md:flex-row ${
+              index % 2 !== 0 ? "md:flex-row-reverse" : ""
+            } items-center mb-10 gap-16`}
           >
-            <img
-              src={study.imageUrl}
-              alt={`دراسة حالة - ${study.title}`}
-              className="w-full h-full object-cover"
-            />
-          </div>
+            {/* الصورة */}
+            <div
+              className={`relative w-full  md:w-2/3 h-[450px] md:h-[700px] lg:h-[900px] rounded-xl overflow-hidden shadow-lg transition-all duration-700 ${
+                visibleItems.has(study.id.toString())
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-10"
+              }`}
+            >
+              <img
+                src={study.imageUrl}
+                alt={`دراسة حالة - ${study.title}`}
+                className="w-full h-full object-cover"
+              />
+            </div>
 
-          {/* النص */}
-          <div className="w-full md:w-1/2 flex flex-col justify-center text-right">
-            {visibleItems.has(study.id.toString()) && (
-              <>
-                <TypeWriter
-                  text={study.title}
-                  speed={50}
-                  delay={500}
-                  tag="h3"
-                  className="text-3xl md:text-3xl font-bold text-gray-400 mb-4"
-                />
+            {/* النص */}
+            <div className="w-full md:w-1/2 flex flex-col justify-center text-right">
+              {visibleItems.has(study.id.toString()) && (
+                <>
+                  <TypeWriter
+                    text={study.title}
+                    speed={50}
+                    delay={500}
+                    tag="h3"
+                    className="text-3xl md:text-3xl font-bold text-gray-400 mb-4"
+                  />
 
-                <TypeWriter
-                  text={study.description}
-                  speed={30}
-                  delay={2000}
-                  className="text-gray-500 mb-6 text-2xl leading-relaxed"
-                />
+                  <TypeWriter
+                    text={study.description}
+                    speed={30}
+                    delay={2000}
+                    className="text-gray-500 mb-6 text-2xl leading-relaxed"
+                  />
 
-                <div className="text-gray-500 text-lg space-y-2 mb-6">
-                  {study.results.map((result, i) => (
-                    <TypeWriter
-                      key={i}
-                      text={`✓ ${result}`}
-                      speed={40}
-                      delay={3500 + i * 800}
-                      className="block"
-                    />
-                  ))}
-                </div>
+                  <div className="text-gray-500 text-lg space-y-2 mb-6">
+                    {study.results.map((result, i) => (
+                      <TypeWriter
+                        key={i}
+                        text={`✓ ${result}`}
+                        speed={40}
+                        delay={3500 + i * 800}
+                        className="block"
+                      />
+                    ))}
+                  </div>
 
-                {/* <div
+                  {/* <div
                   className={`transition-all duration-500 ${
                     visibleItems.has(study.id.toString())
                       ? "opacity-100"
@@ -201,11 +213,12 @@ export default function SectionCaseStudies() {
                     عرض التفاصيل
                   </motion.button>
                 </div> */}
-              </>
-            )}
-          </div>
-        </motion.div>
-      ))}
+                </>
+              )}
+            </div>
+          </motion.div>
+        );
+      })}
     </section>
   );
 }

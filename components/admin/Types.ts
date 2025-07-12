@@ -35,3 +35,16 @@ export type FormState = {
   error: string;
   loading: boolean;
 };
+export type Props = {
+  item: MediaItem;
+  index: number;
+  readonly: boolean;
+  dispatch: React.Dispatch<any>;
+  removeMediaItem: (index: number) => void;
+};
+export type TagInputProps = {
+  tags: string[];
+  onAdd: (tag: string) => void;
+  onRemove: (index: number) => void;
+  disabled?: boolean;
+};
