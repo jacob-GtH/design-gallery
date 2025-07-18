@@ -1,10 +1,18 @@
 // components/DesignForm/DesignFormCore.tsx
 "use client";
 import { fetchDesigners } from "./designerService";
-import React, { useEffect, useReducer, useRef, useState } from "react";
+import React, {
+  Dispatch,
+  Suspense,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { IDesign } from "@/interfaces/Design";
-import { DesignFormViewMode, Designer, MediaItem, FormState } from "./Types";
-import DesignFloatingToolbar from "./DesignFloatingToolbar";
+import { formReducer, FormAction } from "@/hooks/formReducer";
+import { mediaReducer, MediaAction } from "@/hooks/useMediaReducer";
+import { DesignFormViewMode, MediaItem, FormState } from "./Types";
 import DesignEditorBody from "./DesignEditorBody";
 import ReactQuill from "react-quill-new";
 import { motion } from "framer-motion";
@@ -18,155 +26,48 @@ type DesignFormCoreProps = {
   initialData?: IDesign;
   onSuccess?: () => void;
 };
-
 // ----------- أنواع الحالة Action و State -----------
-
-const initialState: FormState = {
+const initialFormState: FormState = {
   title: "",
   description: "",
   designerId: "",
   tags: [],
-  backgroundColor: "",
+  backgroundColor: "#f9fafb",
   mediaItems: [],
   designers: [],
   currentTagInput: "",
   error: "",
   loading: false,
 };
-
-type FormAction =
-  | {
-      type: "SET_FIELD";
-      field: keyof Omit<FormState, "mediaItems">;
-      value: any;
-    }
-  | {
-      type: "LOAD_INITIAL";
-      data: Omit<FormState, "mediaItems"> & { mediaItems: MediaItem[] };
-    }
-  | { type: "ADD_MEDIA"; items: MediaItem[] }
-  | { type: "UPDATE_CAPTION"; index: number; value: string }
-  | { type: "REMOVE_MEDIA"; index: number }
-  | { type: "UPDATE_PROGRESS"; index: number; progress: number }
-  | { type: "SET_LOADING"; loading: boolean }
-  | { type: "UPDATE_MEDIA_CAPTION"; index: number; caption: string }
-  | { type: "ADD_TAG"; tag: string }
-  | { type: "REMOVE_TAG"; index: number }
-  | { type: "SET_DESIGNERS"; designers: Designer[] }
-  | { type: "SET_ERROR"; message: string }
-  | { type: "UPDATE_MEDIA_UPLOADED_URL"; index: number; url: string }
-  | { type: "TOGGLE_EDITOR"; index: number }
-  | { type: "SHOW_TOOLBAR"; index: number }
-  | { type: "HIDE_TOOLBAR"; index: number };
-
-// ----------- Reducer لإدارة الحالة -----------
-function formReducer(state: FormState, action: FormAction): FormState {
-  switch (action.type) {
-   
-    case "SET_FIELD":
-      return {
-        ...state,
-        [action.field]: action.value,
-      };
-
-    case "LOAD_INITIAL":
-      return { ...action.data };
-
-    case "ADD_MEDIA":
-      return {
-        ...state,
-        mediaItems: [
-          ...state.mediaItems,
-          ...action.items.map((item: MediaItem) => ({
-            ...item,
-            showToolbar: false,
-          })),
-        ],
-        error: "",
-      };
-
-    default:
-      return state;
-
-    case "REMOVE_MEDIA":
-      return {
-        ...state,
-        mediaItems: state.mediaItems.filter((_, i) => i !== action.index),
-      };
-    case "UPDATE_MEDIA_CAPTION":
-      return {
-        ...state,
-        mediaItems: state.mediaItems.map((item, i) =>
-          i === action.index ? { ...item, caption: action.caption } : item
-        ),
-      };
-    case "UPDATE_MEDIA_UPLOADED_URL":
-      return {
-        ...state,
-        mediaItems: state.mediaItems.map((item, i) =>
-          i === action.index ? { ...item, uploadedUrl: action.url } : item
-        ),
-      };
-    case "SET_LOADING":
-      return {
-        ...state,
-        loading: action.loading,
-      };
-    case "SET_ERROR":
-      return {
-        ...state,
-        error: action.message,
-      };
-    case "ADD_TAG":
-      return {
-        ...state,
-        tags: [...state.tags, action.tag],
-      };
-    case "REMOVE_TAG":
-      return {
-        ...state,
-        tags: state.tags.filter((_, i) => i !== action.index),
-      };
-    case "SET_DESIGNERS":
-      return {
-        ...state,
-        designers: action.designers,
-      };
-    case "SHOW_TOOLBAR":
-      return {
-        ...state,
-        mediaItems: state.mediaItems.map((item, i) =>
-          i === action.index ? { ...item, showToolbar: true } : item
-        ),
-      };
-
-    case "HIDE_TOOLBAR":
-      return {
-        ...state,
-        mediaItems: state.mediaItems.map((item, i) =>
-          i === action.index ? { ...item, showToolbar: false } : item
-        ),
-      };
-    case "TOGGLE_EDITOR":
-      return {
-        ...state,
-        mediaItems: state.mediaItems.map((item, i) =>
-          i === action.index ? { ...item, showEditor: !item.showEditor } : item
-        ),
-      };
-  }
-}
+const initialMediaState: MediaItem[] = [];
 
 export default function DesignFormCore({
   mode,
   initialData,
   onSuccess,
 }: DesignFormCoreProps) {
-  const [initialLoadedData, setInitialLoadedData] = useState<FormState | null>(null);
+  const [initialLoadedData, setInitialLoadedData] = useState<FormState | null>(
+    null
+  );
   const [success, setSuccess] = React.useState(false);
-  const [state, dispatch] = useReducer(formReducer, initialState);
-  const { backgroundColor, mediaItems } = state;
+  const [formState, formDispatch] = useReducer(formReducer, initialFormState);
+  const [mediaItems, mediaDispatch] = useReducer(
+    mediaReducer,
+    initialMediaState
+  );
+  const { backgroundColor } = formState;
   const editorRef = useRef<ReactQuill>(null);
+  const DesignFloatingToolbar = React.lazy(
+    () => import("./DesignFloatingToolbar")
+  );
+  // مزامنة mediaItems في formState كلما تغير mediaItems
+  useEffect(() => {
+    formDispatch({
+      type: "SET_FIELD",
+      field: "mediaItems",
+      value: mediaItems,
+    });
+  }, [mediaItems]);
 
   // دالة لتحويل الوسائط من البيانات الأولية
   const mapMediaItemsFromInitial = (media: any[]): MediaItem[] => {
@@ -188,28 +89,28 @@ export default function DesignFormCore({
   // تحميل البيانات الأولية عند وجود initialData
   useEffect(() => {
     if (initialData) {
-    const mapped = {
-      title: initialData.title || "",
-      description: initialData.description || "",
-      designerId: initialData.designer || "",
-      tags: (initialData.tags || [])
-        .filter((tag: any) => tag && (typeof tag === "string" || tag.title))
-        .map((tag: any) => (typeof tag === "string" ? tag : tag.title)),
-      backgroundColor: initialData.backgroundColor || "#f9fafb",
-      // إذا كان backgroundColor غير موجود، استخدم اللون الافتراضي
-      // يمكنك تغيير اللون الافتراضي حسب الحاجة
-      designers: [],
-    mediaItems: mapMediaItemsFromInitial(initialData.media || []),
-      // تحويل الوسائط من البيانات الأولية
-      currentTagInput: "",
-      error: "",
-      loading: false,
-    };
-    dispatch({
-      type: "LOAD_INITIAL",
-      data: mapped,
-    });
-    setInitialLoadedData(mapped);
+      const mapped = {
+        title: initialData.title || "",
+        description: initialData.description || "",
+        designerId: initialData.designer || "",
+        tags: (initialData.tags || [])
+          .filter((tag: any) => tag && (typeof tag === "string" || tag.title))
+          .map((tag: any) => (typeof tag === "string" ? tag : tag.title)),
+        backgroundColor: initialData.backgroundColor || "#f9fafb",
+        // إذا كان backgroundColor غير موجود، استخدم اللون الافتراضي
+        // يمكنك تغيير اللون الافتراضي حسب الحاجة
+        designers: [],
+        mediaItems: mapMediaItemsFromInitial(initialData.media || []),
+        // تحويل الوسائط من البيانات الأولية
+        currentTagInput: "",
+        error: "",
+        loading: false,
+      };
+      formDispatch({
+        type: "LOAD_INITIAL",
+        data: mapped,
+      });
+      setInitialLoadedData(mapped);
     }
   }, [initialData]);
 
@@ -218,7 +119,7 @@ export default function DesignFormCore({
     async function loadDesigners() {
       try {
         const data = await fetchDesigners();
-        dispatch({ type: "SET_DESIGNERS", designers: data });
+        formDispatch({ type: "SET_DESIGNERS", designers: data });
       } catch (err) {
         console.error("فشل في جلب المصممين");
       }
@@ -233,7 +134,7 @@ export default function DesignFormCore({
     value: any
   ) => {
     if (mode === "view") return; // منع التعديل في وضع العرض فقط
-    dispatch({ type: "SET_FIELD", field, value });
+    formDispatch({ type: "SET_FIELD", field, value });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -242,14 +143,14 @@ export default function DesignFormCore({
     const validFiles = files.filter((file) => {
       const maxSize = 10 * 1024 * 1024; // 10MB
       if (file.size > maxSize) {
-        dispatch({
+        formDispatch({
           type: "SET_ERROR",
           message: `الملف ${file.name} يتجاوز الحد الأقصى للحجم (10MB)`,
         });
         return false;
       }
       if (!file.type.match(/image\/.*|video\/.*/)) {
-        dispatch({
+        formDispatch({
           type: "SET_ERROR",
           message: `نوع الملف ${file.name} غير مدعوم`,
         });
@@ -271,24 +172,24 @@ export default function DesignFormCore({
       showToolbar: false,
     }));
 
-    dispatch({ type: "ADD_MEDIA", items: newItems });
+    mediaDispatch({ type: "ADD_MEDIA", items: newItems });
     // بعد قراءة الملفات
     e.target.value = "";
   };
 
   const handleRemoveMedia = (index: number) => {
     if (mode === "view") return;
-    dispatch({ type: "REMOVE_MEDIA", index });
+    mediaDispatch({ type: "REMOVE_MEDIA", index });
   };
 
   function handleCaptionChange(index: number, value: string): void {
     if (mode === "view") return;
-    dispatch({ type: "UPDATE_MEDIA_CAPTION", index, caption: value });
+    mediaDispatch({ type: "UPDATE_CAPTION", index, caption: value });
   }
 
   function handleRemoveTag(index: number): void {
     if (mode === "view") return;
-    dispatch({ type: "REMOVE_TAG", index });
+    formDispatch({ type: "REMOVE_TAG", index });
   }
 
   function handleAddTag(e: React.KeyboardEvent<HTMLInputElement>): void {
@@ -296,67 +197,64 @@ export default function DesignFormCore({
 
     if (e.key === "Enter") {
       e.preventDefault();
-      const tag = state.currentTagInput?.trim();
-      if (tag && !state.tags.includes(tag)) {
-        dispatch({ type: "ADD_TAG", tag });
-        dispatch({ type: "SET_FIELD", field: "currentTagInput", value: "" }); // مسح حقل الإدخال بعد الإضافة
+      const tag = formState.currentTagInput?.trim();
+      if (tag && !formState.tags.includes(tag)) {
+        formDispatch({ type: "ADD_TAG", tag });
+        formDispatch({
+          type: "SET_FIELD",
+          field: "currentTagInput",
+          value: "",
+        }); // مسح حقل الإدخال بعد الإضافة
       }
     }
   }
 
   // ============ رفع الملفات ============
-  const uploadMediaItems = async () => {
-    const uploaded = [];
+  const uploadMediaItems = async (
+    mediaItems: MediaItem[],
+    dispatch: Dispatch<MediaAction>
+  ) => {
+    const uploaded: any[] = [];
 
     for (const [index, item] of mediaItems.entries()) {
-      try {
-        if (item.uploadedUrl) {
-          // إذا الملف مرفوع مسبقاً استخدم الرابط
-          uploaded.push({
-            _key: item._key ?? uuidv4(), // ✅ استخدام uuidv4 إذا لم يكن المفتاح موجودًا
-            _type: "mediaItem", // ✅ إذا كانت سكيم الوسائط معرفًا بهذا النوع (اختياري إذا schema يقبل أي object)
-            url: item.uploadedUrl,
-            type: item.type,
-            caption: item.caption,
-          });
-
-          continue;
-        }
-        const data = new FormData();
-        data.append("file", item.file!); // تأكد من أن الملف موجود
-        data.append(
-          "upload_preset",
-          process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
-        );
-
-        dispatch({ type: "UPDATE_PROGRESS", index, progress: 0 });
-
-        const cloud = await uploadWithProgress(data, item.type, index);
-        if (!cloud || !cloud.secure_url) {
-          throw new Error("فشل في رفع الملف إلى Cloudinary");
-        }
-        dispatch({
-          type: "UPDATE_MEDIA_UPLOADED_URL",
-          index,
-          url: cloud.secure_url,
-        });
-
+      if (item.uploadedUrl) {
         uploaded.push({
-          _key: item._key ?? uuidv4(),
-          url: cloud.secure_url,
+          _key: item._key,
+          url: item.uploadedUrl,
           type: item.type,
           caption: item.caption,
         });
-      } catch (error) {
-        console.error("Upload failed:", error);
-        throw error;
+        continue;
+      }
+
+      const data = new FormData();
+      data.append("file", item.file!);
+      data.append(
+        "upload_preset",
+        process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
+      );
+
+      const result = await uploadWithProgress(data, item.type, index, dispatch);
+
+      if (result?.secure_url) {
+        uploaded.push({
+          _key: item._key,
+          url: result.secure_url,
+          type: item.type,
+          caption: item.caption,
+        });
       }
     }
 
     return uploaded;
   };
 
-  const uploadWithProgress = (data: FormData, type: string, index: number) => {
+  const uploadWithProgress = (
+    data: FormData,
+    type: string,
+    index: number,
+    dispatch: Dispatch<MediaAction>
+  ) => {
     return new Promise<any>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
 
@@ -383,34 +281,34 @@ export default function DesignFormCore({
   };
 
   const validateForm = () => {
-    if (!state.title.trim()) return "العنوان مطلوب";
-    if (!state.designerId) return "الرجاء اختيار مصمم";
+    if (!formState.title.trim()) return "العنوان مطلوب";
+    if (!formState.designerId) return "الرجاء اختيار مصمم";
     if (mediaItems.length === 0) return "يجب رفع وسائط (صورة أو فيديو)";
     return null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    if (state.loading) return;
+    if (formState.loading) return;
     e.preventDefault();
     if (mode === "view") return; // منع الإرسال في وضع العرض فقط
-    dispatch({ type: "SET_LOADING", loading: true });
+    formDispatch({ type: "SET_LOADING", loading: true });
 
     const validation = validateForm();
     if (validation) {
-      dispatch({ type: "SET_ERROR", message: validation });
-      dispatch({ type: "SET_LOADING", loading: false });
+      formDispatch({ type: "SET_ERROR", message: validation });
+      formDispatch({ type: "SET_LOADING", loading: false });
       return;
     }
 
-    dispatch({ type: "SET_LOADING", loading: true });
-    dispatch({ type: "SET_ERROR", message: "" });
+    formDispatch({ type: "SET_LOADING", loading: true });
+    formDispatch({ type: "SET_ERROR", message: "" });
 
     try {
-      const uploadedMedia = await uploadMediaItems();
+      const uploadedMedia = await uploadMediaItems(mediaItems, mediaDispatch);
 
       // 🔁 تحويل الوسوم إلى مراجع بعد التأكد من وجودها أو إنشائها
       const tagRefs = await Promise.all(
-        state.tags.map(async (tag: string) => {
+        formState.tags.map(async (tag: string) => {
           try {
             console.log("📎 tagRefs:", tagRefs);
 
@@ -447,7 +345,7 @@ export default function DesignFormCore({
           method: initialData ? "PATCH" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            ...state,
+            ...formState,
             tags: validTags, // ← تم استبدالها بالمراجع الصحيحة
             media: uploadedMedia,
             publishedAt: new Date().toISOString(),
@@ -465,7 +363,7 @@ export default function DesignFormCore({
       console.error("Submit error:", err);
       toast.error("حدث خطأ أثناء الحفظ");
     } finally {
-      dispatch({ type: "SET_LOADING", loading: false });
+      formDispatch({ type: "SET_LOADING", loading: false });
     }
   };
   function resetForm() {
@@ -474,7 +372,10 @@ export default function DesignFormCore({
         "هل تريد حقًا إعادة تعيين النموذج؟ سيتم فقدان جميع التغييرات غير المحفوظة."
       )
     ) {
-      dispatch({ type: "LOAD_INITIAL", data: initialLoadedData || initialState });
+      formDispatch({
+        type: "LOAD_INITIAL",
+        data: initialLoadedData || initialFormState,
+      });
       localStorage.removeItem("designFormDraft");
       setSuccess(false);
     }
@@ -490,67 +391,63 @@ export default function DesignFormCore({
   useEffect(() => {
     const local = localStorage.getItem("backgroundColor");
     if (initialData?.backgroundColor) {
-      dispatch({
+      formDispatch({
         type: "SET_FIELD",
         field: "backgroundColor",
         value: initialData.backgroundColor,
       });
     } else if (local) {
-      dispatch({ type: "SET_FIELD", field: "backgroundColor", value: local });
+      formDispatch({
+        type: "SET_FIELD",
+        field: "backgroundColor",
+        value: local,
+      });
     }
   }, [initialData]);
   // دالة للتحقق مما إذا كان اللون داكنًا
-  function isDarkColor(hex: string) {
-    const r = parseInt(hex.substr(1, 2), 16);
-    const g = parseInt(hex.substr(3, 2), 16);
-    const b = parseInt(hex.substr(5, 2), 16);
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness < 128; // أقل من 128 تعتبر داكنة
-  }
+  const isDarkColor = (hex: string) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    return (r * 299 + g * 587 + b * 114) / 1000 < 128;
+  };
 
   return (
     <motion.div
-      className="flex flex-col  md:flex-row h-full justify-center"
+      className="flex flex-col md:flex-row h-full justify-center"
       style={{
-        backgroundColor: state.backgroundColor,
-        color: isDarkColor(state.backgroundColor) ? "white" : "black",
+        backgroundColor,
+        color: isDarkColor(backgroundColor) ? "white" : "black",
       }}
     >
       <DesignEditorBody
         mode={mode}
-        bgColor={state.backgroundColor}
-        formData={state}
+        bgColor={backgroundColor}
+        formData={formState}
         handleInputChange={handleInputChange}
         handleFileChange={handleFileChange}
-        mediaItems={state.mediaItems}
+        mediaItems={mediaItems}
         handleCaptionChange={handleCaptionChange}
-        dispatch={dispatch}
+        dispatch={mediaDispatch}
         editorRef={editorRef}
         toolbarFocused={false}
-        designers={state.designers}
+        designers={formState.designers}
         handleRemoveTag={handleRemoveTag}
         handleAddTag={handleAddTag}
       />
-
-      <DesignFloatingToolbar
-        formData={state}
-        dispatch={dispatch}
-        bgColor={state.backgroundColor}
-        setBgColor={(color) =>
-          dispatch({
-            type: "SET_FIELD",
-            field: "backgroundColor",
-            value: color,
-          })
-        }
-        handleSubmit={handleSubmit}
-        loading={state.loading}
-        error={state.error}
-        success={success}
-        initialData={initialData}
-        resetForm={resetForm}
-        mode={mode}
-      />
+      <Suspense fallback={<div>Loading toolbar...</div>}>
+        <DesignFloatingToolbar
+          formData={formState}
+          dispatch={formDispatch}
+          bgColor={backgroundColor}
+          setBgColor={(color) => handleChange("backgroundColor", color)}
+          handleSubmit={handleSubmit}
+          loading={formState.loading}
+          error={formState.error}
+          success={success}
+          initialData={initialData}
+          resetForm={resetForm}
+          mode={mode}
+        />
+      </Suspense>
     </motion.div>
   );
 }

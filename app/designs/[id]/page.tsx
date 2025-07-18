@@ -3,7 +3,7 @@ import { client } from "@/sanity/design-cms/lib/client";
 import Link from "next/link";
 import Image from "next/image";
 import { FiArrowLeft, FiHeart, FiCalendar, FiUser } from "react-icons/fi";
-import DesignFooterMotion from "@/components/designs/DesignCardeScroll";
+import DesignFooterMotion from "@/components/designs/DesignCardScroll";
 
 export async function generateStaticParams() {
   const designs = await client.fetch(`*[_type == "design"]{ _id }`);

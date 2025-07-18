@@ -1,7 +1,11 @@
 import { motion } from "framer-motion";
-import { Button } from "./ui/Button";
+import { Button } from "../ui/Button";
 
-export default function HeroSection({ animateStart }: { animateStart: boolean }) {
+export default function HeroSection({
+  animateStart,
+}: {
+  animateStart: boolean;
+}) {
   return (
     <motion.section
       className="relative h-screen text-white overflow-hidden"

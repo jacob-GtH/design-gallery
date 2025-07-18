@@ -2,12 +2,11 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import DesignCard from "./designs/DesignCard";
+import DesignCard from "../designs/DesignCard";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 
 interface DesignsSectionProps {
   designs: any[];
-  
 }
 
 export default function DesignsSection({ designs }: DesignsSectionProps) {

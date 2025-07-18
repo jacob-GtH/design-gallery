@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import DynamicLogo from "@/components/logo/DynamicLogo";
 import Footer from "./footer/page";
-import FloatingDock from "@/components/FloatingDock";
+import FloatingDock from "@/components/common/FloatingDock";
 // import CustomCursor from "@/components/ui/CustomCursor";
 
 const geistSans = Geist({

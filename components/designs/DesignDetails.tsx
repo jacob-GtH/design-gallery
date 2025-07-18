@@ -8,7 +8,7 @@ export default function DesignDetails({ design }: { design: IDesign }) {
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
         <div className="relative h-96">
           <img
-            src={design.mediaUrl}
+            src={design.media[0].url}
             alt={design.title}
             className="w-full h-full object-contain"
           />
@@ -18,7 +18,9 @@ export default function DesignDetails({ design }: { design: IDesign }) {
           <div className="flex flex-wrap justify-between items-start mb-6">
             <div>
               <h1 className="text-3xl font-bold mb-2">{design.title}</h1>
-              <p className="text-lg text-blue-600">بواسطة {design.designer}</p>
+              <p className="text-lg text-blue-600">
+                بواسطة {typeof design.designer === "string" ? design.designer : design.designer.name}
+              </p>
             </div>
 
             <div className="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
@@ -34,7 +36,7 @@ export default function DesignDetails({ design }: { design: IDesign }) {
           </div>
 
           <div className="flex flex-wrap gap-3 mb-8">
-            {design.tags.map((tag) => (
+            {design.tags?.map((tag) => (
               <span
                 key={tag}
                 className="px-4 py-2 bg-blue-50 text-blue-700 rounded-full"
