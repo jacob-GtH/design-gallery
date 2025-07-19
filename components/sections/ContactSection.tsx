@@ -9,14 +9,14 @@ export default function ContactSection() {
     return (
         <section
             id="contact"
-            className="relative  to-black text-white py-32 overflow-hidden"
+            className="relative  to-black text-white py-48 overflow-hidden"
         >
             {/* Decorative elements */}
             <motion.div
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 0.1 }}
                 transition={{ duration: 1 }}
-                className="absolute inset-0 bg-[url('/images/grid-pattern.svg')] bg-center "
+                className="absolute inset-0 bg-[url('/images/grid-pattern.svg')] bg-center bg-no-repeat "
                 aria-hidden="true"
             />
             <div className="container mx-auto px-4 text-center relative z-10">

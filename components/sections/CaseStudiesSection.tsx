@@ -75,7 +75,7 @@ export default function SectionCaseStudies() {
   return (
     <section
       id="case-studies"
-      className="w-full flex flex-col items-center px-6 md:px-12 py-20 space-y-24 "
+      className="w-full flex flex-col items-center px-6 md:px-12 py-20 space-y-24 pb-12"
     >
       <div className="text-start max-w-2xl mr-auto">
         <h2 className="text-4xl md:text-5xl font-bold text-gray-500 mb-4">
@@ -110,7 +110,7 @@ export default function SectionCaseStudies() {
           >
             {/* الصورة */}
             <motion.div
-              className="relative w-full md:w-2/3 h-[450px] md:h-[700px] lg:h-[900px] rounded-xl overflow-hidden shadow-lg"
+              className="relative w-full md:w-2/3 h-[450px] md:h-[600px] lg:h-[700px] rounded-xl overflow-hidden shadow-lg"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 1 }}

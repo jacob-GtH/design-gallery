@@ -10,8 +10,8 @@ import React, {
   useState,
 } from "react";
 import { IDesign } from "@/interfaces/Design";
-import { formReducer, FormAction } from "@/hooks/formReducer";
-import { mediaReducer, MediaAction } from "@/hooks/useMediaReducer";
+import { formReducer } from "@/hooks/formReducer";
+import { mediaReducer, MediaAction } from "@/hooks/mediaReducer";
 import { DesignFormViewMode, MediaItem, FormState } from "./Types";
 import DesignEditorBody from "./DesignEditorBody";
 import ReactQuill from "react-quill-new";
@@ -40,6 +40,18 @@ const initialFormState: FormState = {
   loading: false,
 };
 const initialMediaState: MediaItem[] = [];
+// ----------- مكون DesignFormCore -----------
+// هذا المكون هو الجزء الأساسي من نموذج التصميم
+// حيث يتم إدارة الحالة وتقديم الوظائف الأساسية للنموذج
+// يتم استخدامه في وضع العرض أو التعديل
+// بناءً على قيمة `mode` الممررة إليه
+// يمكن استخدامه لعرض التصميمات أو تعديلها
+// أو إضافة تصميم جديد
+// يتم استخدامه في صفحة تصميمات الإدارة
+// ويمكن استخدامه في أي مكان آخر يحتاج إلى نموذج تصميم
+const DesignFloatingToolbar = React.lazy(
+  () => import("./DesignFloatingToolbar")
+);
 
 export default function DesignFormCore({
   mode,
@@ -57,9 +69,7 @@ export default function DesignFormCore({
   );
   const { backgroundColor } = formState;
   const editorRef = useRef<ReactQuill>(null);
-  const DesignFloatingToolbar = React.lazy(
-    () => import("./DesignFloatingToolbar")
-  );
+
   // مزامنة mediaItems في formState كلما تغير mediaItems
   useEffect(() => {
     formDispatch({
@@ -433,7 +443,9 @@ export default function DesignFormCore({
         handleRemoveTag={handleRemoveTag}
         handleAddTag={handleAddTag}
       />
-      <Suspense fallback={<div>Loading toolbar...</div>}>
+      <Suspense
+        fallback={<div className="text-center p-2">Loading toolbar...</div>}
+      >
         <DesignFloatingToolbar
           formData={formState}
           dispatch={formDispatch}

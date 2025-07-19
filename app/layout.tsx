@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import DynamicLogo from "@/components/logo/DynamicLogo";
-import Footer from "./footer/page";
+import DynamicLogo from "@/components/layout/logo/DynamicLogo";
+import Footer from "../components/layout/footer";
 import FloatingDock from "@/components/common/FloatingDock";
 // import CustomCursor from "@/components/ui/CustomCursor";
 
@@ -34,6 +34,7 @@ export default function RootLayout({
         <DynamicLogo />
         {children}
         <FloatingDock />
+        <Footer />
       </body>
     </html>
   );

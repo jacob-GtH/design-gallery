@@ -6,10 +6,9 @@ import CaseStudiesSection from "@/components/sections/CaseStudiesSection";
 import ServicesSection from "@/components/sections/ServicesSection";
 import ContactSection from "@/components/sections/ContactSection";
 import DesignsSection from "@/components/sections/DesignsSection";
-import Footer from "../footer/page";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
 import ErrorMessage from "@/components/common/ErrorMessage";
 import { IDesign } from "@/interfaces/Design";
+import Loading from "@/components/common/loading";
 
 export default function HomeSection({
   animateStart,
@@ -50,7 +49,7 @@ export default function HomeSection({
       <Suspense
         fallback={
           <div className="flex items-center justify-center min-h-screen">
-            <LoadingSpinner />
+            <Loading />
           </div>
         }
       >
@@ -61,8 +60,7 @@ export default function HomeSection({
         <section>
           {loading && (
             <div className="flex justify-center items-center py-20">
-              <LoadingSpinner />
-              <p className="text-white mr-4">جاري تحميل التصاميم...</p>
+              <Loading />
             </div>
           )}
           {error && <ErrorMessage message={error} onRetry={handleRetry} />}
@@ -72,7 +70,6 @@ export default function HomeSection({
         <ServicesSection />
         <CaseStudiesSection />
         <ContactSection />
-        <Footer />
       </Suspense>
     </main>
   );
