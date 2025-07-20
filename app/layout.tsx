@@ -33,7 +33,7 @@ export default function RootLayout({
       >
         <DynamicLogo />
         <FloatingDock />
-        <main className=" min-h-screen flex-col items-center justify-between">
+        <main className=" min-h-screen flex-col items-center justify-between bg-gray-900 text-white relative">
 
         {children}
         </main>

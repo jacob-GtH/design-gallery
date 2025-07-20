@@ -30,7 +30,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           initial={{ y: 0 }}
           exit={{ y: "-100%" }}
           transition={{ duration: 1.2}}
-          className="fixed inset-0 z-[9999] bg-gray-900 flex flex-col items-center justify-center backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] bg-gray-900 shadow-xl shadow-slate-800 flex flex-col items-center justify-center backdrop-blur-sm"
         >
           {/* الشعار */}
           <motion.div

@@ -102,7 +102,7 @@ export default function ServicesSection() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: direction === "right" ? -50 : 50 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="bg-gray-50/70 p-8 md:p-14 rounded-2xl shadow-sm"
+              className="bg-gray-50/30 p-8 md:p-14 rounded-2xl shadow-sm"
             >
               <motion.h3
                 key={`title-${activeIndex}`}
@@ -121,7 +121,7 @@ export default function ServicesSection() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
-                    className="px-4 py-2 rounded-full text-gray-800 shadow-md border border-gray-200 transition-all duration-300"
+                    className="px-4 py-2 rounded-full text-gray-900 shadow-md border border-gray-500 transition-all duration-300"
                   >
                     {tag}
                   </motion.span>
@@ -139,7 +139,7 @@ export default function ServicesSection() {
               </motion.p>
 
               <button
-                className="inline-flex items-center text-orange-600 hover:text-orange-800 font-medium transition-all duration-200 group hover:translate-x-1"
+                className="inline-flex items-center text-red-600 hover:text-orange-800 font-medium transition-all duration-200 group hover:translate-x-1"
                 aria-label={`Learn more about ${services[activeIndex].title}`}
               >
                 Learn More

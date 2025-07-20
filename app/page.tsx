@@ -46,7 +46,7 @@ export default function Home() {
                 duration: 1.2,
                 ease: [12, 0, 0.24, 1],
               }}
-              className="fixed inset-0 z-[9999]"
+              className="fixed inset-0 z-[9999] "
             >
               <SplashScreen onComplete={handleSplashComplete} />
             </motion.div>
@@ -59,7 +59,7 @@ export default function Home() {
               initial={{ y: "100%" }}
               animate={{ y: "0%" }}
               transition={{ duration: 1.2, ease: [-1.1, 0, 0.24, 1] }}
-              className="relative z-10 bg-gray-900"
+              className="relative z-10 bg-gray-900 shadow-2xl shadow-slate-50 "
             >
               <HomeSection animateStart={startAnimation} />
             </motion.div>

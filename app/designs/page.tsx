@@ -15,12 +15,14 @@ export default async function DesignsPage() {
       <CustomCursor />
 
       <div className="max-w-[1900px] mx-auto px-4 py-12">
-        <h1 className="text-4xl font-bold mb-4">معرض التصاميم</h1>
-        <p className="text-gray-400 mb-12">
-          استعرض أعمال المصممين بتنسيق بصري جذّاب.
-        </p>
+        <div className="text-center items-center justify-center py-20 min-h-96">
+          <h1 className="text-4xl font-bold mb-4">معرض التصاميم</h1>
+          <p className="text-gray-400 mb-12">
+            استعرض أعمال المصممين بتنسيق بصري جذّاب.
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 ">
           {designs.map((design) => (
             <Link href={`/designs/${design.id}`} key={design.id}>
               <div className="group relative overflow-hidden rounded-lg shadow-lg hover-target cursor-pointer transform transition duration-700 hover:scale-[1.01] opacity-0 animate-fade-in">

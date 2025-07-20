@@ -70,7 +70,7 @@ export default function ContactSection() {
 
             {/* Animated floating elements فقاعات */}
             <motion.div
-                className="absolute top-20 left-20 w-16 h-16  bg-purple-500 opacity-20"
+                className="absolute top-20 left-20 w-16 h-16 rounded-full bg-purple-500 opacity-50"
                 animate={{
                     y: [0, -20, 0],
                     scale: [1, 1.3, 1]
@@ -83,7 +83,7 @@ export default function ContactSection() {
                 aria-hidden="true"
             />
             <motion.div
-                className="absolute bottom-20 right-20 w-24 h-24 rounded-sm bg-white opacity-10"
+                className="absolute bottom-20 right-20 w-24 h-24 rounded-sm bg-purple-500 opacity-50"
                 animate={{
                     y: [0, 20, 0],
                     scale: [1, 1.3, 1]

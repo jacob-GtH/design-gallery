@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 
 export default function ContactPage() {
     return (
-        <section className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white px-6 py-20 flex items-center justify-center">
+        <section className="min-h-screen bg-gradient-to-br text-white px-6 py-20 flex items-center justify-center">
             <motion.div
                 className="w-full max-w-3xl bg-white/5 backdrop-blur-sm p-10 rounded-2xl shadow-xl"
                 initial={{ opacity: 0, y: 60 }}
