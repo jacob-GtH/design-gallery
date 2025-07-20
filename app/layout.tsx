@@ -32,8 +32,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable}relative antialiased`}
       >
         <DynamicLogo />
-        {children}
         <FloatingDock />
+        <main className=" min-h-screen flex-col items-center justify-between">
+
+        {children}
+        </main>
+        {/* <CustomCursor /> */}
         <Footer />
       </body>
     </html>

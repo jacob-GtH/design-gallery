@@ -1,5 +1,4 @@
 // app/loading.tsx
-import "./globals.css"; // سننشئ هذا الملف بعد قليل
 import Image from "next/image";
 
 export default function Loading() {

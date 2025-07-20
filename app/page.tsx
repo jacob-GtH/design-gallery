@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SplashScreen from "../components/common/SplashScreen";
-import LoadingSpinner from "../components/common/LoadingSpinner";
+import Loading from "../components/common/loading";
 import HomeSection  from "./home/page";
 
 export default function Home() {
@@ -30,7 +30,7 @@ export default function Home() {
       <Suspense
         fallback={
           <div className="flex items-center justify-center min-h-screen">
-            <LoadingSpinner />
+            <Loading />
           </div>
         }
       >
