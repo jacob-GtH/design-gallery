@@ -1,9 +1,11 @@
+// sanity/design-cms/sanity.cli.ts
 import {defineCliConfig} from 'sanity/cli'
+import {dataset, projectId} from './env'
 
 export default defineCliConfig({
   api: {
-    projectId: '0bujsn83',
-    dataset: 'production'
+    projectId: projectId,
+    dataset: dataset,
   },
   /**
    * Enable auto-updates for studios.

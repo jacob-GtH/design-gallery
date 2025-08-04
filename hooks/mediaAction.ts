@@ -6,7 +6,9 @@ export type MediaAction =
   | { type: "REMOVE_MEDIA"; index: number }
   | { type: "UPDATE_CAPTION"; index: number; caption: string }
   | { type: "UPDATE_UPLOADED_URL"; index: number; url: string }
-  | { type: "UPDATE_PROGRESS"; index: number; progress: number };
+  | { type: "UPDATE_PROGRESS"; index: number; progress: number }
+  | { type: "SHOW_TOOLBAR"; index: number }
+  | { type: "HIDE_TOOLBAR"; index: number };
 
 export function mediaReducer(state: MediaItem[], action: MediaAction ): MediaItem[] {
   switch (action.type) {
@@ -26,6 +28,14 @@ export function mediaReducer(state: MediaItem[], action: MediaAction ): MediaIte
       return state.map((item, i) =>
         i === action.index ? { ...item, uploadProgress: action.progress } : item
       );
+      case "SHOW_TOOLBAR":
+      return state.map((item, i) =>
+          i === action.index ? { ...item, showToolbar: true } : item
+        );
+    case "HIDE_TOOLBAR":
+      return state.map((item, i) =>
+          i === action.index ? { ...item, showToolbar: false } : item
+        );
     default:
       return state;
   }

@@ -11,6 +11,7 @@ import {
 } from "react-icons/fi";
 import { FileTextIcon } from "lucide-react";
 import { Button } from "../ui/Button";
+import Alert from "../ui/Alert"; // ← تأكد من المسار الصحيح
 
 type Props = {
   formData: any;
@@ -25,24 +26,6 @@ type Props = {
   resetForm: () => void;
   mode?: "create" | "edit" | "view";
 };
-
-const Alert = ({
-  type,
-  message,
-}: {
-  type: "error" | "success";
-  message: string;
-}) => (
-  <div
-    className={`p-3 rounded-md ${
-      type === "error"
-        ? "bg-red-50 text-red-700 border-l-4 border-red-500"
-        : "bg-green-50 text-green-700 border-l-4 border-green-500"
-    }`}
-  >
-    {message}
-  </div>
-);
 
 function TooltipButton({
   icon,
@@ -108,9 +91,16 @@ export default function DesignFloatingToolbar({
       transition={{ delay: 0.2 }}
       className="fixed z-[100] right-2 top-1 mt-20 sm:right-4 transform -translate-y-1/2 space-y-4"
     >
-      {error && <Alert type="error" message={error} />}
-      {success && <Alert type="success" message="تم رفع التصميم بنجاح" />}
+      {error && <Alert type="error" message={error} autoDismiss={false} />}
 
+      {success && (
+        <Alert
+          type="success"
+          message="تم رفع التصميم بنجاح"
+          autoDismiss={true}
+          duration={6000}
+        />
+      )}
       <div className="flex flex-col items-center space-y-2 sm:p-4 bg-white p-1 border border-gray-100 shadow-lg rounded-xl sm:space-y-2">
         <TooltipButton
           icon={<FiFileText size={20} />}

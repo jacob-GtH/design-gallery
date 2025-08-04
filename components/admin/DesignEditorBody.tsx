@@ -21,6 +21,7 @@ interface DesignEditorBodyProps {
   mediaItems: any[];
   handleCaptionChange: (index: number, value: string) => void;
   dispatch: any;
+  formDispatch: React.Dispatch<any>;
   toolbarFocused: boolean;
   designers: Designer[];
   handleRemoveTag: (i: number) => void;
@@ -36,6 +37,7 @@ const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
   mediaItems,
   handleCaptionChange,
   dispatch,
+  formDispatch,
   bgColor,
   toolbarFocused,
   designers,
@@ -170,7 +172,7 @@ const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
                         if (!toolbarFocused) {
                           dispatch({ type: "HIDE_TOOLBAR", index });
                         }
-                      }, 9000)
+                      }, 5000)
                     }
                     onChangeSelection={(range) => {
                       if (range && range.length > 0) {
@@ -234,8 +236,8 @@ const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
               name="designerId"
               value={formData.designerId}
               onChange={(e) =>
-                dispatch({
-                  type: "UPDATE_FIELD",
+                formDispatch({
+                  type: "SET_FIELD",
                   field: "designerId",
                   value: e.target.value,
                 })
