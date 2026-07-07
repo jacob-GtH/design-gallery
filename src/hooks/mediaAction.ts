@@ -1,0 +1,43 @@
+// hooks/useMediaReducer.ts
+import { MediaItem } from "@/src/components/admin/Types";
+
+export type MediaAction =
+  | { type: "ADD_MEDIA"; items: MediaItem[] }
+  | { type: "REMOVE_MEDIA"; index: number }
+  | { type: "UPDATE_CAPTION"; index: number; caption: string }
+  | { type: "UPDATE_UPLOADED_URL"; index: number; url: string }
+  | { type: "UPDATE_PROGRESS"; index: number; progress: number }
+  | { type: "SHOW_TOOLBAR"; index: number }
+  | { type: "HIDE_TOOLBAR"; index: number };
+
+export function mediaReducer(state: MediaItem[], action: MediaAction ): MediaItem[] {
+  switch (action.type) {
+    case "ADD_MEDIA":
+      return [...state, ...action.items];
+    case "REMOVE_MEDIA":
+      return state.filter((_, i) => i !== action.index);
+    case "UPDATE_CAPTION":
+      return state.map((item, i) =>
+        i === action.index ? { ...item, caption: action.caption } : item
+      );
+    case "UPDATE_UPLOADED_URL":
+      return state.map((item, i) =>
+        i === action.index ? { ...item, uploadedUrl: action.url } : item
+      );
+    case "UPDATE_PROGRESS":
+      return state.map((item, i) =>
+        i === action.index ? { ...item, uploadProgress: action.progress } : item
+      );
+      case "SHOW_TOOLBAR":
+      return state.map((item, i) =>
+          i === action.index ? { ...item, showToolbar: true } : item
+        );
+    case "HIDE_TOOLBAR":
+      return state.map((item, i) =>
+          i === action.index ? { ...item, showToolbar: false } : item
+        );
+    default:
+      return state;
+  }
+}
+
