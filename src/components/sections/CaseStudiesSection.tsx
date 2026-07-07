@@ -1,10 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 
 export default function SectionCaseStudies() {
-  const [visibleItems, setVisibleItems] = useState<Set<string>>(new Set());
-
   const caseStudies = [
     {
       id: 1,
@@ -48,17 +46,9 @@ export default function SectionCaseStudies() {
           const id = entry.target.getAttribute("data-id");
 
           if (entry.isIntersecting && id) {
-            setVisibleItems((prev) => {
-              const newSet = new Set(prev);
-              newSet.add(id); // عند الدخول
-              return newSet;
-            });
+             // Logic when entering
           } else if (!entry.isIntersecting && id) {
-            setVisibleItems((prev) => {
-              const newSet = new Set(prev);
-              newSet.delete(id); // عند الخروج من الشاشة نحذف العنصر
-              return newSet;
-            });
+             // Logic when exiting
           }
         });
       },
@@ -86,10 +76,6 @@ export default function SectionCaseStudies() {
       </div>
 
       {caseStudies.map((study, index) => {
-        const baseDelay = index * 0.5;
-        const descDelay = baseDelay + 1.5;
-        const resultDelay = descDelay + 1;
-
         return (
           <motion.div
             key={study.id}

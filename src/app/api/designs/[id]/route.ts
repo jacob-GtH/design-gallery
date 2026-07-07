@@ -33,9 +33,9 @@ export async function GET(
 
     const { _id, ...rest } = design;
     return NextResponse.json({ id: _id, ...rest });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("❌ Failed to fetch design:", error);
-    return NextResponse.json({ error: error.message || "خطأ غير متوقع" }, { status: 500 });
+    return NextResponse.json({ error: (error as Error).message || "خطأ غير متوقع" }, { status: 500 });
   }
 }
 
@@ -48,9 +48,9 @@ export async function DELETE(
   try {
     await client.delete(id);
     return NextResponse.json({ message: "تم الحذف بنجاح" });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("❌ Failed to delete:", error);
-    return NextResponse.json({ error: error.message || "فشل في الحذف" }, { status: 500 });
+    return NextResponse.json({ error: (error as Error).message || "فشل في الحذف" }, { status: 500 });
   }
 }
 
@@ -75,8 +75,8 @@ export async function PATCH(
       .commit();
 
     return NextResponse.json({ message: "تم التحديث بنجاح" });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("❌ Failed to update:", error);
-    return NextResponse.json({ error: error.message || "فشل في التحديث" }, { status: 500 });
+    return NextResponse.json({ error: (error as Error).message || "فشل في التحديث" }, { status: 500 });
   }
 }

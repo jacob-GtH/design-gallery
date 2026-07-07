@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import DesignCard from "@/src/components/designs/DesignCard";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { IDesign } from "@/interfaces/Design";
 
 interface DesignsSectionProps {
-  designs: any[];
+  designs: IDesign[];
 }
 
 export default function DesignsSection({ designs }: DesignsSectionProps) {

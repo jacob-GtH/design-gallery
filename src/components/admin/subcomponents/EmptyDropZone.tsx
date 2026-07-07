@@ -13,7 +13,6 @@ interface EmptyDropZoneProps {
 
 const EmptyDropZone = ({
   isDragging,
-  disabled,
   handleDragOver,
   handleDragLeave,
   handleDrop,

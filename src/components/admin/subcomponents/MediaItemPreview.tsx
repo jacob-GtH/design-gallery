@@ -1,15 +1,15 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { FiFileText, FiTrash2 } from "react-icons/fi";
+import { FiTrash2 } from "react-icons/fi";
 import { Props } from "../Types"; // تأكد من وجود هذا النوع
+import Image from "next/image";
 //import ProgressBar from './ProgressBar'; // مسار مكون ProgressBar إن وُجد
 
 const MediaItemPreview = ({
   item,
   index,
   readonly,
-  dispatch,
   removeMediaItem,
 }: Props) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -48,10 +48,12 @@ const MediaItemPreview = ({
     <div className="relative group w-full overflow-hidden">
       <div className="relative">
         {item.type === "image" ? (
-          <img
+          <Image
             src={item.previewUrl}
             alt="معاينة التصميم"
-            className="w-full h-auto object-contain mx-auto"
+            fill
+            className="object-contain mx-auto"
+            unoptimized
           />
         ) : (
           <video

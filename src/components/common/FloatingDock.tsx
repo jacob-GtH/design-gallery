@@ -10,8 +10,6 @@ export default function FloatingDock() {
     hoveredIndex,
     setHovered,
     setActiveApp,
-    updateApp,
-    setBadge,
   } = useFloatingDock({
     apps: defaultApps,
     autoHide: true,

@@ -1,6 +1,7 @@
 // src/app/api/designs/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { client } from "@/sanity/design-cms/lib/client";
+import { IDesign } from "@/interfaces/Design";
 
 export async function GET() {
   try {
@@ -11,27 +12,27 @@ export async function GET() {
       description,
       publishedAt,
       likes,
-      background,
-      "designer":  designer->{_id, name},
-      "tags": tags[]->title,
-      media[]{
-        url,
-        type,
-        caption
-      }
-    }`);
+       backgroundColor,
+       "designer":  designer->{_id, name},
+       "tags": tags[]->title,
+       media[]{
+         url,
+         type,
+         caption
+       }
+     }`);
 
-    const designs = rawDesigns.map((d: any) => ({
+    const designs = rawDesigns.map((d: IDesign & { _id: string }) => ({
       id: d._id,
       title: d.title,
-      description: d.description,
-      publishedAt: d.publishedAt,
-      likes: d.likes ?? 0,
-      background: d.background || '#f9fafb',
-      designer: d.designer,
-      tags: d.tags ?? [],
-      media: d.media ?? [],
-    }));
+       description: d.description,
+       publishedAt: d.publishedAt,
+       likes: d.likes ?? 0,
+       backgroundColor: d.backgroundColor || '#f9fafb',
+       designer: d.designer,
+       tags: d.tags ?? [],
+       media: d.media ?? [],
+     }));
 
     return NextResponse.json(designs);
   } catch (error) {

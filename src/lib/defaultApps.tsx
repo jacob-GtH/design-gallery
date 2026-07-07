@@ -1,15 +1,10 @@
 import {
   FiHome,
-  FiTerminal,
-  FiChrome,
-  FiFolder,
   FiFileText,
-  FiActivity,
   FiSettings,
   FiGrid,
   FiMail,
 } from "react-icons/fi";
-import { FaFirefoxBrowser } from "react-icons/fa";
 import { ReactNode } from "react";
 
 export interface App {

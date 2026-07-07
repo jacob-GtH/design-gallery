@@ -39,7 +39,7 @@ export type Props = {
   item: MediaItem;
   index: number;
   readonly: boolean;
-  dispatch: React.Dispatch<any>;
+  dispatch: React.Dispatch<unknown>;
   removeMediaItem: (index: number) => void;
 };
 export type TagInputProps = {

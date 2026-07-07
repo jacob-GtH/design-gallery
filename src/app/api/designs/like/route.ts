@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ likes: result.likes });
   } catch (error) {
+    console.error('Like error:', error);
     return NextResponse.json({ error: 'Failed to update likes' }, { status: 500 });
   }
 }

@@ -1,12 +1,12 @@
 import { Dispatch } from "react";
-import { MediaItem } from "@/src/components/admin/Types";
+import { MediaItem, MediaType } from "@/src/components/admin/Types";
 import { MediaAction } from "@/src/hooks/mediaAction";
 
 export const uploadMediaItems = async (
   mediaItems: MediaItem[],
   dispatch: Dispatch<MediaAction>
-) => {
-  const uploaded: any[] = [];
+): Promise<{ _key: string; url: string; type: MediaType; caption?: string }[]> => {
+  const uploaded: { _key: string; url: string; type: MediaType; caption?: string }[] = [];
 
   for (const [index, item] of mediaItems.entries()) {
     if (item.uploadedUrl) {
@@ -47,7 +47,11 @@ const uploadWithProgress = (
   index: number,
   dispatch: Dispatch<MediaAction>
 ) => {
-  return new Promise<any>((resolve, reject) => {
+  return new Promise<{
+    secure_url: string;
+    original_filename: string;
+    resource_type: string;
+  }>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
     xhr.upload.addEventListener("progress", (e) => {

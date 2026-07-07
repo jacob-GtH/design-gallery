@@ -1,5 +1,5 @@
 "use client";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { motion } from "framer-motion";
 import {
   FiUpload,
@@ -13,8 +13,10 @@ import { FileTextIcon } from "lucide-react";
 import { Button } from "../ui/Button";
 import Alert from "../ui/Alert"; // ← تأكد من المسار الصحيح
 
+import { FormState } from "./Types";
+
 type Props = {
-  formData: any;
+  formData: FormState;
   dispatch: React.Dispatch<any>;
   bgColor: string;
   setBgColor: (color: string) => void;

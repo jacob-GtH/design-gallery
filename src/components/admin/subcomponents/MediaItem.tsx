@@ -1,5 +1,6 @@
 // components/DesignForm/subcomponents/MediaItem.tsx
 import React, { useState } from "react";
+import Image from "next/image";
 
 export type MediaType = "image" | "video";
 
@@ -37,9 +38,9 @@ export function MediaItemComponent({
   return (
     <div className="media-item">
       {item.type === "image" ? (
-        <img src={item.previewUrl} alt={`media-${index}`} width={150} />
+        <Image src={item.previewUrl} alt={`media-${index}`} width={150} height={100} className="object-cover" unoptimized />
       ) : (
-        <video src={item.previewUrl} width={150} controls />
+        <video src={item.previewUrl} width={150} height={100} controls className="object-cover" />
       )}
 
       {mode !== "view" && (

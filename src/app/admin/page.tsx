@@ -35,6 +35,7 @@ export default function HomePage() {
         prev.filter((design) => design.id !== deleteTargetId)
       );
     } catch (err) {
+      console.error("error during delete:", err);
       toast("خطأ", { description: "حدث خطأ أثناء الحذف" });
     } finally {
       setDeleteTargetId(null);
@@ -48,6 +49,7 @@ export default function HomePage() {
       const data = await res.json();
       setDesigns(data);
     } catch (err) {
+      console.error("error fetching designs:", err);
       setError("تعذر تحميل التصاميم");
       toast("خطأ", { description: "حدث خطأ أثناء تحميل البيانات" });
     } finally {

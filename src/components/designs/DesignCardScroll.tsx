@@ -5,7 +5,7 @@ import { motion, useAnimation } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 
-export default function DesignFooterMotion({ relatedDesigns }: { relatedDesigns: any[] }) {
+export default function DesignFooterMotion({ relatedDesigns }: { relatedDesigns: { id: string, title: string, mediaUrl: string, mediaType: string }[] }) {
   const controls = useAnimation();
   const [isVisible, setIsVisible] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);

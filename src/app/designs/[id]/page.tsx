@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { client } from "@/sanity/design-cms/lib/client";
 import Link from "next/link";
-import Image from "next/image";
 import { FiArrowLeft, FiHeart, FiCalendar, FiUser } from "react-icons/fi";
 import DesignFooterMotion from "@/components/designs/DesignCardScroll";
 
@@ -39,7 +38,7 @@ export default async function DesignPage({
         count(media) > 0
       ][0..20]{
         title,
-        "slug": slug.current,
+        "id": _id,
         "mediaUrl": media[0].url,
         "mediaType": media[0].type
       }

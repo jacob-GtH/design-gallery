@@ -4,8 +4,8 @@ import { FormState, Designer } from "@/src/components/admin/Types";
 export type FormAction =
   | {
       type: "SET_FIELD";
-      field: keyof Omit<FormState, "">;
-      value: any;
+      field: keyof FormState;
+      value: FormState[keyof FormState];
     }
   | { type: "LOAD_INITIAL"; data: Omit<FormState, "mediaItems"> }
   | { type: "SET_LOADING"; loading: boolean }

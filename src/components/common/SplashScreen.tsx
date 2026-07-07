@@ -20,7 +20,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     } , 2000); // مدة عرض splash قبل الخروج
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [onComplete]);
 
   return (
     <AnimatePresence mode="wait">

@@ -2,7 +2,6 @@
 "use client";
 import { fetchDesigners } from "@/components/admin/designerService";
 import React, {
-  Dispatch,
   Suspense,
   useEffect,
   useReducer,
@@ -11,7 +10,7 @@ import React, {
 } from "react";
 import { IDesign } from "@/interfaces/Design";
 import { formReducer } from "@/hooks/formAction";
-import { mediaReducer, MediaAction } from "@/hooks/mediaAction";
+import { mediaReducer } from "@/hooks/mediaAction";
 import { DesignFormViewMode, MediaItem, FormState } from "./Types";
 import DesignEditorBody from "@/components/admin/DesignEditorBody";
 import ReactQuill from "react-quill-new";
@@ -70,7 +69,6 @@ export default function DesignFormCore({
   );
   const { backgroundColor } = formState;
   const editorRef = useRef<ReactQuill>(null);
-  const uploadedMedia = uploadMediaItems(mediaItems, mediaDispatch);
 
   // مزامنة mediaItems في formState كلما تغير mediaItems
   useEffect(() => {
@@ -82,13 +80,13 @@ export default function DesignFormCore({
   }, [mediaItems]);
 
   // دالة لتحويل الوسائط من البيانات الأولية
-  const mapMediaItemsFromInitial = (media: any[]): MediaItem[] => {
+  const mapMediaItemsFromInitial = (media: { _key?: string; _id?: string; url: string; type: "image" | "video"; caption?: string }[]): MediaItem[] => {
     return media.map((item) => ({
       _key: item._key || uuidv4(), // استخدام uuidv4 إذا لم يكن المفتاح موجودًا
       id: item._id || uuidv4(), // استخدام _id أو إنشاء معرف جديد
       file: null, // لا نحتاج الملف هنا لأنه تم رفعه مسبقاً
       previewUrl: item.url,
-      type: item.type as MediaItem["type"],
+      type: item.type,
       caption: item.caption || "",
       uploadProgress: undefined, // لا نحتاج التقدم هنا لأنه تم رفعه مسبقاً
       showToolbar: false,
@@ -104,10 +102,10 @@ export default function DesignFormCore({
       const mapped = {
         title: initialData.title || "",
         description: initialData.description || "",
-        designerId: initialData.designer || "",
-        tags: (initialData.tags || [])
-          .filter((tag: any) => tag && (typeof tag === "string" || tag.title))
-          .map((tag: any) => (typeof tag === "string" ? tag : tag.title)),
+        designerId: typeof initialData.designer === "string" ? initialData.designer : initialData.designer?._id || "",
+        tags: (initialData.tags as (string | { title: string })[] || [])
+          .filter((tag) => tag && (typeof tag === "string" || (typeof tag === "object" && "title" in tag)))
+          .map((tag) => (typeof tag === "string" ? tag : tag.title)),
         backgroundColor: initialData.backgroundColor || "#f9fafb",
         // إذا كان backgroundColor غير موجود، استخدم اللون الافتراضي
         // يمكنك تغيير اللون الافتراضي حسب الحاجة
@@ -133,7 +131,7 @@ export default function DesignFormCore({
         const data = await fetchDesigners();
         formDispatch({ type: "SET_DESIGNERS", designers: data });
       } catch (err) {
-        console.error("فشل في جلب المصممين");
+        console.error("فشل في جلب المصممين", err);
       }
     }
 
@@ -141,9 +139,9 @@ export default function DesignFormCore({
   }, []);
 
   // دالة للتعامل مع تغير الحقول
-  const handleChange = (
-    field: keyof Omit<FormState, "mediaItems">,
-    value: any
+  const handleChange = <K extends keyof Omit<FormState, "mediaItems">>(
+    field: K,
+    value: FormState[K]
   ) => {
     if (mode === "view") return; // منع التعديل في وضع العرض فقط
     formDispatch({ type: "SET_FIELD", field, value });
@@ -187,11 +185,6 @@ export default function DesignFormCore({
     mediaDispatch({ type: "ADD_MEDIA", items: newItems });
     // بعد قراءة الملفات
     e.target.value = "";
-  };
-
-  const handleRemoveMedia = (index: number) => {
-    if (mode === "view") return;
-    mediaDispatch({ type: "REMOVE_MEDIA", index });
   };
 
   function handleCaptionChange(index: number, value: string): void {

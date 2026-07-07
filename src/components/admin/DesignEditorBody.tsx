@@ -1,9 +1,10 @@
-import React, { useRef, useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import MediaItemPreview from "@/components/admin/subcomponents/MediaItemPreview";
 import EmptyDropZone from "@/components/admin/subcomponents/EmptyDropZone";
 // import { isDarkColor } from "@/lib/utils";
-import { Designer } from "@/components/admin/Types";
+import { Designer, FormState, MediaItem } from "@/components/admin/Types";
 import { useMemo } from "react";
 import dynamic from "next/dynamic";
 // import "react-quill-new/dist/quill.snow.css";
@@ -13,36 +14,32 @@ type Mode = "create" | "edit" | "view";
 
 interface DesignEditorBodyProps {
   mode: Mode;
-  bgColor: string;
-  formData: any;
-  editorRef: any;
-  handleInputChange: (e: React.ChangeEvent<any>) => void;
+  bgColor?: string;
+  formData: FormState;
+  editorRef?: React.RefObject<any>;
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  mediaItems: any[];
+  mediaItems: MediaItem[];
   handleCaptionChange: (index: number, value: string) => void;
-  dispatch: any;
+  dispatch: React.Dispatch<any>;
   formDispatch: React.Dispatch<any>;
   toolbarFocused: boolean;
   designers: Designer[];
-  handleRemoveTag: (i: number) => void;
-  handleAddTag: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  handleRemoveTag?: (i: number) => void;
+  handleAddTag?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
 const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
   mode,
   formData,
-  editorRef,
   handleInputChange,
   handleFileChange,
   mediaItems,
   handleCaptionChange,
   dispatch,
   formDispatch,
-  bgColor,
   toolbarFocused,
   designers,
-  handleRemoveTag,
-  handleAddTag,
 }) => {
   const isReadOnly = mode === "view";
 
@@ -234,7 +231,7 @@ const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
             <span className="text-gray-500">المصمم:</span>
             <select
               name="designerId"
-              value={formData.designerId}
+              value={typeof formData.designerId === "string" ? formData.designerId : formData.designerId?._id || ""}
               onChange={(e) =>
                 formDispatch({
                   type: "SET_FIELD",

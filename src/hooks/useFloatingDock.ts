@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 export interface App {
   name: string;
@@ -20,7 +20,6 @@ interface UseDockConfig {
 export function useFloatingDock({
   apps: initialApps,
   autoHide = true,
-  position = "bottom",
   hideOnScroll = true,
   scrollThreshold = 50,
 }: UseDockConfig) {
@@ -190,7 +189,7 @@ export function useDockPersistence(
     } catch (error) {
       console.error("Error loading dock state:", error);
     }
-  }, [storageKey, setApps]);
+  }, [storageKey, setApps, apps]);
 
   useEffect(() => {
     saveState();

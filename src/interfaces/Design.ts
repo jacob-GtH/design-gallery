@@ -1,6 +1,6 @@
 // interfaces/Design.ts
 export interface IDesign {
-  createdAt: any;
+  createdAt: string;
   id: string;
   title: string;
   description?: string;

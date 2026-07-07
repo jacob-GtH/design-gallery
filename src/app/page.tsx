@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SplashScreen from "@/components/common/SplashScreen";
 import Loading from "@/components/common/loading";
-import HomeSection from "./home/page";
+import HomeSection from "@/components/sections/HomeSection";
 
 export default function Home() {
   const [splashDone, setSplashDone] = useState(false);
