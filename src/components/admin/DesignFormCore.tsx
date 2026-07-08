@@ -1,6 +1,5 @@
 // components/DesignForm/DesignFormCore.tsx
 "use client";
-import { fetchDesigners } from "@/components/admin/designerService";
 import React, {
   Suspense,
   useEffect,
@@ -9,17 +8,21 @@ import React, {
   useState,
 } from "react";
 import { IDesign } from "@/interfaces/Design";
-import { formReducer } from "@/hooks/formAction";
-import { mediaReducer } from "@/hooks/mediaAction";
-import { DesignFormViewMode, MediaItem, FormState } from "./Types";
-import DesignEditorBody from "@/components/admin/DesignEditorBody";
 import ReactQuill from "react-quill-new";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
-import { uploadMediaItems } from "@/hooks/useMediaUpload";
+import { isDarkColor } from "@/lib/utils/colorUtils";
+import { client } from "@/sanity/design-cms/lib/client";
+import { getOrCreateTag } from "@/lib/actions";
 
-// Define the Designer type if not already imported
+import { fetchDesigners } from "@/components/admin/designerService";
+import { formReducer } from "@/hooks/formAction";
+import { mediaReducer } from "@/hooks/mediaAction";
+import { uploadMediaItems } from "@/hooks/useMediaUpload";
+import { DesignFormViewMode, MediaItem, FormState } from "./Types";
+import DesignEditorBody from "@/components/admin/DesignEditorBody";
+
 
 type DesignFormCoreProps = {
   mode: DesignFormViewMode;
@@ -126,15 +129,14 @@ export default function DesignFormCore({
 
   //  تحميل المصممين عند بداية تحميل النموذج
   useEffect(() => {
-    async function loadDesigners() {
+    const loadDesigners = async () => {
       try {
         const data = await fetchDesigners();
         formDispatch({ type: "SET_DESIGNERS", designers: data });
       } catch (err) {
         console.error("فشل في جلب المصممين", err);
       }
-    }
-
+    };
     loadDesigners();
   }, []);
 
@@ -245,34 +247,10 @@ export default function DesignFormCore({
       // 🔁 تحويل الوسوم إلى مراجع بعد التأكد من وجودها أو إنشائها
       const tagRefs = await Promise.all(
         formState.tags.map(async (tag: string) => {
-          try {
-            console.log("📎 tagRefs:", tagRefs);
-
-            const res = await fetch("/api/create-tag", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ title: tag }),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok || !data._id || typeof data._id !== "string") {
-              console.warn("⚠️ وسم غير صالح:", tag, data);
-              return null;
-            }
-
-            return {
-              _type: "reference",
-              _ref: data._id,
-            };
-          } catch (err) {
-            console.error("❌ فشل أثناء إنشاء وسم:", tag, err);
-            return null;
-          }
+          return await getOrCreateTag(tag);
         })
       );
 
-      // إزالة أي null من المصفوفة
       const validTags = tagRefs.filter(Boolean);
 
       const res = await fetch(
@@ -340,11 +318,6 @@ export default function DesignFormCore({
       });
     }
   }, [initialData]);
-  // دالة للتحقق مما إذا كان اللون داكنًا
-  const isDarkColor = (hex: string) => {
-    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-    return (r * 299 + g * 587 + b * 114) / 1000 < 128;
-  };
 
   return (
     <motion.div

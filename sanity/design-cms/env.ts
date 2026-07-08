@@ -1,10 +1,7 @@
 // sanity/design-cms/env.ts
 // أعلى env.ts
-import dotenv from 'dotenv'
-import path from 'path'
 
 // تحميل .env.local من جذر المشروع
-dotenv.config({ path: path.resolve(__dirname, '../../.env.local') })
 
 
 export const apiVersion = process.env.NEXT_PUBLIC_SANITY_API_VERSION || '2025-06-09'

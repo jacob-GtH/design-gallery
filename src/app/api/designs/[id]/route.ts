@@ -66,10 +66,16 @@ export async function PATCH(
   }
 
   try {
+    const updatedTags = data.tags ? data.tags.map((tag: { _ref: string }) => ({
+      _type: "reference",
+      _ref: tag._ref,
+    })) : [];
+
     await client
       .patch(id)
       .set({
         ...data,
+        tags: updatedTags,
         publishedAt: data.publishedAt || new Date().toISOString(),
       })
       .commit();

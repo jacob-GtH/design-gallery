@@ -77,9 +77,9 @@ export async function POST(req: NextRequest) {
         _type: "reference",
         _ref: designerId,
       },
-      tags: tags ? tags.map((tag: string) => ({
+      tags: tags ? tags.map((tag: { _ref: string }) => ({
         _type: "reference",
-        _ref: tag,
+        _ref: tag._ref,
       })) : [],
     };
 

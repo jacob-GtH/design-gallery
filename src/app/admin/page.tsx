@@ -64,7 +64,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-white py-10 px-4 sm:px-6 lg:px-20 relative">
       <h1 className="text-4xl font-bold mb-10 text-center text-gray-800">
-        🎨 معرض التصاميم
+        معرض التصاميم
       </h1>
 
       {loading ? (
