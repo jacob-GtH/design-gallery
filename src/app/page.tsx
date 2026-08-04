@@ -59,7 +59,7 @@ export default function Home() {
               initial={{ y: "100%" }}
               animate={{ y: "0%" }}
               transition={{ duration: 1.2, ease: [-1.1, 0, 0.24, 1] }}
-              className="relative z-10 bg-gray-900 shadow-2xl shadow-slate-50 "
+              className="relative z-10 bg-white dark:bg-gray-900 shadow-2xl shadow-gray-200 dark:shadow-slate-50 transition-colors duration-500"
             >
               <HomeSection animateStart={startAnimation} />
             </motion.div>

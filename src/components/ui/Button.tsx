@@ -14,11 +14,11 @@ export const Button = ({
   className = '',
   ...props
 }: ButtonProps) => {
-  const baseClasses = "px-6 py-3 rounded-full font-medium transition-all";
+  const baseClasses = "px-6 py-3 rounded-full font-medium transition-all duration-300";
 
   const variants = {
-    primary: "bg-white text-blue-900 hover:bg-blue-100 shadow-lg",
-    outline: "bg-transparent border-2 border-white  hover:bg-white/10"
+    primary: "bg-black text-white dark:bg-white dark:text-blue-900 hover:bg-gray-800 dark:hover:bg-blue-100 shadow-lg border border-black/10 dark:border-none",
+    outline: "bg-transparent border-2 border-black/20 dark:border-white text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
   };
 
   return (

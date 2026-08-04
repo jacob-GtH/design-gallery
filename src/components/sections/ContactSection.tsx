@@ -1,101 +1,105 @@
+"use client";
 
-'use client'
-
-
-import { motion } from 'framer-motion'
-import { FiArrowLeft } from 'react-icons/fi'
+import { motion } from "framer-motion";
+import { FiArrowLeft } from "react-icons/fi";
+import Link from "next/link";
+import { SectionHeader } from "../ui/SectionHeader";
 
 export default function ContactSection() {
-    return (
-        <section
-            id="contact"
-            className="relative  to-black text-white py-48 overflow-hidden"
+  return (
+    <section
+      id="contact"
+      className="relative w-full py-32 md:py-48 overflow-hidden bg-white dark:bg-[#050505] transition-colors duration-500"
+    >
+      {/* Background Decorative Elements */}
+      <div className="absolute inset-0 z-0">
+        {/* Subtle Grid */}
+        
+        {/* Deep Aura Glows */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/5 dark:bg-purple-600/10 blur-[120px] rounded-full transition-colors duration-500" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-indigo-600/5 dark:bg-indigo-600/10 blur-[100px] rounded-full transition-colors duration-500" />
+      </div>
+
+      {/* Floating Frosted Glass Orbs */}
+      <motion.div
+        animate={{
+          y: [0, -30, 0],
+          x: [0, 20, 0],
+          rotate: [0, 90, 0],
+        }}
+        transition={{
+          duration: 15,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+          className="absolute top-20 left-[10%] w-32 h-32 rounded-full bg-gradient-to-br from-purple-500/10 dark:from-purple-500/20 to-transparent backdrop-blur-3xl border border-gray-200 dark:border-white/5 z-0 transition-colors duration-500"
+        />
+        <motion.div
+          animate={{
+            y: [0, 40, 0],
+            x: [0, -30, 0],
+            rotate: [0, -120, 0],
+          }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2,
+          }}
+          className="absolute bottom-20 right-[15%] w-48 h-48 rounded-full bg-gradient-to-tr from-indigo-500/10 dark:from-indigo-500/15 to-transparent backdrop-blur-2xl border border-gray-200 dark:border-white/5 z-0 transition-colors duration-500"
+        />
+
+      <div className="container mx-auto px-6 relative z-10 text-center flex flex-col items-center">
+        <SectionHeader
+          align="center"
+          badge="لنبدأ رحلة جديدة"
+          title="لديك رؤية؟"
+          gradientTitle="نحن هنا لنحققها"
+          description="نحن دائماً نبحث عن شركاء طموحين ومشاريع ملهمة. تواصل معنا اليوم لنبدأ في تحويل أفكارك إلى واقع رقمي ملموس."
+          className="mb-12"
+        />
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true, margin: "-100px" }}
+          className="max-w-4xl mx-auto"
         >
-            {/* Decorative elements */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 0.1 }}
-                transition={{ duration: 1 }}
-                className="absolute inset-0 bg-[url('/images/grid-pattern.svg')] bg-center bg-no-repeat "
-                aria-hidden="true"
-            />
-            <div className="container mx-auto px-4 text-center relative z-10">
-                <motion.div
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-                    className="max-w-3xl mx-auto"
-                >
-                    <motion.h2
-                        className="text-4xl md:text-5xl font-bold mb-6"
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                    >
-                        دعنا نتحدث
-                    </motion.h2>
 
-                    <motion.p
-                        className="text-lg md:text-xl text-purple-100 mb-10 leading-relaxed"
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                    >
-                        مهتم بالتعاون معنا؟ نحن دائماً نبحث عن شركاء جدد ومشاريع ملهمة.
-                        <br className="hidden md:block" /> تواصل معنا وسنرد عليك خلال 24 ساعة.
-                    </motion.p>
+          {/* Primary Action */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-4 px-10 py-5 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-extrabold text-xl hover:bg-gray-800 dark:hover:bg-purple-50 transition-all group shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(255,255,255,0.1)] hover:shadow-[0_20px_60px_rgba(168,85,247,0.2)]"
+            >
+              تواصل معنا الآن
+              <span className="w-8 h-8 rounded-full bg-white dark:bg-black text-black dark:text-white flex items-center justify-center group-hover:translate-x-[-4px] transition-transform duration-300">
+                <FiArrowLeft className="rotate-180" />
+              </span>
+            </Link>
+          </motion.div>
 
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        transition={{ delay: 0.6 }}
-                    >
-                <motion.a
-                    href="/src/app/contact"
-                    className="inline-flex items-center gap-2 px-8 py-4 bg-white text-purple-900 rounded-full font-semibold text-lg hover:bg-opacity-90 transition-all group"
-                    whileHover={{
-                        scale: 1.05,
-                        boxShadow: "0 10px 25px -5px rgba(255, 255, 255, 0.1)"
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                    aria-label="انتقل إلى صفحة التواصل"
-                >
-                            تواصل معنا الآن
-                            <FiArrowLeft className="group-hover:translate-x-1 transition-transform" />
-                        </motion.a>
-                    </motion.div>
-                </motion.div>
-            </div>
+          {/* Quick Info */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 0.5 }}
+            transition={{ delay: 1, duration: 1 }}
+            className="mt-16 text-sm text-gray-500 dark:text-gray-500 uppercase tracking-widest"
+          >
+            نرد عادةً خلال أقل من 24 ساعة
+          </motion.div>
+        </motion.div>
+      </div>
 
-            {/* Animated floating elements فقاعات */}
-            <motion.div
-                className="absolute top-20 left-20 w-16 h-16 rounded-full bg-purple-500 opacity-50"
-                animate={{
-                    y: [0, -20, 0],
-                    scale: [1, 1.3, 1]
-                }}
-                transition={{
-                    duration: 10,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                }}
-                aria-hidden="true"
-            />
-            <motion.div
-                className="absolute bottom-20 right-20 w-24 h-24 rounded-sm bg-purple-500 opacity-50"
-                animate={{
-                    y: [0, 20, 0],
-                    scale: [1, 1.3, 1]
-                }}
-                transition={{
-                    duration: 10,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 2
-                }}
-                aria-hidden="true"
-            />
-        </section>
-    )
+      {/* Background Decorative Text */}
+      <div className="absolute bottom-[-5%] left-1/2 -translate-x-1/2 opacity-[0.05] dark:opacity-[0.02] text-[12vw] font-black text-black dark:text-white select-none pointer-events-none whitespace-nowrap uppercase tracking-tighter transition-colors duration-500">
+        Get In Touch
+      </div>
+    </section>
+  );
 }

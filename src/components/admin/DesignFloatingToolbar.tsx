@@ -50,7 +50,7 @@ export default function DesignFloatingToolbar({
       {error && <Alert type="error" message={error} autoDismiss={false} />}
       {success && <Alert type="success" message="تم رفع التصميم بنجاح" autoDismiss duration={6000} />}
 
-      <div className="flex flex-col items-center space-y-2 sm:p-4 bg-white p-1 border border-gray-100 shadow-lg rounded-xl">
+      <div className="flex flex-col items-center space-y-2 sm:p-4 bg-white dark:bg-gray-900 p-1 border border-gray-100 dark:border-gray-800 shadow-lg rounded-xl transition-colors duration-500">
         <TooltipButton
           icon={<FiFileText size={20} />}
           onClick={() => document.getElementById("title-input")?.focus()}

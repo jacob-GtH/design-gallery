@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState, useCallback } from "react";
+import { motion, useScroll, useSpring } from "framer-motion";
 import HeroSection from "@/components/sections/HeroSection";
 import CaseStudiesSection from "@/components/sections/CaseStudiesSection";
 import ServicesSection from "@/components/sections/ServicesSection";
@@ -19,20 +20,27 @@ export default function HomeSection({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // مراقبة تقدم التمرير لشريط التقدم العلوي
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
+
   const fetchDesigns = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Replace with your actual API endpoint
       const response = await fetch("/api/designs");
       if (!response.ok) {
         throw new Error("فشل تحميل التصاميم");
       }
-       const data: IDesign[] = await response.json();
-       setDesigns(data);
-     } catch (err: unknown) {
-       setError((err as Error).message || "حدث خطأ غير متوقع");
-     } finally {
+      const data: IDesign[] = await response.json();
+      setDesigns(data);
+    } catch (err: unknown) {
+      setError((err as Error).message || "حدث خطأ غير متوقع");
+    } finally {
       setLoading(false);
     }
   }, []);
@@ -44,8 +52,25 @@ export default function HomeSection({
   const handleRetry = () => {
     fetchDesigns();
   };
+
+  // إعدادات أنميشن ظهور الأقسام عند التمرير
+  const revealVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.8, ease: [0.25, 1, 0.5, 1] as const }
+    }
+  };
+
   return (
-    <main className="min-h-screen overflow-hidden relative">
+    <main className="min-h-screen overflow-hidden relative bg-white dark:bg-[#050505] transition-colors duration-500">
+      {/* شريط تقدم التمرير العلوي الفاخر */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 origin-[0%] z-[9999]"
+        style={{ scaleX }}
+      />
+
       <Suspense
         fallback={
           <div className="flex items-center justify-center min-h-screen">
@@ -54,10 +79,15 @@ export default function HomeSection({
         }
       >
         {/* الشاشة الرئيسية */}
-
         <HeroSection animateStart={animateStart} />
 
-        <section>
+        {/* قسم أحدث التصاميم مع أنميشن ظهور سلس */}
+        <motion.section
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={revealVariants}
+        >
           {loading && (
             <div className="flex justify-center items-center py-20">
               <Loading />
@@ -65,11 +95,37 @@ export default function HomeSection({
           )}
           {error && <ErrorMessage message={error} onRetry={handleRetry} />}
           {!loading && !error && <DesignsSection designs={designs} />}
-        </section>
+        </motion.section>
 
-        <ServicesSection />
-        <CaseStudiesSection />
-        <ContactSection />
+        {/* قسم الخدمات مع أنميشن ظهور سلس */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={revealVariants}
+        >
+          <ServicesSection />
+        </motion.div>
+
+        {/* قسم دراسات الحالة مع أنميشن ظهور سلس */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={revealVariants}
+        >
+          <CaseStudiesSection />
+        </motion.div>
+
+        {/* قسم التواصل مع أنميشن ظهور سلس */}
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={revealVariants}
+        >
+          <ContactSection />
+        </motion.div>
       </Suspense>
     </main>
   );

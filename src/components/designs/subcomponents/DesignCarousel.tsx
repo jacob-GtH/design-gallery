@@ -1,163 +1,100 @@
 "use client";
 
-import React, { useRef, useState, useCallback, useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import DesignCard from "../DesignCard";
-import CarouselControls from "./CarouselControls";
 import { IDesign } from "@/interfaces/Design";
 
 interface DesignCarouselProps {
   designs: IDesign[];
 }
 
-const DesignCarousel: React.FC<DesignCarouselProps> = ({ designs }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+export default function DesignCarousel({ designs }: DesignCarouselProps) {
+  const [index, setIndex] = useState(0);
 
-  const infiniteDesigns = designs ? [...designs, ...designs, ...designs] : [];
-
-  const startAutoScroll = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-
-    intervalRef.current = setInterval(() => {
-      const container = scrollRef.current;
-      if (!container) return;
-
-      const cardWidth = container.children[0]?.clientWidth || 0;
-      const gap = 40;
-      const scrollAmount = cardWidth + gap;
-
-      container.scrollBy({
-        left: scrollAmount,
-        behavior: "smooth",
-      });
-    }, 3000);
-  }, []);
-
-  const stopAutoScroll = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
-
-  const scrollToDesign = useCallback((direction: "prev" | "next") => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    const cardWidth = container.children[0]?.clientWidth || 0;
-    const gap = 40;
-    const scrollAmount = cardWidth + gap;
-
-    container.scrollBy({
-      left: direction === "next" ? scrollAmount : -scrollAmount,
-      behavior: "smooth",
-    });
-  }, []);
-
-  const togglePlayPause = useCallback(() => {
-    setIsPlaying((prev) => {
-      if (prev) {
-        stopAutoScroll();
-        return false;
-      } else {
-        startAutoScroll();
-        return true;
-      }
-    });
-  }, [startAutoScroll, stopAutoScroll]);
-
+  // التنقل التلقائي
   useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    const setupInitialPosition = () => {
-      const cardWidth = container.children[0]?.clientWidth || 0;
-      const gap = 40;
-      const sectionWidth = (cardWidth + gap) * designs.length;
-      container.scrollLeft = sectionWidth;
-    };
-
-    requestAnimationFrame(setupInitialPosition);
-
-    if (isPlaying) {
-      startAutoScroll();
-    }
-
-    const handleScroll = () => {
-      const cardWidth = container.children[0]?.clientWidth || 0;
-      const gap = 40;
-      const sectionWidth = (cardWidth + gap) * designs.length;
-      const scrollLeft = container.scrollLeft;
-
-      if (scrollLeft <= 1) {
-        container.scrollLeft = sectionWidth;
-      } else if (scrollLeft >= sectionWidth * 2 - 1) {
-        container.scrollLeft = sectionWidth;
-      }
-
-      const relativeIndex = Math.round((scrollLeft % sectionWidth) / (cardWidth + gap));
-      setCurrentIndex(relativeIndex);
-    };
-
-    container.addEventListener("scroll", handleScroll);
-    return () => {
-      stopAutoScroll();
-      container.removeEventListener("scroll", handleScroll);
-    };
-  }, [designs?.length, isPlaying, startAutoScroll, stopAutoScroll]);
-
-  if (!designs || designs.length === 0) {
-    return (
-      <section className="relative h-screen py-24 bg-gradient-to-tr from-purple-900/40 to-black">
-        <div className="flex items-center justify-center h-full">
-          <p className="text-white text-xl">لا توجد تصاميم لعرضها</p>
-        </div>
-      </section>
-    );
-  }
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % designs.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [designs.length]);
 
   return (
-    <div className="relative">
-      <div
-        ref={scrollRef}
-        className="flex gap-10 overflow-x-hidden scrollbar-hide px-8 pb-8"
-        style={{ scrollSnapType: "x mandatory" }}
-        onMouseEnter={stopAutoScroll}
-        onMouseLeave={() => isPlaying && startAutoScroll()}
-      >
-        {infiniteDesigns.map((design, index) => (
-          <motion.div
-            key={`${design.id}-${index}`}
-            initial={{ opacity: 0, y: 0 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 1,
-              delay: (index % designs.length) * 0.1,
-              ease: "easeOut",
-            }}
-            viewport={{ amount: 0.3 }}
-            className="relative w-[400px] md:w-[700px] xl:w-[900px] flex-shrink-0"
-            style={{ scrollSnapAlign: "start" }}
-          >
-            <DesignCard design={design} priority={true} />
-          </motion.div>
-        ))}
+    <div className="relative w-full h-[400px] md:h-[600px] flex items-center justify-center overflow-hidden px-4">
+      <div className="relative w-full max-w-5xl h-full flex items-center justify-center">
+        <AnimatePresence initial={false}>
+          {[-1, 0, 1].map((offset) => {
+            const itemIndex = (index + offset + designs.length) % designs.length;
+            const design = designs[itemIndex];
+
+            return (
+              <motion.div
+                key={`${design.id}-${itemIndex}`}
+                initial={{ 
+                  opacity: 0, 
+                  scale: 0.8, 
+                  x: offset * 300,
+                  zIndex: 0 
+                }}
+                animate={{ 
+                  opacity: offset === 0 ? 1 : 0.4, 
+                  scale: offset === 0 ? 1 : 0.85, 
+                  x: offset * (typeof window !== "undefined" && window.innerWidth > 768 ? 400 : 200),
+                  zIndex: offset === 0 ? 20 : 10,
+                  filter: offset === 0 ? "blur(0px)" : "blur(4px)",
+                }}
+                exit={{ 
+                  opacity: 0, 
+                  scale: 0.8, 
+                  x: offset === 1 ? 500 : -500 
+                }}
+                transition={{
+                  duration: 0.8,
+                  ease: [0.32, 0.72, 0, 1]
+                }}
+                className="absolute w-[300px] md:w-[600px] xl:w-[800px]"
+              >
+                <div className={`transition-all duration-500 ${offset === 0 ? "shadow-[0_0_50px_rgba(99,102,241,0.2)]" : ""}`}>
+                  <DesignCard design={design} priority={offset === 0} />
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
-      <div className="flex justify-center gap-2 mt-8">
-        {designs.map((_, index) => (
-          <div
-            key={index}
-            className={`w-6 md:w-14 h-1 rounded-full transition-colors ${
-              index === currentIndex % designs.length ? "bg-white" : "bg-white/30"
+
+      {/* Navigation Indicators */}
+      <div className="absolute bottom-4 flex gap-2 z-30">
+        {designs.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setIndex(i)}
+            className={`h-1.5 rounded-full transition-all duration-500 ${
+              index === i ? "w-8 bg-indigo-500" : "w-2 bg-black/20 dark:bg-white/20"
             }`}
           />
         ))}
       </div>
+
+      {/* Side Buttons for Manual Navigation */}
+      <button 
+        onClick={() => setIndex((prev) => (prev - 1 + designs.length) % designs.length)}
+        className="absolute left-4 md:left-10 z-40 p-4 rounded-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 text-black dark:text-white transition-all backdrop-blur-sm transition-colors duration-500"
+      >
+        <svg className="w-6 h-6 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      <button 
+        onClick={() => setIndex((prev) => (prev + 1) % designs.length)}
+        className="absolute right-4 md:right-10 z-40 p-4 rounded-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 text-black dark:text-white transition-all backdrop-blur-sm transition-colors duration-500"
+      >
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
     </div>
   );
-};
-
-export default DesignCarousel;
+}

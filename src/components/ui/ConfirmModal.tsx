@@ -26,26 +26,26 @@ export default function ConfirmModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
+            exit={{ scale: 0.95, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full text-center space-y-4"
+            className="bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full text-center space-y-5"
           >
-            <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-            <p className="text-gray-600">{description}</p>
-            <div className="flex justify-center gap-4 mt-4">
+            <h3 className="text-xl font-bold text-white">{title}</h3>
+            <p className="text-gray-400 text-sm md:text-base leading-relaxed">{description}</p>
+            <div className="flex justify-center gap-4 mt-6">
               <button
                 onClick={onCancel}
-                className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300"
+                className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold transition-all"
               >
                 {cancelText}
               </button>
               <button
                 onClick={onConfirm}
-                className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                className="px-6 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold shadow-lg shadow-red-600/10 transition-all"
               >
                 {confirmText}
               </button>

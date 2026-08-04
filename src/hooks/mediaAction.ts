@@ -8,10 +8,13 @@ export type MediaAction =
   | { type: "UPDATE_UPLOADED_URL"; index: number; url: string }
   | { type: "UPDATE_PROGRESS"; index: number; progress: number }
   | { type: "SHOW_TOOLBAR"; index: number }
-  | { type: "HIDE_TOOLBAR"; index: number };
+  | { type: "HIDE_TOOLBAR"; index: number }
+  | { type: "SET_MEDIA"; items: MediaItem[] }; // إضافة هذا الأكشن الجديد
 
 export function mediaReducer(state: MediaItem[], action: MediaAction ): MediaItem[] {
   switch (action.type) {
+    case "SET_MEDIA": // معالجة الأكشن الجديد
+      return action.items;
     case "ADD_MEDIA":
       return [...state, ...action.items];
     case "REMOVE_MEDIA":

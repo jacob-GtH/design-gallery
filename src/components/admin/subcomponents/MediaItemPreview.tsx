@@ -45,14 +45,14 @@ const MediaItemPreview = ({
   }, [item.type]);
 
   return (
-    <div className="relative group w-full overflow-hidden">
-      <div className="relative">
+    <div className="relative group w-full h-[680] overflow-hidden">
+      <div className="relative w-full h-full">
         {item.type === "image" ? (
           <Image
             src={item.previewUrl}
             alt="معاينة التصميم"
             fill
-            className="object-contain mx-auto"
+            className="w-full h-auto object-contain mx-auto"
             unoptimized
           />
         ) : (

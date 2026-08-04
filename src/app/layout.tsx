@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
 import DynamicLogo from "@/components/layout/logo/DynamicLogo";
 import Footer from "@/components/layout/footer";
 import FloatingDock from "@/components/common/FloatingDock";
-// import CustomCursor from "@/components/ui/CustomCursor";
+import CustomCursor from "@/components/ui/CustomCursor";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,17 +28,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} relative antialiased`}
       >
-        <DynamicLogo />
-        <FloatingDock />
-        <main className="min-h-screen flex-col items-center justify-between bg-gray-900 text-white relative">
-          {children}
-        </main>
-        {/* <CustomCursor /> */}
-        <Footer />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <DynamicLogo />
+          <FloatingDock />
+          <main className="min-h-screen flex-col items-center justify-between bg-white text-black dark:bg-gray-900 dark:text-white relative">
+            {children}
+          </main>
+          <CustomCursor />
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -55,6 +55,10 @@ body {
 .no-border-quill .ql-toolbar {
   border: none !important;
   box-shadow: none !important;
+  background-color: transparent;
+}
+
+.dark .no-border-quill .ql-toolbar {
   background-color: #1e293b;
 }
 

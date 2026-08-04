@@ -66,9 +66,9 @@ export default function DesignFooterMotion({ relatedDesigns }: { relatedDesigns:
       animate={controls}
       initial={{ y: 100, opacity: 0 }}
       transition={{ duration: 0.5, ease: "easeInOut" }}
-      className="fixed bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/90 to-transparent px-4 py-6"
+      className="fixed bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-gray-100/90 dark:from-black/90 to-transparent px-4 py-6 transition-colors duration-500"
     >
-      <h2 className="text-white/50 text-lg font-semibold ml-2 mb-2">Other Designs</h2>
+      <h2 className="text-gray-500 dark:text-white/50 text-xl font-bold ml-2 mb-2 text-right border-b border-gray-200 dark:border-gray-800 pb-4 transition-colors duration-500">تصاميم أخرى قد تعجبك</h2>
       <div
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide"
@@ -79,7 +79,7 @@ export default function DesignFooterMotion({ relatedDesigns }: { relatedDesigns:
             href={`/designs/${related.id}`}
             className="group w-48 flex-shrink-0"
           >
-            <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+            <div className="relative aspect-square bg-gray-200/40 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-xl transition-colors duration-500">
               {related.mediaType === "image" ? (
                 <Image
                   src={related.mediaUrl}
@@ -87,7 +87,7 @@ export default function DesignFooterMotion({ relatedDesigns }: { relatedDesigns:
                   width={400}
                   height={400}
                   unoptimized
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
               ) : (
                 <video
@@ -95,11 +95,12 @@ export default function DesignFooterMotion({ relatedDesigns }: { relatedDesigns:
                   muted
                   loop
                   playsInline
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
               )}
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-200 dark:from-gray-950 via-transparent to-transparent opacity-70 group-hover:opacity-80 transition-opacity duration-300 transition-colors duration-500" />
+              <p className="absolute bottom-4 right-4 text-sm text-black dark:text-white font-semibold truncate max-w-[calc(100%-20px)] z-10 transition-colors duration-500">{related.title}</p>
             </div>
-            <p className="mt-2 ml-2 text-sm text-white truncate">{related.title}</p>
           </Link>
         ))}
       </div>

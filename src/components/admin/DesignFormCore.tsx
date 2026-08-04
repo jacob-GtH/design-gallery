@@ -102,6 +102,7 @@ export default function DesignFormCore({
   // تحميل البيانات الأولية عند وجود initialData
   useEffect(() => {
     if (initialData) {
+      const mappedMedia = mapMediaItemsFromInitial(initialData.media || [])
       const mapped = {
         title: initialData.title || "",
         description: initialData.description || "",
@@ -113,7 +114,7 @@ export default function DesignFormCore({
         // إذا كان backgroundColor غير موجود، استخدم اللون الافتراضي
         // يمكنك تغيير اللون الافتراضي حسب الحاجة
         designers: [],
-        mediaItems: mapMediaItemsFromInitial(initialData.media || []),
+        mediaItems: mappedMedia,
         // تحويل الوسائط من البيانات الأولية
         currentTagInput: "",
         error: "",
@@ -124,6 +125,7 @@ export default function DesignFormCore({
         data: mapped,
       });
       setInitialLoadedData(mapped);
+      mediaDispatch({ type: "SET_MEDIA", items: mappedMedia }); // تحديث حالة mediaItems
     }
   }, [initialData]);
 
@@ -253,6 +255,9 @@ export default function DesignFormCore({
 
       const validTags = tagRefs.filter(Boolean);
 
+     // 🌟 تجهيز البيانات الأساسية فقط ومنع إرسال حقول الواجهة المشوهة
+ 
+
       const res = await fetch(
         initialData ? `/api/designs/${initialData.id}` : "/api/designs",
         {
@@ -266,7 +271,6 @@ export default function DesignFormCore({
           }),
         }
       );
-
       if (!res.ok) throw new Error(await res.text());
 
       toast.success(initialData ? "تم التحديث بنجاح" : "تم الإضافة بنجاح");

@@ -60,10 +60,10 @@ export default async function DesignPage({
     <main className="w-full min-h-screen overflow-x-hidden" style={{ backgroundColor: design.backgroundColor }}>
       {/* تفاصيل التصميم */}
       <div className="pb-12 pt-14 max-w-sm md:max-w-7xl mx-auto">
-        <h1 className="text-4xl  font-bold mb-4">{design.title}</h1>
+        <h1 className="text-black dark:text-white text-4xl font-bold mb-4 transition-colors duration-500">{design.title}</h1>
 
         {design.description && (
-          <p className="text-lg text-gray-300 mb-6 whitespace-pre-line">
+          <p className="text-gray-600 dark:text-gray-300 mb-6 whitespace-pre-line transition-colors duration-500">
             {design.description}
           </p>
         )}
@@ -93,14 +93,14 @@ export default async function DesignPage({
 
               {item.caption && (
                 <div
-                  className="text-gray-300 leading-relaxed prose prose-invert max-w-none"
+                  className="text-gray-600 dark:text-gray-300 leading-relaxed prose prose-neutral dark:prose-invert max-w-none transition-colors duration-500"
                   dangerouslySetInnerHTML={{ __html: item.caption }}
                 />
               )}
             </div>
           ))}
         </section>
-        <div className="flex flex-wrap items-center gap-4 text-gray-400 text-sm mb-8">
+        <div className="flex flex-wrap items-center gap-4 text-gray-500 dark:text-gray-400 text-sm mb-8 transition-colors duration-500">
           <span className="flex items-center gap-2">
             <FiCalendar />
             {formattedDate}
@@ -120,7 +120,7 @@ export default async function DesignPage({
         {/* زر الرجوع */}
         <Link
           href="/designs"
-          className="inline-flex items-center gap-2 text-sm text-white hover:text-red-400"
+          className="inline-flex items-center gap-2 text-sm text-black dark:text-white hover:text-red-600 dark:hover:text-red-400 transition-colors duration-500"
         >
           <FiArrowLeft />
           عودة إلى جميع التصاميم
