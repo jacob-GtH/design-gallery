@@ -1,4 +1,6 @@
 // types.ts
+import { MediaAction } from "@/hooks/mediaAction";
+
 export type DesignFormViewMode = "create" | "edit" | "view";
 
 export type MediaType = "image" | "video";
@@ -26,7 +28,7 @@ export type Designer = {
 export type FormState = {
   title: string;
   description: string;
-  designerId: string | { _id: string; name: string };
+  designerId: string;
   tags: string[];
   backgroundColor: string;
   mediaItems: MediaItem[];
@@ -39,8 +41,10 @@ export type Props = {
   item: MediaItem;
   index: number;
   readonly: boolean;
-  dispatch: React.Dispatch<unknown>;
+  dispatch: React.Dispatch<MediaAction>;
   removeMediaItem: (index: number) => void;
+  moveUp?: (index: number) => void;
+  moveDown?: (index: number) => void;
 };
 export type TagInputProps = {
   tags: string[];

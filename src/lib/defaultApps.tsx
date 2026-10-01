@@ -18,54 +18,29 @@ export interface App {
 
 export const defaultApps: App[] = [
   {
-    name: "الرئيسية",
+    name: "dock.home",
     icon: <FiHome size={24} />,
     color: "#3B82F6",
     action: () => (window.location.href = "/"),
   },
-  // {
-  //   name: 'Terminal',
-  //   icon: <FiTerminal size={24} />,
-  //   color: '#10B981',
-  // },
-  // {
-  //   name: 'Chrome',
-  //   icon: <FiChrome size={24} />,
-  //   color: '#F59E0B',
-  // },
-  // {
-  //   name: 'الملفات',
-  //   icon: <FiFolder size={24} />,
-  //   color: '#8B5CF6',
-  // },
   {
-    name: "النصوص",
+    name: "dock.texts",
     icon: <FiFileText size={24} />,
     color: "#06B6D4",
   },
-  // {
-  //   name: 'Firefox',
-  //   icon: <FaFirefoxBrowser size={24} />,
-  //   color: '#FF7F00',
-  // },
-  // {
-  //   name: 'المراقب',
-  //   icon: <FiActivity size={24} />,
-  //   color: '#EF4444',
-  // },
   {
-    name: "الإعدادات",
+    name: "dock.settings",
     icon: <FiSettings size={24} />,
-    color: "#6B7280",
+    color: "#8B7280",
   },
   {
-    name: "الشبكة",
+    name: "dock.grid",
     icon: <FiGrid size={24} />,
     color: "#EC4899",
     action: () => (window.location.href = "/designs"),
   },
   {
-    name: "البريد",
+    name: "dock.mail",
     icon: <FiMail size={24} />,
     color: "#F97316",
     badge: 3,

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 interface ColorPickerProps {
   color: string;
@@ -11,6 +12,12 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
   onChange,
   tooltip,
 }) => {
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language?.startsWith("ar");
+  const tooltipClass = isRTL
+    ? "absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity"
+    : "absolute right-full mr-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity";
+
   return (
     <div className="relative group">
       <label
@@ -29,7 +36,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
         onChange={(e) => onChange(e.target.value)}
         className="absolute opacity-0 w-0 h-0"
       />
-      <span className="absolute right-full mr-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+      <span className={tooltipClass}>
         {tooltip}
       </span>
     </div>

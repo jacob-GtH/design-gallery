@@ -1,12 +1,13 @@
 import { Dispatch } from "react";
-import { MediaItem, MediaType } from "@/src/components/admin/Types";
-import { MediaAction } from "@/src/hooks/mediaAction";
+import { MediaItem, MediaType } from "@/components/admin/Types";
+import { MediaAction } from "@/hooks/mediaAction";
 
 export const uploadMediaItems = async (
   mediaItems: MediaItem[],
   dispatch: Dispatch<MediaAction>
 ): Promise<{ _key: string; url: string; type: MediaType; caption?: string }[]> => {
   const uploaded: { _key: string; url: string; type: MediaType; caption?: string }[] = [];
+  const errors: string[] = [];
 
   for (const [index, item] of mediaItems.entries()) {
     if (item.uploadedUrl) {
@@ -19,23 +20,39 @@ export const uploadMediaItems = async (
       continue;
     }
 
+    if (!item.file) {
+      errors.push(`الوسيط ${index + 1}: لا يوجد ملف`);
+      continue;
+    }
+
     const data = new FormData();
-    data.append("file", item.file!);
+    data.append("file", item.file);
     data.append(
       "upload_preset",
       process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
     );
 
-    const result = await uploadWithProgress(data, item.type, index, dispatch);
+    try {
+      const result = await uploadWithProgress(data, item.type, index, dispatch);
 
-    if (result?.secure_url) {
-      uploaded.push({
-        _key: item._key,
-        url: result.secure_url,
-        type: item.type,
-        caption: item.caption,
-      });
+      if (result?.secure_url) {
+        uploaded.push({
+          _key: item._key,
+          url: result.secure_url,
+          type: item.type,
+          caption: item.caption,
+        });
+      } else {
+        errors.push(`الوسيط ${index + 1}: استجابة غير صالحة من الخادم`);
+      }
+    } catch (err) {
+      errors.push(`الوسيط ${index + 1}: ${(err as Error).message || "فشل الرفع"}`);
     }
+  }
+
+  // إذا فشل أي وسيط، ارمِ خطأً مجمعاً
+  if (errors.length > 0) {
+    throw new Error(`فشل رفع ${errors.length} وسيط:\n${errors.join("\n")}`);
   }
 
   return uploaded;

@@ -4,13 +4,16 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { SectionBadge } from "../ui/SectionBadge";
+import { useTranslation } from "react-i18next";
 
 export default function HeroSection({
   animateStart,
 }: {
   animateStart: boolean;
 }) {
+  const { t } = useTranslation();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
   const { scrollY } = useScroll();
   
   // Parallax effects
@@ -33,14 +36,14 @@ export default function HeroSection({
       transition={{ duration: 1.2, ease: [0.76, 0, 0.24, 1] }}
       className="relative h-screen w-full flex items-center justify-end overflow-hidden bg-white dark:bg-[#050505] transition-colors duration-500"
     >
-      {/* Background Image - Strongly aligned to the left */}
-      <div 
+      {/* Background Image - Strongly aligned to the start side */}
+      <div
         className="absolute inset-0 z-0 bg-cover bg-left md:bg-[left_center] bg-no-repeat opacity-100 dark:opacity-60 transition-opacity duration-500"
         style={{ backgroundImage: `url("/images/bgHome.png")` }}
       />
       
-      {/* Gradient Overlays - Clear the left side, darken the right */}
-      <div className="absolute inset-0 z-1 bg-gradient-to-r from-transparent via-white/0 dark:via-black/20 to-white/7 dark:to-black/90 hidden md:block" />
+      {/* Gradient Overlays - Clear the start side, darken the end side */}
+      <div className="absolute inset-0 z-1 bg-gradient-to-r from-transparent via-white/0 dark:via-black/20 to-white/7 dark:to-black/90 hidden md:block rtl:bg-gradient-to-l rtl:from-white/7 rtl:dark:from-black/90 rtl:via-white/0 rtl:dark:via-black/20 rtl:to-transparent" />
       <div className="absolute inset-0 z-1 bg-gradient-to-b from-transparent via-black/10 dark:via-black/10 to-white/10 dark:to-[#050505]" />
 
       {/* Interactive Spotlight Glow */}
@@ -51,24 +54,24 @@ export default function HeroSection({
         }}
       />
 
-      {/* Content Container - Pushed to the extreme right on desktop */}
-      <div className="relative z-10 w-full flex flex-col items-center md:items-end text-center md:text-right px-6 md:px-12 lg:px-24">
-        <motion.div style={{ y: textY, opacity }} className="max-w-2xl xl:max-w-3xl flex flex-col items-center md:items-end">
+      {/* Content Container - Dynamic alignment based on language */}
+      <div className="relative z-10 w-full flex flex-col items-center px-6 md:px-12 lg:px-24 md:items-start text-center md:text-start">
+        <motion.div style={{ y: textY, opacity }} className="max-w-2xl xl:max-w-3xl flex flex-col items-center md:items-start">
           {/* Badge */}
           <SectionBadge className="mb-6">
-            Design Gallery Studio
+            {t("hero.studio")}
           </SectionBadge>
 
-          {/* Main Headline - Compact and ultra-aligned to the right */}
+          {/* Main Headline - Compact and ultra-aligned to the start */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={animateStart ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 1.7, duration: 0.8 }}
-            className="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white dark:text-white leading-[1.1] mb-8"
+            className="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white dark:text-white leading-[1.1] mb-8 text-center md:text-start"
           >
-            نصنع الواقع <br />
+            {t("hero.title1")} <br />
             <span className="text-transparent bg-clip-text bg-hero-gradient">
-              بلمسات إبداعية
+              {t("hero.title2")}
             </span>
           </motion.h1>
 
@@ -77,52 +80,52 @@ export default function HeroSection({
             initial={{ opacity: 0, y: 15 }}
             animate={animateStart ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 1.9, duration: 0.8 }}
-            className="text-indigo-200 dark:text-gray-400 text-base md:text-lg lg:text-xl max-w-lg mb-10 font-light leading-relaxed ml-auto"
+            className="text-indigo-200 dark:text-gray-400 text-base md:text-lg lg:text-xl max-w-lg mb-10 font-light leading-relaxed text-center md:text-start"
           >
-            استوديو إبداعي متخصص في تحويل الرؤى الطموحة إلى تجارب رقمية استثنائية تترك أثراً لا ينسى في عالم التصميم.
+            {t("hero.description")}
           </motion.p>
 
-          {/* CTAs */}
+          {/* CTAs - Direction-aware alignment */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={animateStart ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 2.1, duration: 0.8 }}
-            className="flex flex-col sm:flex-row-reverse gap-4 justify-start"
+            className="flex flex-col sm:flex-row gap-4 items-center md:items-start"
           >
-            <Link 
+            <Link
               href="#case-studies"
               className="px-8 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl font-bold text-white transition-all hover:shadow-[0_10px_30px_rgba(79,70,229,0.3)] flex items-center justify-center gap-2"
             >
-              استكشف أعمالنا
-              <svg className="w-5 h-5 transform rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {t("hero.exploreWork")}
+              <svg className="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </Link>
             
-            <Link 
+            <Link
               href="#contact"
               className="px-8 py-3.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 backdrop-blur-md border border-black/10 dark:border-white/10 rounded-xl font-bold text-white dark:text-white transition-all text-center"
             >
-              تواصل معنا
+              {t("hero.contactUs")}
             </Link>
           </motion.div>
         </motion.div>
       </div>
 
-      {/* Animated Scroll Indicator */}
+      {/* Animated Scroll Indicator - Logical positioning */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={animateStart ? { opacity: 1 } : {}}
         transition={{ delay: 2.5, duration: 1 }}
-        className="absolute bottom-8 right-8 md:right-12 flex flex-col items-center gap-2"
+        className="absolute bottom-8 flex flex-col items-center gap-2 start-8 md:start-12"
       >
         <div className="w-[1px] h-10 bg-gradient-to-b from-purple-500 to-transparent" />
       </motion.div>
 
-      {/* Side Branding Mini Text */}
-      <div className="absolute left-10 bottom-10 opacity-20 dark:opacity-10 hidden md:block rotate-[-90deg] origin-left">
+      {/* Side Branding Mini Text - Logical positioning */}
+      <div className="absolute bottom-10 opacity-20 dark:opacity-10 hidden md:block rotate-[-90deg] origin-left start-10">
         <span className="text-sm font-bold text-black dark:text-white uppercase tracking-[0.5em] whitespace-nowrap">
-          The Art of Excellence
+          {t("hero.branding")}
         </span>
       </div>
     </motion.section>

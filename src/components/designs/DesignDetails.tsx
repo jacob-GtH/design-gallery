@@ -1,6 +1,5 @@
 // components/designs/DesignDetails.tsx
 import { IDesign } from "@/interfaces/Design";
-import { Button } from "@/components/ui/Button";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { FiHeart, FiShare2, FiUser } from "react-icons/fi";
 
@@ -31,6 +30,7 @@ export default function DesignDetails({ design }: { design: IDesign }) {
           
           {/* نصف الصورة / الميديا */}
           <div className="w-full lg:w-1/2 relative h-[350px] md:h-[500px] rounded-2xl overflow-hidden border border-gray-300 dark:border-gray-800 bg-gray-50 dark:bg-black/40 transition-colors duration-500">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={design.media[0]?.url}
               alt={design.title}

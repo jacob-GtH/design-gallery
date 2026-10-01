@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState, useCallback } from "react";
+import { Suspense } from "react";
 import { motion, useScroll, useSpring } from "framer-motion";
 import HeroSection from "@/components/sections/HeroSection";
 import CaseStudiesSection from "@/components/sections/CaseStudiesSection";
@@ -8,17 +8,15 @@ import ServicesSection from "@/components/sections/ServicesSection";
 import ContactSection from "@/components/sections/ContactSection";
 import DesignsSection from "@/components/sections/DesignsSection";
 import ErrorMessage from "@/components/common/ErrorMessage";
-import { IDesign } from "@/interfaces/Design";
 import Loading from "@/components/common/loading";
+import { useDesigns } from "@/hooks/useDesigns";
 
 export default function HomeSection({
   animateStart = true,
 }: {
   animateStart?: boolean;
 }) {
-  const [designs, setDesigns] = useState<IDesign[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { designs, loading, error, retry } = useDesigns();
 
   // مراقبة تقدم التمرير لشريط التقدم العلوي
   const { scrollYProgress } = useScroll();
@@ -27,31 +25,6 @@ export default function HomeSection({
     damping: 30,
     restDelta: 0.001,
   });
-
-  const fetchDesigns = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/designs");
-      if (!response.ok) {
-        throw new Error("فشل تحميل التصاميم");
-      }
-      const data: IDesign[] = await response.json();
-      setDesigns(data);
-    } catch (err: unknown) {
-      setError((err as Error).message || "حدث خطأ غير متوقع");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchDesigns();
-  }, [fetchDesigns]);
-
-  const handleRetry = () => {
-    fetchDesigns();
-  };
 
   // إعدادات أنميشن ظهور الأقسام عند التمرير
   const revealVariants = {
@@ -93,7 +66,7 @@ export default function HomeSection({
               <Loading />
             </div>
           )}
-          {error && <ErrorMessage message={error} onRetry={handleRetry} />}
+          {error && <ErrorMessage message={error} onRetry={retry} />}
           {!loading && !error && <DesignsSection designs={designs} />}
         </motion.section>
 

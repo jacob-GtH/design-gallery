@@ -1,5 +1,5 @@
 // hooks/useMediaReducer.ts
-import { MediaItem } from "@/src/components/admin/Types";
+import { MediaItem } from "@/components/admin/Types";
 
 export type MediaAction =
   | { type: "ADD_MEDIA"; items: MediaItem[] }
@@ -9,6 +9,7 @@ export type MediaAction =
   | { type: "UPDATE_PROGRESS"; index: number; progress: number }
   | { type: "SHOW_TOOLBAR"; index: number }
   | { type: "HIDE_TOOLBAR"; index: number }
+  | { type: "MOVE_MEDIA"; fromIndex: number; toIndex: number }
   | { type: "SET_MEDIA"; items: MediaItem[] }; // إضافة هذا الأكشن الجديد
 
 export function mediaReducer(state: MediaItem[], action: MediaAction ): MediaItem[] {
@@ -39,6 +40,13 @@ export function mediaReducer(state: MediaItem[], action: MediaAction ): MediaIte
       return state.map((item, i) =>
           i === action.index ? { ...item, showToolbar: false } : item
         );
+    case "MOVE_MEDIA": {
+      if (action.fromIndex === action.toIndex) return state;
+      const newState = [...state];
+      const [moved] = newState.splice(action.fromIndex, 1);
+      newState.splice(action.toIndex, 0, moved);
+      return newState;
+    }
     default:
       return state;
   }

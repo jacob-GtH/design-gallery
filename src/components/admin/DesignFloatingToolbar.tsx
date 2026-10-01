@@ -2,8 +2,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { motion } from "framer-motion";
-import { FiUpload, FiLoader, FiFileText, FiRepeat, FiImage, FiTag } from "react-icons/fi";
+import { FiUpload, FiLoader, FiFileText, FiRepeat, FiImage, FiTag, FiEye } from "react-icons/fi";
 import { FileTextIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "../ui/Button";
 import Alert from "../ui/Alert";
 import { FormState } from "./Types";
@@ -18,7 +19,6 @@ type Props = {
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   loading: boolean;
   error: string;
-  success: boolean;
   initialData?: any;
   resetForm: () => void;
   mode?: "create" | "edit" | "view";
@@ -27,16 +27,15 @@ type Props = {
 export default function DesignFloatingToolbar({
   formData,
   dispatch,
-  bgColor,
   setBgColor,
   handleSubmit,
   loading,
   error,
-  success,
   initialData,
   mode,
   resetForm,
 }: Props) {
+  const { t } = useTranslation();
   if (mode === "view") return null;
 
   return (
@@ -48,50 +47,58 @@ export default function DesignFloatingToolbar({
       className="fixed z-[100] right-2 top-1 mt-20 sm:right-4 transform -translate-y-1/2 space-y-4"
     >
       {error && <Alert type="error" message={error} autoDismiss={false} />}
-      {success && <Alert type="success" message="تم رفع التصميم بنجاح" autoDismiss duration={6000} />}
 
       <div className="flex flex-col items-center space-y-2 sm:p-4 bg-white dark:bg-gray-900 p-1 border border-gray-100 dark:border-gray-800 shadow-lg rounded-xl transition-colors duration-500">
         <TooltipButton
           icon={<FiFileText size={20} />}
           onClick={() => document.getElementById("title-input")?.focus()}
-          tooltip="إضافة عنوان"
+          tooltip={t("admin.addTitle")}
           color="blue"
         />
 
         <TooltipButton
           icon={<FileTextIcon size={20} />}
           onClick={() => document.getElementById("description-input")?.focus()}
-          tooltip="إضافة وصف"
+          tooltip={t("admin.addDescription")}
           color="purple"
         />
 
         <TooltipButton
           icon={<FiImage size={20} />}
           onClick={() => document.getElementById("file-upload")?.click()}
-          tooltip="رفع وسائط"
+          tooltip={t("admin.uploadMedia")}
           color="gray"
         />
 
         <TooltipButton
           icon={<FiTag size={20} />}
           onClick={() => document.getElementById("tag-input")?.focus()}
-          tooltip="إضافة علامة (قيد التطوير)"
+          tooltip={t("admin.addTag")}
           color="green"
         />
+
+        {initialData?.id && (
+          <TooltipButton
+            icon={<FiEye size={20} />}
+            onClick={() => window.open(`/admin/view/${initialData.id}`, "_blank")}
+            tooltip={t("admin.preview")}
+            color="purple"
+          />
+        )}
 
         <ColorPicker
           color={formData.backgroundColor}
           onChange={(color) => {
             setBgColor(color);
-            dispatch({ type: "UPDATE_FIELD", field: "backgroundColor", value: color });
+            dispatch({ type: "SET_FIELD", field: "backgroundColor", value: color });
           }}
-          tooltip="تغيير لون الخلفية"
+          tooltip={t("admin.changeBgColor")}
         />
 
         <TooltipButton
           icon={<FiRepeat size={20} />}
           onClick={resetForm}
-          tooltip="إعادة تعيين"
+          tooltip={t("admin.reset")}
           color="gray"
         />
       </div>
@@ -104,7 +111,7 @@ export default function DesignFloatingToolbar({
       >
         {loading ? <FiLoader className="animate-spin" size={20} /> : <FiUpload size={20} />}
         <span className="sr-only">
-          {loading ? "جاري الرفع..." : initialData ? "حفظ التعديلات" : "نشر التصميم"}
+          {loading ? t("admin.uploading") : initialData ? t("admin.saveChanges") : t("admin.publishDesign")}
         </span>
       </Button>
     </motion.form>

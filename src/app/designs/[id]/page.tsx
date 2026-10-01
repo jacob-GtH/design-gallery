@@ -53,7 +53,7 @@ export default async function DesignPage({
     "ar-EG",
     { year: "numeric", month: "long", day: "numeric" }
   );
-  console.log("background color:", design.background);
+  console.log("background color:", design.backgroundColor);
 
 
   return (
@@ -74,6 +74,7 @@ export default async function DesignPage({
             <div key={index}>
               <div className="relative group w-full overflow-hidden">
                 {item.type === "image" ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={item.url}
                     alt={`media-${index}`}

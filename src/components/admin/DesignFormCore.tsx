@@ -12,8 +12,8 @@ import ReactQuill from "react-quill-new";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
+import { useTranslation } from "react-i18next";
 import { isDarkColor } from "@/lib/utils/colorUtils";
-import { client } from "@/sanity/design-cms/lib/client";
 import { getOrCreateTag } from "@/lib/actions";
 
 import { fetchDesigners } from "@/components/admin/designerService";
@@ -61,10 +61,10 @@ export default function DesignFormCore({
   initialData,
   onSuccess,
 }: DesignFormCoreProps) {
+  const { t } = useTranslation();
   const [initialLoadedData, setInitialLoadedData] = useState<FormState | null>(
     null
   );
-  const [success, setSuccess] = React.useState(false);
   const [formState, formDispatch] = useReducer(formReducer, initialFormState);
   const [mediaItems, mediaDispatch] = useReducer(
     mediaReducer,
@@ -72,6 +72,7 @@ export default function DesignFormCore({
   );
   const { backgroundColor } = formState;
   const editorRef = useRef<ReactQuill>(null);
+  const [toolbarFocused, setToolbarFocused] = React.useState(false);
 
   // مزامنة mediaItems في formState كلما تغير mediaItems
   useEffect(() => {
@@ -81,6 +82,55 @@ export default function DesignFormCore({
       value: mediaItems,
     });
   }, [mediaItems]);
+
+  // ============ حفظ تلقائي للمسودة ============
+  // حفظ تلقائي كل 10 ثوانٍ عند وجود بيانات في وضع الإنشاء
+  useEffect(() => {
+    if (mode !== "create") return;
+    if (!formState.title && !formState.description && mediaItems.length === 0) return;
+
+    const timer = setTimeout(() => {
+      const draft = {
+        title: formState.title,
+        description: formState.description,
+        designerId: formState.designerId,
+        tags: formState.tags,
+        backgroundColor: formState.backgroundColor,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem("designFormDraft", JSON.stringify(draft));
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, [formState, mediaItems, mode]);
+
+  // استرجاع المسودة المحفوظة عند فتح نموذج الإنشاء
+  useEffect(() => {
+    if (mode !== "create" || initialData) return;
+
+    const savedDraft = localStorage.getItem("designFormDraft");
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        if (draft.title || draft.description || draft.tags?.length > 0) {
+          formDispatch({
+            type: "LOAD_INITIAL",
+            data: {
+              ...initialFormState,
+              title: draft.title || "",
+              description: draft.description || "",
+              designerId: draft.designerId || "",
+              tags: draft.tags || [],
+              backgroundColor: draft.backgroundColor || "#f9fafb",
+            },
+          });
+          toast.info(t("admin.draftRestored"));
+        }
+      } catch (err) {
+        console.error("فشل استرجاع المسودة:", err);
+      }
+    }
+  }, [mode, initialData, t]);
 
   // دالة لتحويل الوسائط من البيانات الأولية
   const mapMediaItemsFromInitial = (media: { _key?: string; _id?: string; url: string; type: "image" | "video"; caption?: string }[]): MediaItem[] => {
@@ -221,9 +271,9 @@ export default function DesignFormCore({
   // ============ رفع الملفات ============
 
   const validateForm = () => {
-    if (!formState.title.trim()) return "العنوان مطلوب";
-    if (!formState.designerId) return "الرجاء اختيار مصمم";
-    if (mediaItems.length === 0) return "يجب رفع وسائط (صورة أو فيديو)";
+    if (!formState.title.trim()) return t("formErrors.titleRequired");
+    if (!formState.designerId) return t("formErrors.designerRequired");
+    if (mediaItems.length === 0) return t("formErrors.mediaRequired");
     return null;
   };
 
@@ -231,12 +281,10 @@ export default function DesignFormCore({
     if (formState.loading) return;
     e.preventDefault();
     if (mode === "view") return; // منع الإرسال في وضع العرض فقط
-    formDispatch({ type: "SET_LOADING", loading: true });
 
     const validation = validateForm();
     if (validation) {
       formDispatch({ type: "SET_ERROR", message: validation });
-      formDispatch({ type: "SET_LOADING", loading: false });
       return;
     }
 
@@ -258,28 +306,34 @@ export default function DesignFormCore({
      // 🌟 تجهيز البيانات الأساسية فقط ومنع إرسال حقول الواجهة المشوهة
  
 
+      // بناء كائن نظيف فقط بالحقول المطلوبة (منع حقول الواجهة القذرة)
+      const cleanPayload = {
+        title: formState.title,
+        description: formState.description,
+        designerId: formState.designerId,
+        backgroundColor: formState.backgroundColor,
+        tags: validTags, // ← تم استبدالها بالمراجع الصحيحة
+        media: uploadedMedia,
+        publishedAt: new Date().toISOString(),
+      };
+
       const res = await fetch(
         initialData ? `/api/designs/${initialData.id}` : "/api/designs",
         {
           method: initialData ? "PATCH" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...formState,
-            tags: validTags, // ← تم استبدالها بالمراجع الصحيحة
-            media: uploadedMedia,
-            publishedAt: new Date().toISOString(),
-          }),
+          body: JSON.stringify(cleanPayload),
         }
       );
       if (!res.ok) throw new Error(await res.text());
 
-      toast.success(initialData ? "تم التحديث بنجاح" : "تم الإضافة بنجاح");
+      toast.success(initialData ? t("formErrors.updateSuccess") : t("formErrors.createSuccess"));
       localStorage.removeItem("designFormDraft");
 
       if (onSuccess) await onSuccess();
     } catch (err) {
       console.error("Submit error:", err);
-      toast.error("حدث خطأ أثناء الحفظ");
+      toast.error(t("formErrors.saveError"));
     } finally {
       formDispatch({ type: "SET_LOADING", loading: false });
     }
@@ -295,7 +349,6 @@ export default function DesignFormCore({
         data: initialLoadedData || initialFormState,
       });
       localStorage.removeItem("designFormDraft");
-      setSuccess(false);
     }
   }
   // هذه الدالة الجديدة تتوافق مع التوقيع المطلوب من DesignEditorBody
@@ -342,7 +395,8 @@ export default function DesignFormCore({
         dispatch={mediaDispatch}
         formDispatch={formDispatch}
         editorRef={editorRef}
-        toolbarFocused={false}
+        toolbarFocused={toolbarFocused}
+        onToolbarFocusChange={setToolbarFocused}
         designers={formState.designers}
         handleRemoveTag={handleRemoveTag}
         handleAddTag={handleAddTag}
@@ -358,7 +412,6 @@ export default function DesignFormCore({
           handleSubmit={handleSubmit}
           loading={formState.loading}
           error={formState.error}
-          success={success}
           initialData={initialData}
           resetForm={resetForm}
           mode={mode}

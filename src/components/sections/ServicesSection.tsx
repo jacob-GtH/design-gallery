@@ -1,41 +1,40 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SectionHeader } from "../ui/SectionHeader";
+import { useTranslation } from "react-i18next";
 
 const services = [
   {
     id: "web",
-    title: "Web Design",
-    content:
-      "We specialize in building modern web experiences that represent your brand powerfully.",
-    tags: ["Responsive", "UX/UI", "CMS"],
+    titleKey: "services.items.web.title",
+    contentKey: "services.items.web.content",
+    tagsKeys: ["services.items.web.tags.0", "services.items.web.tags.1", "services.items.web.tags.2"],
   },
   {
     id: "branding",
-    title: "Branding",
-    content:
-      "Crafting strong, memorable brands that stand out in competitive markets.",
-    tags: ["Logo Design", "Typography", "Guidelines"],
+    titleKey: "services.items.branding.title",
+    contentKey: "services.items.branding.content",
+    tagsKeys: ["services.items.branding.tags.0", "services.items.branding.tags.1", "services.items.branding.tags.2"],
   },
   {
     id: "graphic",
-    title: "Graphic Design",
-    content:
-      "From social media to print, we create compelling visuals that communicate.",
-    tags: ["Social Media", "Posters", "Packaging"],
+    titleKey: "services.items.graphic.title",
+    contentKey: "services.items.graphic.content",
+    tagsKeys: ["services.items.graphic.tags.0", "services.items.graphic.tags.1", "services.items.graphic.tags.2"],
   },
   {
     id: "packaging",
-    title: "Packaging",
-    content:
-      "Unique, functional packaging designs that speak to your customers.",
-    tags: ["Custom Boxes", "Labels", "Retail"],
+    titleKey: "services.items.packaging.title",
+    contentKey: "services.items.packaging.content",
+    tagsKeys: ["services.items.packaging.tags.0", "services.items.packaging.tags.1", "services.items.packaging.tags.2"],
   },
   {
     id: "video",
-    title: "Video Production",
-    content: "Videos that tell your brand story, from concept to delivery.",
-    tags: ["Animation", "Promo", "Editing"],
+    titleKey: "services.items.video.title",
+    contentKey: "services.items.video.content",
+    tagsKeys: ["services.items.video.tags.0", "services.items.video.tags.1", "services.items.video.tags.2"],
   },
 ];
 
@@ -68,18 +67,23 @@ const serviceIcons: Record<string, React.ReactNode> = {
 };
 
 export default function ServicesSection() {
-  const [activeIndex, setActiveIndex] = useState(0); // نبدأ من العنصر الأول
-  const [direction, setDirection] = useState("right");
+  const { t, i18n } = useTranslation();
+  const [mounted, setMounted] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isRTL = mounted && i18n.language?.startsWith("ar");
 
   const handleServiceChange = (newIndex: number) => {
     if (newIndex === activeIndex) return;
-    setDirection(newIndex > activeIndex ? "right" : "left");
     setActiveIndex(newIndex);
   };
 
   const getButtonClasses = (index: number) => {
-    const baseClasses =
-      "relative transition-all duration-300 cursor-pointer text-left min-w-max md:min-w-0 flex items-center py-4 px-6 md:ml-4 rounded-xl select-none outline-none group overflow-hidden w-full";
+    const baseClasses = "relative transition-all duration-300 cursor-pointer min-w-max md:min-w-0 flex items-center py-4 px-6 text-start rounded-xl select-none outline-none group overflow-hidden w-full";
 
     return index === activeIndex
       ? `${baseClasses} text-black dark:text-white`
@@ -89,25 +93,97 @@ export default function ServicesSection() {
   return (
     <section
       id="services"
-      className="min-h-screen w-full flex flex-col items-center px-6 md:px-16 py-12 md:py-24 overflow-hidden relative bg-white dark:bg-black transition-colors duration-500"
+      className="min-h-screen w-full flex flex-col items-center px-6 md:px-16 py-12 md:py-24 overflow-hidden relative bg-white dark:bg-[#050505] transition-colors duration-500"
     >
-      {/* Background Decorative Glow */}
-      <div className="absolute top-1/4 left-1/4 w-[300px] md:w-[600px] h-[300px] md:h-[600px] rounded-full bg-indigo-900/10 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[300px] md:w-[600px] h-[300px] md:h-[600px] rounded-full bg-purple-900/10 blur-[100px] pointer-events-none" />
+      {/* Dynamic Background Glow - Positioned safely with inset */}
+      <div className="absolute top-1/4 start-1/4 w-[300px] md:w-[500px] h-[300px] md:h-[500px] rounded-full bg-indigo-900/10 blur-[100px] pointer-events-none -translate-x-1/2 rtl:translate-x-1/2" />
+      <div className="absolute top-1/2 end-1/4 w-[300px] md:w-[500px] h-[300px] md:h-[500px] rounded-full bg-purple-900/10 blur-[100px] pointer-events-none translate-x-1/2 rtl:-translate-x-1/2" />
 
       <div className="w-full max-w-7xl mx-auto relative z-10 mb-12">
         <SectionHeader
-          align="right"
-          badge="خدماتنا الإبداعية"
-          title="نحول الأفكار إلى"
-          gradientTitle="تجارب استثنائية"
+          align={isRTL ? "right" : "left"}
+          badge={t("services.badge")}
+          title={t("services.title")}
+          gradientTitle={t("services.gradientTitle")}
         />
       </div>
 
-      <div className="flex flex-col md:flex-row w-full h-full max-w-7xl mx-auto md:gap-16 relative z-10">
+      {/* Mobile Accordion */}
+      <div className="md:hidden w-full flex flex-col gap-4 relative z-10 mb-8">
+        {services.map((service, index) => (
+          <div
+            key={service.id}
+            className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+              activeIndex === index 
+                ? "bg-white/80 dark:bg-gray-800/50 border-indigo-500/30" 
+                : "bg-white/30 dark:bg-gray-900/30 border-gray-200 dark:border-gray-800"
+            }`}
+          >
+            <button
+              onClick={() => setActiveIndex(index)}
+              className="w-full p-5 flex items-center justify-between text-start"
+            >
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">0{index + 1}</span>
+                <span className={`text-lg font-semibold ${activeIndex === index ? "text-black dark:text-white" : "text-gray-600 dark:text-gray-400"}`}>
+                  {t(service.titleKey)}
+                </span>
+              </div>
+              <span className="text-indigo-500 font-bold">
+                {activeIndex === index ? "−" : "+"}
+              </span>
+            </button>
+            
+            <AnimatePresence>
+              {activeIndex === index && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="px-5 pb-5 pt-2"
+                >
+                  <div className="mb-4">
+                     {serviceIcons[service.id]}
+                  </div>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {service.tagsKeys.map((tagKey) => (
+                      <span key={tagKey} className="px-3 py-1 rounded-full bg-indigo-950/20 text-indigo-700 dark:text-indigo-300 text-xs font-medium border border-indigo-900/10">
+                        {t(tagKey)}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-6">
+                    {t(service.contentKey)}
+                  </p>
+
+                  {/* Action Button */}
+                  <div className="flex justify-start">
+                    <button
+                      className="inline-flex items-center gap-2 text-indigo-500 hover:text-white font-semibold group transition-all duration-300 px-5 py-2.5 rounded-xl bg-indigo-950/20 hover:bg-indigo-600 border border-indigo-400/60 hover:border-indigo-500 shadow-md text-sm"
+                      aria-label={`${t("services.learnMore")} ${t(service.titleKey)}`}
+                    >
+                      {t("services.learnMore")}
+                      <svg
+                        className="w-4 h-4 rtl:rotate-180 transform transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden md:flex flex-col md:flex-row w-full h-full max-w-7xl mx-auto md:gap-12 lg:gap-16 relative z-10">
         
         {/* Sidebar Titles */}
-        <div className="w-full md:w-1/3 flex flex-row md:flex-col justify-start md:justify-center gap-2 md:gap-3 overflow-x-auto md:overflow-x-visible pb-6 md:pb-0 scrollbar-none">
+        <div className="w-full md:w-1/3 flex flex-row md:flex-col justify-start gap-2 md:gap-3 overflow-x-auto md:overflow-x-visible pb-6 md:pb-0 scrollbar-none">
           {services.map((service, index) => (
             <button
               key={service.id}
@@ -116,25 +192,27 @@ export default function ServicesSection() {
               onClick={() => handleServiceChange(index)}
               aria-current={index === activeIndex ? "true" : "false"}
             >
-              {/* Animated Background Selector */}
+              {/* Animated Background Selector using Logical Border */}
               {index === activeIndex && (
                 <motion.div
                   layoutId="activeTabBackground"
-                  className="absolute inset-0 bg-service-gradient border-l-4 border-indigo-500 rounded-xl"
+                  className="absolute inset-0 bg-service-gradient border-s-4 border-indigo-500 rounded-xl"
                   transition={{ type: "spring", stiffness: 450, damping: 38 }}
                 />
               )}
 
               <div className="flex flex-row items-center relative z-20 w-full">
-                <span className={`py-1 text-2xl lg:text-3xl mx-2 my-1 transition-colors duration-300 font-mono ${
-                  index === activeIndex ? "text-indigo-400 font-bold" : "text-gray-600 group-hover:text-gray-400"
+                <span className={`py-1 text-2xl lg:text-3xl me-3 transition-colors duration-300 font-mono ${
+                  index === activeIndex ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-gray-600 dark:text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300"
                 }`}>
                   0{index + 1}
                 </span>
-                <span className={`py-2 text-2xl lg:text-3xl 2xl:text-4xl font-semibold transition-all duration-300 ${
-                  index === activeIndex ? "translate-x-2 text-black dark:text-white" : "group-hover:translate-x-1"
+                <span className={`py-2 text-xl lg:text-2xl 2xl:text-3xl font-semibold transition-all duration-300 text-start transform ${
+                  index === activeIndex 
+                    ? "text-black dark:text-white translate-x-2 rtl:-translate-x-2" 
+                    : "text-gray-700 dark:text-gray-400 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 dark:group-hover:text-gray-200"
                 }`}>
-                  {service.title}
+                  {t(service.titleKey)}
                 </span>
               </div>
             </button>
@@ -146,7 +224,7 @@ export default function ServicesSection() {
           {/* Static Glass Container */}
           <div className="bg-gray-100 dark:bg-gray-900/40 backdrop-blur-md p-8 md:p-14 rounded-3xl border border-gray-200 dark:border-gray-800/80 shadow-2xl relative overflow-hidden group hover:border-indigo-500/20 transition-all duration-500 w-full h-full">
             {/* Card Inner Glow Accent */}
-            <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-gradient-to-br from-indigo-500/10 to-transparent blur-2xl pointer-events-none rounded-full" />
+            <div className="absolute top-0 end-0 w-[150px] h-[150px] bg-gradient-to-br from-indigo-500/10 to-transparent blur-2xl pointer-events-none rounded-full" />
 
             <AnimatePresence mode="wait">
               <motion.div
@@ -158,45 +236,50 @@ export default function ServicesSection() {
                 className="relative z-10 w-full h-full flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex justify-between items-start mb-6">
-                    <h3 className="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-700 to-gray-500 dark:from-white dark:via-gray-100 dark:to-gray-400 tracking-tight">
-                      {services[activeIndex].title}
+                  <div className="flex justify-between items-start mb-6 gap-4">
+                    <h3 className="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-700 to-gray-500 dark:from-white dark:via-gray-100 dark:to-gray-400 tracking-tight text-start">
+                      {t(services[activeIndex].titleKey)}
                     </h3>
 
                     {/* Service Icon */}
-                    <div className="p-3 bg-white dark:bg-gray-950/50 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-inner shrink-0 ml-4">
+                    <div className="p-3 bg-white dark:bg-gray-950/50 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-inner shrink-0 ms-auto">
                       {serviceIcons[services[activeIndex].id]}
                     </div>
                   </div>
 
                   {/* Tags */}
                   <div className="flex flex-wrap gap-2 mb-8">
-                    {services[activeIndex].tags.map((tag) => (
+                    {services[activeIndex].tagsKeys.map((tagKey) => (
                       <span
-                        key={tag}
-                        className="px-4 py-2 rounded-full text-indigo-300 bg-indigo-950/30 border border-indigo-900/50 shadow-md backdrop-blur-sm text-sm font-medium hover:border-indigo-500/40 transition-colors duration-300"
+                        key={tagKey}
+                        className="px-4 py-2 rounded-full text-indigo-700 dark:text-indigo-300 bg-indigo-950/30 border border-indigo-900/20 shadow-md backdrop-blur-sm text-sm font-medium hover:border-indigo-500 transition-colors duration-300"
                       >
-                        {tag}
+                        {t(tagKey)}
                       </span>
                     ))}
                   </div>
 
                   {/* Description */}
-                  <p className="text-gray-600 dark:text-gray-400 text-lg md:text-xl leading-relaxed mb-10 max-w-2xl">
-                    {services[activeIndex].content}
+                  <p className="text-gray-600 dark:text-gray-300 text-lg md:text-xl leading-relaxed mb-10 max-w-2xl text-start">
+                    {t(services[activeIndex].contentKey)}
                   </p>
                 </div>
 
                 {/* Action Button */}
-                <div>
+                <div className="flex justify-start">
                   <button
-                    className="inline-flex items-center gap-3 text-indigo-400 hover:text-white font-semibold group transition-all duration-300 px-6 py-3 rounded-xl bg-indigo-950/20 hover:bg-indigo-600 border border-indigo-900/60 hover:border-indigo-500 shadow-lg"
-                    aria-label={`Learn more about ${services[activeIndex].title}`}
+                    className="inline-flex items-center gap-3 text-indigo-500 hover:text-white font-semibold group transition-all duration-300 px-6 py-3 rounded-xl bg-indigo-950/20 hover:bg-indigo-600 border border-indigo-400/60 hover:border-indigo-500 shadow-lg"
+                    aria-label={`${t("services.learnMore")} ${t(services[activeIndex].titleKey)}`}
                   >
-                    Learn More
-                    <span className="transform group-hover:translate-x-1.5 transition-transform duration-300 text-lg">
-                      →
-                    </span>
+                    {t("services.learnMore")}
+                    <svg
+                      className="w-5 h-5 rtl:rotate-180 transform transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
                   </button>
                 </div>
               </motion.div>

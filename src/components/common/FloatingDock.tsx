@@ -5,17 +5,16 @@ import { useFloatingDock, useDockKeyboardShortcuts, useDockPersistence } from "@
 import { defaultApps } from "@/lib/defaultApps";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, Globe } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useRouter } from "next/navigation";
 
 export default function FloatingDock() {
-  const [hoveredApp, setHoveredApp] = useState<number | null>(null);
-  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const { theme, setTheme } = useTheme();
+  const { i18n, t } = useTranslation();
+  const router = useRouter();
   const {
     apps,
     isVisible,
@@ -27,30 +26,37 @@ export default function FloatingDock() {
     hideOnScroll: true,
   });
 
+  useEffect(() => setMounted(true), []);
+
   useDockKeyboardShortcuts(apps, setActiveApp);
   useDockPersistence(apps, setApps, "floating-dock");
 
-  const getScale = (index: number) => {
-    if (hoveredApp === null) return 1;
-    const distance = Math.abs(index - hoveredApp);
-    if (distance === 0) return 1.4; // المركزية أكبر
-    if (distance === 1) return 1.2; // المجاورة أقل
-    if (distance === 2) return 1.1; // التي تليها أقل
-    return 1;
-  };
+  if (!mounted) return null;
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  if (!mounted) return null;
+  const toggleLanguage = () => {
+    const newLang = i18n.language?.startsWith("ar") ? "en" : "ar";
+    i18n.changeLanguage(newLang);
+    document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = newLang;
+    router.refresh();
+  };
 
-  // إضافة زر السمة إلى قائمة التطبيقات ديناميكياً
+  // إضافة زر السمة وزر اللغة إلى قائمة التطبيقات ديناميكياً
   const appsWithTheme = [
     ...apps,
     {
+      name: i18n.language?.startsWith("ar") ? "English" : "العربية",
+      icon: <Globe size={24} />,
+      color: "#10B981",
+      action: toggleLanguage,
+    },
+    {
       name: theme === "dark" ? "وضع النهار" : "وضع الليل",
-      icon: theme === "dark" ? <Sun size={24} className="text-amber-400" /> : <Moon size={24} className="text-indigo-400" />,
+      icon: theme === "dark" ? <Sun size={24} /> : <Moon size={24} />,
       color: theme === "dark" ? "#fbbf24" : "#818cf8",
       action: toggleTheme,
     }
@@ -60,13 +66,13 @@ export default function FloatingDock() {
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 md:bottom-auto md:top-4 md:left-1/2 md:-translate-x-1/2 z-[999]"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 50 }}
-          transition={{ type: "spring", stiffness: 200, damping: 25 }}
+          className="fixed left-1/2 -translate-x-1/2 z-[999] bottom-4 md:bottom-auto md:top-6"
+          initial={{ opacity: 0, y: -20, x: "-50%" }}
+          animate={{ opacity: 1, y: 0, x: "-50%" }}
+          exit={{ opacity: 0, y: -20, x: "-50%" }}
+          transition={{ type: "spring", stiffness: 260, damping: 20 }}
         >
-            <div className="flex flex-row md:flex-row gap-3 items-center bg-white/20 dark:bg-black/20 backdrop-blur-xl border border-gray-300 dark:border-white/10 rounded-2xl p-2 shadow-2xl shadow-black/20 relative transition-colors duration-500">
+            <div dir="ltr" className="flex flex-row gap-2 md:gap-4 items-center bg-white/30 dark:bg-black/30 backdrop-blur-2xl border border-gray-200/50 dark:border-white/10 rounded-full p-2 shadow-2xl relative transition-all duration-500">
               {appsWithTheme.map((app, index) => (
                 <motion.button
                   key={index}
@@ -78,51 +84,48 @@ export default function FloatingDock() {
                         setActiveApp(index);
                     }
                   }}
-                  className={`relative p-3 rounded-xl text-black dark:text-white transition-all duration-300 transform-gpu focus:outline-none focus:ring-2 focus:ring-indigo-500/50`}
-                  onMouseEnter={() => setHoveredApp(index)}
-                  onMouseLeave={() => setHoveredApp(null)}
-                  animate={{
-                    scale: getScale(index),
-                    y: hoveredApp === index ? -0 : 0, // رفع الأيقونة قليلاً عند التركيز
+                  onMouseEnter={() => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                  aria-label={t(app.name)}
+                  title={t(app.name)}
+                  className={`relative p-3 rounded-full transition-all duration-300 transform-gpu focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 flex items-center justify-center group`}
+                  whileHover={{ 
+                    backgroundColor: "rgba(255,255,255,0.1)",
                   }}
                   whileTap={{ scale: 0.9 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20, mass: 0.8 }}
-                  style={{ zIndex: hoveredApp === index ? 100 : 10 }}
                 >
-                  {/* Tooltip */}
-                  {hoveredApp === index && ( 
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: -40 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20, duration: 0.2 }}
-                      className="absolute top-1/2 -translate-y-1/2 -left-24 px-3 py-1.5 bg-gray-200 dark:bg-gray-800 text-black dark:text-white text-xs rounded-md shadow-lg whitespace-nowrap transition-colors duration-500"
-                    >
-                      {app.name}
-                    </motion.div>
-                  )}
-
-                  {app.icon}
+                  <motion.div 
+                    className="flex items-center justify-center w-6 h-6 md:w-7 md:h-7 transition-colors duration-300"
+                    style={{ 
+                        color: hoveredIndex === index ? (app.color || '#6366f1') : (theme === 'dark' ? 'white' : 'black') 
+                    }}
+                    animate={{
+                        filter: hoveredIndex === index ? `drop-shadow(0 0 8px ${app.color || '#6366f1'})` : 'none',
+                        scale: hoveredIndex === index ? 1.15 : 1
+                    }}
+                  >
+                    {app.icon}
+                  </motion.div>
 
                   {"isActive" in app && app.isActive && (
                     <motion.div
-                      className="absolute right-0.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.7)] animate-pulse"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: [0, 1, 0], opacity: [0, 1, 0] }} // حركة نبضية تختفي وتظهر
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-indigo-500 rounded-full"
+                      layoutId="active-indicator"
                     />
                   )}
 
                   {"badge" in app && app.badge && app.badge > 0 && (
                     <motion.div
-                      className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold border-2 border-white/10"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 500 }}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold border-2 border-white/20"
                     >
-                      {app.badge > 99 ? "99+" : app.badge}
+                      {app.badge > 99 ? "9" : app.badge}
                     </motion.div>
                   )}
+                  
+                  {/* Tooltip */}
+                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap" style={{ color: app.color || '#6366f1' }}>
+                    {t(app.name)}
+                  </span>
                 </motion.button>
               ))}
             </div>

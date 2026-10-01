@@ -1,0 +1,220 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About Us",
+    "designs": "Designs",
+    "services": "Services",
+    "contact": "Contact Us"
+  },
+  "dock": {
+    "home": "Home",
+    "texts": "Text Files",
+    "settings": "Settings",
+    "grid": "Grid",
+    "mail": "Mail",
+    "themeLight": "Light Mode",
+    "themeDark": "Dark Mode"
+  },
+  "footer": {
+    "brand": "Design Gallery",
+    "description": "We transform creative visions into tangible digital experiences that leave a lasting impact. A studio specialized in design and innovation.",
+    "explore": "Explore",
+    "company": "Company",
+    "contactTitle": "Contact Us",
+    "newsletter": "Be the first to know about our latest projects and innovations.",
+    "rights": "All rights reserved",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use"
+  },
+  "hero": {
+    "studio": "Design Gallery Studio",
+    "title1": "We create reality",
+    "title2": "with creative touches",
+    "description": "A creative studio specialized in transforming ambitious visions into exceptional digital experiences that leave an unforgettable mark in the world of design.",
+    "exploreWork": "Explore Our Work",
+    "contactUs": "Contact Us",
+    "branding": "The Art of Excellence"
+  },
+  "services": {
+    "badge": "Our Creative Services",
+    "title": "We Transform Ideas Into",
+    "gradientTitle": "Exceptional Experiences",
+    "learnMore": "Learn More",
+    "items": {
+      "web": {
+        "title": "Web Design",
+        "content": "We specialize in building modern web experiences that represent your brand powerfully.",
+        "tags": ["Responsive", "UX/UI", "CMS"]
+      },
+      "branding": {
+        "title": "Branding",
+        "content": "Crafting strong, memorable brands that stand out in competitive markets.",
+        "tags": ["Logo Design", "Typography", "Guidelines"]
+      },
+      "graphic": {
+        "title": "Graphic Design",
+        "content": "From social media to print, we create compelling visuals that communicate.",
+        "tags": ["Social Media", "Posters", "Packaging"]
+      },
+      "packaging": {
+        "title": "Packaging",
+        "content": "Unique, functional packaging designs that speak to your customers.",
+        "tags": ["Custom Boxes", "Labels", "Retail"]
+      },
+      "video": {
+        "title": "Video Production",
+        "content": "Videos that tell your brand story, from concept to delivery.",
+        "tags": ["Animation", "Promo", "Editing"]
+      }
+    }
+  },
+  "caseStudies": {
+    "badge": "Our Selected Works",
+    "title": "Success Stories",
+    "gradientTitle": "Embody Our Vision",
+    "description": "We don't just design interfaces, we build digital experiences that leave a tangible impact on our clients' business growth.",
+    "viewProject": "View Project",
+    "viewDetails": "View Full Project Details",
+    "browseAll": "Browse All Projects",
+    "results": "Results Achieved:",
+    "items": [
+      {
+        "title": "Content Management System for Educational Company",
+        "category": "Web Development / Educational Platforms",
+        "description": "Integrated software solutions that improved user experience by 40%, leading to a significant increase in course completion rates.",
+        "results": ["Improved user experience by 40%", "Reduced load time by 60%", "Increased engagement with educational content"]
+      },
+      {
+        "title": "E-commerce Platform for Product Sales",
+        "category": "E-commerce / Payment Solutions",
+        "description": "We designed a unique shopping experience focused on accessibility and fast checkout, leading to a huge increase in sales during the first quarter.",
+        "results": ["Increased sales by 75%", "Improved conversion rate", "Smart and easy-to-use admin interface"]
+      },
+      {
+        "title": "Advanced Mobile App for Customer Service",
+        "category": "Mobile Apps / Customer Experience",
+        "description": "An integrated app connecting customers to technical services instantly, with a smart notification system and periodic performance reports for managers.",
+        "results": ["4.9/5 rating in app stores", "Over 100K active downloads", "Unprecedented retention rate"]
+      }
+    ]
+  },
+  "designs": {
+    "noDesigns": "No designs yet",
+    "noDesignsDesc": "We're working on adding new creations soon.",
+    "latest": "Latest",
+    "designsWord": "Designs",
+    "description": "Explore a curated collection of the latest projects and digital creations."
+  },
+  "designsPage": {
+    "badge": "Design Gallery",
+    "title": "Explore Creativity",
+    "gradientTitle": "In Full Detail",
+    "description": "Browse our exceptional works designed and developed with complete passion and meticulous professionalism.",
+    "selectedWorks": "Selected Works"
+  },
+  "contact": {
+    "badge": "Contact Us",
+    "title": "Let's Start",
+    "gradientTitle": "Something Great",
+    "description": "We're here to answer your inquiries and help turn your vision into reality. Fill out the form below and we'll get back to you as soon as possible.",
+    "namePlaceholder": "Full Name",
+    "emailPlaceholder": "Email Address",
+    "messagePlaceholder": "Your Message...",
+    "sendMessage": "Send Message",
+    "emailLabel": "Email",
+    "phoneLabel": "Phone",
+    "getInTouch": "Get In Touch"
+  },
+  "cta": {
+    "badge": "Let's Start a New Journey",
+    "title": "Have a Vision?",
+    "gradientTitle": "We're Here to Make It Real",
+    "description": "We're always looking for ambitious partners and inspiring projects. Contact us today to start transforming your ideas into tangible digital reality.",
+    "contactNow": "Contact Us Now",
+    "responseTime": "We usually respond within 24 hours"
+  },
+  "designCard": {
+    "noTitle": "Design without title",
+    "unknownDesigner": "Unknown designer",
+    "like": "Like",
+    "share": "Share",
+    "viewDetails": "View details of {{title}}",
+    "playVideo": "Play video",
+    "pauseVideo": "Pause video"
+  },
+  "designCardScroll": {
+    "title": "Other designs you may like"
+  },
+  "formErrors": {
+    "titleRequired": "Title is required",
+    "designerRequired": "Please select a designer",
+    "mediaRequired": "Media (image or video) is required",
+    "updateSuccess": "Updated successfully",
+    "createSuccess": "Added successfully",
+    "saveError": "An error occurred while saving"
+  },
+  "errorBoundary": {
+    "title": "An unexpected error occurred",
+    "message": "Sorry, an error occurred while displaying this page. You can try again or return to the home page.",
+    "retry": "Try Again",
+    "backHome": "Back to Home"
+  },
+  "admin": {
+    "dashboardBadge": "Dashboard",
+    "dashboardTitle": "Admin Gallery",
+    "dashboardGradientTitle": "and Design Control",
+    "dashboardDescription": "Add, edit, or delete your designs from the gallery with ease and full control.",
+    "loading": "Loading designs...",
+    "errorLoad": "Failed to load designs",
+    "retry": "Retry",
+    "noDesigns": "No designs in the gallery yet.",
+    "addFirstDesign": "Add First Design",
+    "edit": "Edit",
+    "delete": "Delete",
+    "dateUnavailable": "Date unavailable",
+    "deleteConfirmTitle": "Are you sure you want to delete?",
+    "deleteConfirmDescription": "This design will be permanently deleted and cannot be recovered.",
+    "deleteConfirmText": "Yes, delete the design",
+    "deleteCancelText": "Cancel",
+    "deletedSuccess": "Design deleted successfully",
+    "deleteError": "An error occurred while deleting",
+    "addedSuccess": "Design added successfully to the gallery",
+    "createMode": "Create New Design",
+    "editMode": "Edit Design",
+    "viewMode": "View Design",
+    "close": "Close",
+    "addTitle": "Add Title",
+    "addDescription": "Add Description",
+    "uploadMedia": "Upload Media",
+    "addTag": "Add Tag",
+    "changeBgColor": "Change Background Color",
+    "reset": "Reset",
+    "uploading": "Uploading...",
+    "saveChanges": "Save Changes",
+    "publishDesign": "Publish Design",
+    "projectTitle": "Project name...",
+    "projectDescription": "Project description...",
+    "dragDrop": "Drag and drop files here or click to upload",
+    "supportedFormats": "Supports: JPG, PNG, MP4 (max 10MB)",
+    "designer": "Designer:",
+    "selectDesigner": "Select a designer",
+    "tags": "Tags:",
+    "addTagPlaceholder": "Enter a tag and press Enter",
+    "deleteTag": "Delete tag {{tag}}",
+    "creationDate": "Creation date:",
+    "notPublishedYet": "Not published yet",
+    "deleteMedia": "Delete media",
+    "loadingToolbar": "Loading toolbar...",
+    "preview": "Preview before publishing",
+    "autoSaved": "Draft saved automatically",
+    "draftRestored": "Saved draft restored",
+    "totalDesigns": "Total Designs",
+    "thisMonth": "This Month",
+    "searchPlaceholder": "Search by title...",
+    "filterByDesigner": "Filter by designer",
+    "filterByTag": "Filter by tag",
+    "allDesigners": "All designers",
+    "allTags": "All tags",
+    "noResults": "No matching results"
+  }
+}

@@ -16,17 +16,18 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     // محاكاة لتقدم التحميل لزيادة التفاعل
     const interval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 100) {
+        const newProgress = prev + 2;
+        if (newProgress >= 100) {
           clearInterval(interval);
           return 100;
         }
-        return prev + 2;
+        return newProgress;
       });
     }, 30);
 
     const timer = setTimeout(() => {
       setShowSplash(false);
-        onComplete(); // إتاحة وقت لأنميشن الخروج
+      onComplete(); // Move onComplete here to ensure it's called after the splash screen is hidden
     }, 2800);
 
     return () => {
@@ -54,7 +55,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] rounded-full transition-colors duration-500" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/5 dark:bg-purple-500/10 blur-[120px] rounded-full transition-colors duration-500" />
-            <div className="absolute inset-0 bg-[url(\'https://grainy-gradients.vercel.app/noise.svg\')] opacity-[0.05] dark:opacity-[0.03] brightness-100 contrast-150 transition-opacity duration-500" />
+            <div className="absolute inset-0 bg-[url(https://grainy-gradients.vercel.app/noise.svg)] opacity-[0.05] dark:opacity-[0.03] brightness-100 contrast-150 transition-opacity duration-500" />
           </div>
 
           <div className="relative z-10 flex flex-col items-center">

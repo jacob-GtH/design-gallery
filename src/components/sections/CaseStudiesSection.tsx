@@ -1,53 +1,52 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { SectionHeader } from "../ui/SectionHeader";
+import { useTranslation } from "react-i18next";
+import { useState, useEffect } from "react";
 
 const CheckIcon = () => (
-  <svg className="w-5 h-5 text-emerald-500 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <svg className="w-5 h-5 text-indigo-500 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
   </svg>
 );
 
 export default function SectionCaseStudies() {
+  const { t, i18n } = useTranslation();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // إصلاح Hydration: قبل التركيب، نستخدم نفس قيمة SSR (isRTL = false)
+  const isRTL = mounted && i18n.language?.startsWith("ar");
+
   const caseStudies = [
     {
       id: 1,
-      title: "نظام إدارة المحتوى لشركة تعليمية",
-      category: "تطوير ويب / منصات تعليمية",
-      description:
-        "حلول برمجية متكاملة ساهمت في تحسين تجربة المستخدم بنسبة 40٪، مما أدى إلى زيادة ملحوظة في معدلات إكمال الدورات التعليمية.",
-      imageUrl: "/images/bgHome.png", // استخدام مسار محلي إذا توفر أو صورة بديلة عالية الجودة
-      results: [
-        "تحسين تجربة المستخدم بنسبة 40٪",
-        "تقليل وقت التحميل بمقدار 60٪",
-        "زيادة التفاعل مع المحتوى التعليمي",
-      ],
+      titleKey: "caseStudies.items.0.title",
+      categoryKey: "caseStudies.items.0.category",
+      descriptionKey: "caseStudies.items.0.description",
+      imageUrl: "/images/bgHome.png",
+      resultsKeys: ["caseStudies.items.0.results.0", "caseStudies.items.0.results.1", "caseStudies.items.0.results.2"],
       accentColor: "indigo"
     },
     {
       id: 2,
-      title: "منصة تجارة إلكترونية لبيع المنتجات",
-      category: "التجارة الإلكترونية / حلول الدفع",
-      description: "صممنا تجربة تسوق فريدة تركز على سهولة الوصول وسرعة الدفع، مما ساهم في تحقيق زيادة هائلة في المبيعات خلال الربع الأول.",
+      titleKey: "caseStudies.items.1.title",
+      categoryKey: "caseStudies.items.1.category",
+      descriptionKey: "caseStudies.items.1.description",
       imageUrl: "/images/bgHome.png",
-      results: [
-        "زيادة المبيعات بنسبة 75٪",
-        "تحسين معدل التحويل (Conversion Rate)",
-        "واجهة إدارة ذكية وسهلة الاستخدام",
-      ],
+      resultsKeys: ["caseStudies.items.1.results.0", "caseStudies.items.1.results.1", "caseStudies.items.1.results.2"],
       accentColor: "purple"
     },
     {
       id: 3,
-      title: "تطبيق جوال متقدم لخدمة العملاء",
-      category: "تطبيقات الجوال / تجربة العملاء",
-      description: "تطبيق متكامل يربط العملاء بالخدمات الفنية بشكل لحظي، مع نظام تنبيهات ذكي وتقارير أداء دورية للمديرين.",
+      titleKey: "caseStudies.items.2.title",
+      categoryKey: "caseStudies.items.2.category",
+      descriptionKey: "caseStudies.items.2.description",
       imageUrl: "/images/bgHome.png",
-      results: [
-        "تقييم 4.9/5 في متاجر التطبيقات",
-        "أكثر من 100 ألف عملية تحميل نشطة",
-        "معدل احتفاظ (Retention) غير مسبوق",
-      ],
+      resultsKeys: ["caseStudies.items.2.results.0", "caseStudies.items.2.results.1", "caseStudies.items.2.results.2"],
       accentColor: "emerald"
     },
   ];
@@ -55,7 +54,7 @@ export default function SectionCaseStudies() {
   return (
     <section
       id="case-studies"
-      className="relative w-full flex flex-col items-center px-6 md:px-12 py-32 space-y-32 overflow-hidden bg-white dark:bg-black transition-colors duration-500"
+      className="relative w-full flex flex-col items-center px-6 md:px-12 py-20 space-y-32 overflow-hidden bg-white dark:bg-[#050505] transition-colors duration-500"
     >
       {/* Decorative Background Glows */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-500/3 dark:bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none transition-colors duration-500" />
@@ -64,16 +63,16 @@ export default function SectionCaseStudies() {
       {/* Section Header */}
       <SectionHeader
         align="center"
-        badge="أعمالنا المختارة"
-        title="قصص نجاح"
-        gradientTitle="تجسد رؤيتنا"
-        description="نحن لا نصمم مجرد واجهات، بل نبني تجارب رقمية تترك أثراً ملموساً في نمو أعمال عملائنا."
+        badge={t("caseStudies.badge")}
+        title={t("caseStudies.title")}
+        gradientTitle={t("caseStudies.gradientTitle")}
+        description={t("caseStudies.description")}
       />
       
       {caseStudies.map((study, index) => (
         <div
           key={study.id}
-          className={`relative z-10 w-full max-w-7xl flex flex-col ${index % 2 !== 0 ? "md:flex-row-reverse" : "md:flex-row"} items-center gap-12 lg:gap-20`}
+          className={`relative z-10 w-full max-w-7xl flex flex-col ${index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-12 lg:gap-20`}
         >
           {/* Image Container with Parallax Effect */}
           <motion.div
@@ -88,22 +87,22 @@ export default function SectionCaseStudies() {
               
               <Image
                 src={study.imageUrl}
-                alt={study.title}
+                alt={t(study.titleKey)}
                 fill
                 className="object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
               />
               
               {/* Overlay Badge on Image */}
-              <div className="absolute bottom-8 left-8 z-20 flex items-center gap-4">
+              <div className={`absolute bottom-8 z-20 flex items-center gap-4 ${isRTL ? "right-8" : "left-8"}`}>
                 <div className="px-6 py-3 bg-white/10 dark:bg-black/10 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl shadow-2xl transition-colors duration-500">
-                  <span className="text-white dark:text-white font-semibold text-lg">عرض المشروع</span>
+                  <span className="text-white dark:text-white font-semibold text-lg">{t("caseStudies.viewProject")}</span>
                 </div>
               </div>
             </div>
           </motion.div>
 
-          {/* Content Container */}
-          <div className={`w-full md:w-2/5 flex flex-col ${index % 2 !== 0 ? "text-right items-end" : "text-right items-end"} space-y-8`}>
+          {/* Content Container - Dynamic alignment based on language */}
+          <div className={`w-full md:w-2/5 flex flex-col ${isRTL ? "text-right items-end" : "text-left items-start"} space-y-8`}>
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -112,33 +111,45 @@ export default function SectionCaseStudies() {
               className="space-y-4"
             >
               <span className="inline-block px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 dark:text-indigo-400 text-xs font-bold uppercase tracking-widest transition-colors duration-500">
-                {study.category}
+                {t(study.categoryKey)}
               </span>
               <h3 className="text-3xl md:text-4xl font-extrabold text-black dark:text-white leading-tight transition-colors duration-500">
-                {study.title}
+                {t(study.titleKey)}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed transition-colors duration-500">
-                {study.description}
+                {t(study.descriptionKey)}
               </p>
             </motion.div>
 
             {/* Results Grid */}
             <div className="w-full space-y-4 pt-8 border-t border-gray-200 dark:border-white/5 transition-colors duration-500">
-              <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-6">النتائج المحققة:</h4>
+              <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-6">{t("caseStudies.results")}</h4>
               <div className="space-y-4">
-                {study.results.map((result, i) => (
+                {study.resultsKeys.map((resultKey, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, x: 20 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.2 + i * 0.1, duration: 0.5 }}
-                    className="flex items-center gap-4 justify-end group/item"
+                    className={`flex items-center gap-4 ${isRTL ? "justify-start" : "justify-start"} group/item`}
                   >
-                    <span className="text-gray-700 dark:text-gray-300 group-hover/item:text-black dark:group-hover/item:text-white transition-colors duration-300 text-lg font-medium">{result}</span>
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/10 dark:border-emerald-500/20 flex items-center justify-center group-hover/item:bg-emerald-500/20 transition-all duration-300">
-                      <CheckIcon />
-                    </div>
+                    {isRTL ? (
+                      <>
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 border border-indigo-500/10 dark:border-indigo-500/20 flex items-center justify-center group-hover/item:bg-indigo-500/20 transition-all duration-300">
+                          <CheckIcon />
+                        </div>
+                        <span className="text-gray-700 dark:text-gray-300 group-hover/item:text-black dark:group-hover/item:text-white transition-colors duration-300 text-lg font-medium">{t(resultKey)}</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 border border-indigo-500/10 dark:border-indigo-500/20 flex items-center justify-center group-hover/item:bg-indigo-500/20 transition-all duration-300">
+                          <CheckIcon />
+                        </div>
+                        <span className="text-gray-700 dark:text-gray-300 group-hover/item:text-black dark:group-hover/item:text-white transition-colors duration-300 text-lg font-medium">{t(resultKey)}</span>
+
+                      </>
+                    )}
                   </motion.div>
                 ))}
               </div>
@@ -150,12 +161,26 @@ export default function SectionCaseStudies() {
               whileTap={{ scale: 0.98 }}
               className="mt-6 flex items-center gap-3 text-black dark:text-white font-bold group transition-colors duration-500"
             >
-              <span className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center group-hover:bg-indigo-600 group-hover:border-indigo-500 transition-all duration-300">
-                <svg className="w-5 h-5 transform rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </span>
-              تفاصيل المشروع كاملة
+              {isRTL ? (
+                <>
+                  {t("caseStudies.viewDetails")}
+                  <span className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center group-hover:bg-indigo-600 group-hover:border-indigo-500 transition-all duration-300">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </span>
+                </>
+              ) : (
+                <>
+                {t("caseStudies.viewDetails")}
+                  <span className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center group-hover:bg-indigo-600 group-hover:border-indigo-500 transition-all duration-300">
+                    <svg className="w-5 h-5 transform rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </span>
+                  
+                </>
+              )}
             </motion.button>
           </div>
         </div>
@@ -168,8 +193,8 @@ export default function SectionCaseStudies() {
         viewport={{ once: true }}
         className="pt-20 text-center"
       >
-        <button className="px-10 py-5 bg-black dark:bg-white text-white dark:text-black font-extrabold rounded-2xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(255,255,255,0.1)]">
-          تصفح كافة المشاريع
+        <button className="px-10 py-5 bg-indigo-950 dark:bg-white text-white dark:text-black font-extrabold rounded-2xl hover:bg-indigo-800 dark:hover:bg-gray-200 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(255,255,255,0.1)]">
+          {t("caseStudies.browseAll")}
         </button>
       </motion.div>
     </section>

@@ -4,8 +4,10 @@ import { motion } from "framer-motion";
 import { FiArrowLeft } from "react-icons/fi";
 import Link from "next/link";
 import { SectionHeader } from "../ui/SectionHeader";
+import { useTranslation } from "react-i18next";
 
 export default function ContactSection() {
+  const { t } = useTranslation();
   return (
     <section
       id="contact"
@@ -16,7 +18,7 @@ export default function ContactSection() {
         {/* Subtle Grid */}
         
         {/* Deep Aura Glows */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/5 dark:bg-purple-600/10 blur-[120px] rounded-full transition-colors duration-500" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-purple-600/5 dark:bg-purple-600/10 blur-[120px] rounded-full transition-colors duration-500" />
         <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-indigo-600/5 dark:bg-indigo-600/10 blur-[100px] rounded-full transition-colors duration-500" />
       </div>
 
@@ -52,10 +54,10 @@ export default function ContactSection() {
       <div className="container mx-auto px-6 relative z-10 text-center flex flex-col items-center">
         <SectionHeader
           align="center"
-          badge="لنبدأ رحلة جديدة"
-          title="لديك رؤية؟"
-          gradientTitle="نحن هنا لنحققها"
-          description="نحن دائماً نبحث عن شركاء طموحين ومشاريع ملهمة. تواصل معنا اليوم لنبدأ في تحويل أفكارك إلى واقع رقمي ملموس."
+          badge={t("cta.badge")}
+          title={t("cta.title")}
+          gradientTitle={t("cta.gradientTitle")}
+          description={t("cta.description")}
           className="mb-12"
         />
 
@@ -75,9 +77,9 @@ export default function ContactSection() {
           >
             <Link
               href="/contact"
-              className="inline-flex items-center gap-4 px-10 py-5 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-extrabold text-xl hover:bg-gray-800 dark:hover:bg-purple-50 transition-all group shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(255,255,255,0.1)] hover:shadow-[0_20px_60px_rgba(168,85,247,0.2)]"
+              className="inline-flex items-center gap-4 px-10 py-5 bg-indigo-950 dark:bg-white text-white dark:text-black rounded-2xl font-extrabold text-xl hover:bg-gray-800 dark:hover:bg-purple-50 transition-all group shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(255,255,255,0.1)] hover:shadow-[0_20px_60px_rgba(168,85,247,0.2)]"
             >
-              تواصل معنا الآن
+              {t("cta.contactNow")}
               <span className="w-8 h-8 rounded-full bg-white dark:bg-black text-black dark:text-white flex items-center justify-center group-hover:translate-x-[-4px] transition-transform duration-300">
                 <FiArrowLeft className="rotate-180" />
               </span>
@@ -87,18 +89,18 @@ export default function ContactSection() {
           {/* Quick Info */}
           <motion.div
             initial={{ opacity: 0 }}
-            whileInView={{ opacity: 0.5 }}
+            whileInView={{ opacity: 0.9  }}
             transition={{ delay: 1, duration: 1 }}
-            className="mt-16 text-sm text-gray-500 dark:text-gray-500 uppercase tracking-widest"
+            className="mt-16 text-sm text-indigo-500 dark:text-indigo-500 uppercase tracking-widest"
           >
-            نرد عادةً خلال أقل من 24 ساعة
+            {t("cta.responseTime")}
           </motion.div>
         </motion.div>
       </div>
 
       {/* Background Decorative Text */}
       <div className="absolute bottom-[-5%] left-1/2 -translate-x-1/2 opacity-[0.05] dark:opacity-[0.02] text-[12vw] font-black text-black dark:text-white select-none pointer-events-none whitespace-nowrap uppercase tracking-tighter transition-colors duration-500">
-        Get In Touch
+        {t("contact.getInTouch")}
       </div>
     </section>
   );

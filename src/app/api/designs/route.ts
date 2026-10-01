@@ -1,6 +1,6 @@
 // src/app/api/designs/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { client } from "@/sanity/design-cms/lib/client";
+import { client } from "@/lib/sanity.client";
 import { IDesign } from "@/interfaces/Design";
 
 export async function GET() {
@@ -12,6 +12,9 @@ export async function GET() {
       description,
       publishedAt,
       likes,
+      "createdAt": _createdAt,
+      viewsCount,
+      rating,
        backgroundColor,
        "designer":  designer->{_id, name},
        "tags": tags[]->title,
@@ -28,6 +31,9 @@ export async function GET() {
        description: d.description,
        publishedAt: d.publishedAt,
        likes: d.likes ?? 0,
+       createdAt: d.createdAt,
+       viewsCount: d.viewsCount ?? 0,
+       rating: d.rating ?? 0,
        backgroundColor: d.backgroundColor || '#f9fafb',
        designer: d.designer,
        tags: d.tags ?? [],
@@ -66,7 +72,7 @@ export async function POST(req: NextRequest) {
       _type: "design",
       title,
       description,
-      background: backgroundColor || '#f9fafb',
+      backgroundColor: backgroundColor || '#f9fafb',
       slug: {
         _type: "slug",
         current: title.toLowerCase().replace(/\s+/g, "-").slice(0, 96),

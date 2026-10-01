@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence, useSpring } from "framer-motion";
 
 export default function CustomCursor() {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
 
@@ -16,11 +15,10 @@ export default function CustomCursor() {
 
   useEffect(() => {
     const moveCursor = (e: MouseEvent) => {
-      setPosition({ x: e.clientX, y: e.clientY });
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
       // إظهار الماوس بمجرد حركته
-      if (!isVisible) setIsVisible(true);
+      setIsVisible(true);
     };
 
     const handleMouseEnter = () => setIsHovering(true);
@@ -47,7 +45,7 @@ export default function CustomCursor() {
       window.removeEventListener("mousemove", moveCursor);
       observer.disconnect();
     };
-  }, [isVisible]);
+  }, [cursorX, cursorY]);
 
   return (
     <div className="hidden lg:block">

@@ -158,7 +158,7 @@ export function useDockKeyboardShortcuts(
 // التخزين المحلي
 export function useDockPersistence(
   apps: App[],
-  setApps: (apps: App[]) => void,
+  setApps: React.Dispatch<React.SetStateAction<App[]>>,
   storageKey = "floating-dock-state"
 ) {
   const saveState = useCallback(() => {
@@ -178,18 +178,19 @@ export function useDockPersistence(
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const state = JSON.parse(saved);
-        const merged = apps.map((app, index) => ({
-          ...app,
-          ...state.apps[index],
-          icon: app.icon,
-          action: app.action,
-        }));
-        setApps(merged);
+        setApps((prevApps: App[]) =>
+          prevApps.map((app, index) => ({
+            ...app,
+            ...state.apps[index],
+            icon: app.icon,
+            action: app.action,
+          }))
+        );
       }
     } catch (error) {
       console.error("Error loading dock state:", error);
     }
-  }, [storageKey, setApps, apps]);
+  }, [storageKey, setApps]);
 
   useEffect(() => {
     saveState();

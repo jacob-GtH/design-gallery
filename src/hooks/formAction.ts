@@ -1,5 +1,5 @@
 // formReducer.ts
-import { FormState, Designer } from "@/src/components/admin/Types";
+import { FormState, Designer } from "@/components/admin/Types";
 
 export type FormAction =
   | {

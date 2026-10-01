@@ -62,9 +62,214 @@ body {
   background-color: #1e293b;
 }
 
+/* تحسين تنسيق شريط الأدوات عند ظهوره */
+.no-border-quill .ql-toolbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 50 !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+  margin-bottom: 16px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  transition: all 0.3s ease !important;
+  flex-wrap: wrap !important;
+  gap: 4px !important;
+}
+
+.dark .no-border-quill .ql-toolbar {
+  background: rgba(17, 24, 39, 0.95) !important;
+  border-color: #374151 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
+}
+
+.no-border-quill .ql-toolbar button {
+  padding: 6px 8px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.no-border-quill .ql-toolbar button:hover {
+  background-color: #f3f4f6 !important;
+  transform: translateY(-1px) !important;
+}
+
+.dark .no-border-quill .ql-toolbar button:hover {
+  background-color: #374151 !important;
+}
+
+.no-border-quill .ql-toolbar button.ql-active {
+  background-color: #e0e7ff !important;
+  color: #4f46e5 !important;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2) !important;
+}
+
+.dark .no-border-quill .ql-toolbar button.ql-active {
+  background-color: #312e81 !important;
+  color: #a5b4fc !important;
+}
+
+.no-border-quill .ql-toolbar .ql-stroke {
+  stroke: currentColor !important;
+}
+
+.no-border-quill .ql-toolbar .ql-fill {
+  fill: currentColor !important;
+}
+
+.no-border-quill .ql-toolbar .ql-picker {
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  margin: 0 2px !important;
+}
+
+.no-border-quill .ql-toolbar .ql-picker:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.dark .no-border-quill .ql-toolbar .ql-picker:hover {
+  background-color: #374151 !important;
+}
+
+/* تحسين محرر النصوص */
+.no-border-quill .ql-container {
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  min-height: 120px !important;
+}
+
+.no-border-quill .ql-editor {
+  padding: 16px 20px !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  min-height: 120px !important;
+}
+
+.no-border-quill .ql-editor:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+}
+
+/* تحسين القوائم المنسدلة */
+.no-border-quill .ql-toolbar .ql-picker-options {
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+  padding: 8px !important;
+}
+
+.dark .no-border-quill .ql-toolbar .ql-picker-options {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+}
+
+.no-border-quill .ql-toolbar .ql-picker-item {
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.no-border-quill .ql-toolbar .ql-picker-item:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.dark .no-border-quill .ql-toolbar .ql-picker-item:hover {
+  background-color: #374151 !important;
+}
+
 .no-border-quill .ql-editor {
   border: none !important;
   box-shadow: none !important;
+}
+
+/* تحسين تنسيق شريط أدوات ReactQuill */
+.no-border-quill .ql-toolbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 50 !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  margin-bottom: 12px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  transition: all 0.3s ease !important;
+}
+
+.dark .no-border-quill .ql-toolbar {
+  background: rgba(17, 24, 39, 0.95) !important;
+  border-color: #374151 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
+}
+
+.no-border-quill .ql-toolbar button {
+  padding: 6px 8px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+}
+
+.no-border-quill .ql-toolbar button:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.dark .no-border-quill .ql-toolbar button:hover {
+  background-color: #374151 !important;
+}
+
+.no-border-quill .ql-toolbar button.ql-active {
+  background-color: #e0e7ff !important;
+  color: #4f46e5 !important;
+}
+
+.dark .no-border-quill .ql-toolbar button.ql-active {
+  background-color: #312e81 !important;
+  color: #a5b4fc !important;
+}
+
+.no-border-quill .ql-toolbar .ql-stroke {
+  stroke: currentColor !important;
+}
+
+.no-border-quill .ql-toolbar .ql-fill {
+  fill: currentColor !important;
+}
+
+/* تحسين محرر النصوص */
+.no-border-quill .ql-container {
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  min-height: 120px !important;
+}
+
+.no-border-quill .ql-editor {
+  padding: 12px 16px !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+}
+
+.no-border-quill .ql-editor:focus {
+  outline: none !important;
+}
+
+/* تحسين القوائم المنسدلة */
+.no-border-quill .ql-toolbar .ql-picker {
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+}
+
+.no-border-quill .ql-toolbar .ql-picker:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.dark .no-border-quill .ql-toolbar .ql-picker:hover {
+  background-color: #374151 !important;
 }
 .logo {
   mix-blend-mode: difference;

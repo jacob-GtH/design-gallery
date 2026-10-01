@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import DesignCard from "../DesignCard";
 import { IDesign } from "@/interfaces/Design";
 

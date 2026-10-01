@@ -3,6 +3,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { SectionBadge } from "./SectionBadge";
+import { useTranslation } from "react-i18next";
+import { useState, useEffect } from "react";
 
 interface SectionHeaderProps {
   badge?: string;
@@ -18,19 +20,34 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
   title,
   gradientTitle,
   description,
-  align = "right",
+  align,
   className = "",
 }) => {
+  const { i18n } = useTranslation();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // إصلاح Hydration: قبل التركيب، نستخدم نفس قيمة SSR (isRTL = false)
+  const isRTL = mounted && i18n.language?.startsWith("ar");
+
+  // If align is not explicitly set, use language direction
+  const effectiveAlign = align || (isRTL ? "right" : "left");
+
   const alignmentClasses = {
-    right: "text-right items-end ml-auto",
+    right: "text-start items-start",
     center: "text-center items-center mx-auto",
-    left: "text-left items-start mr-auto",
+    left: "text-start items-start",
   };
 
+  const finalAlign = effectiveAlign === "center" ? "center" : (isRTL ? "right" : "left");
+
   return (
-    <div className={`flex flex-col max-w-4xl mb-16 ${alignmentClasses[align]} ${className}`}>
+    <div className={`flex flex-col max-w-4xl mb-16 ${alignmentClasses[finalAlign]} ${className}`}>
       {badge && <SectionBadge>{badge}</SectionBadge>}
-      
+
       <motion.h2
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}

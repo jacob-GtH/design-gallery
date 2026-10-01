@@ -2,6 +2,7 @@
 "use client";
 
 import { FiImage } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
 
 interface EmptyDropZoneProps {
   disabled?: boolean;
@@ -16,7 +17,9 @@ const EmptyDropZone = ({
   handleDragOver,
   handleDragLeave,
   handleDrop,
-}: EmptyDropZoneProps) => (
+}: EmptyDropZoneProps) => {
+  const { t } = useTranslation();
+  return (
   <div
     className={`flex flex-col p-16 m-20 space-y-2 items-center justify-center h-full border-2 ${
       isDragging
@@ -29,11 +32,12 @@ const EmptyDropZone = ({
     onClick={() => document.getElementById("file-upload")?.click()}
   >
     <FiImage className="text-4xl text-gray-400 mb-3" />
-    <p className="text-gray-500">اسحب وأسقط الملفات هنا أو انقر للرفع</p>
+    <p className="text-gray-500">{t("admin.dragDrop")}</p>
     <p className="text-sm text-gray-400 mt-2">
-      يدعم: JPG, PNG, MP4 (بحد أقصى 10MB)
+      {t("admin.supportedFormats")}
     </p>
   </div>
-);
+  );
+};
 
 export default EmptyDropZone;

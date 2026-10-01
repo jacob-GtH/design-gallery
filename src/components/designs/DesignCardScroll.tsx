@@ -4,11 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 export default function DesignFooterMotion({ relatedDesigns }: { relatedDesigns: { id: string, title: string, mediaUrl: string, mediaType: string }[] }) {
+  const { t, i18n } = useTranslation();
+  const [mounted, setMounted] = useState(false);
   const controls = useAnimation();
   const [isVisible, setIsVisible] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // إصلاح Hydration: قبل التركيب، نستخدم نفس قيمة SSR (isRTL = false)
+  const isRTL = mounted && i18n.language?.startsWith("ar");
 
   // ✅ كرر التصاميم 3 مرات
   const infiniteDesigns = [...relatedDesigns, ...relatedDesigns, ...relatedDesigns];
@@ -68,7 +78,7 @@ export default function DesignFooterMotion({ relatedDesigns }: { relatedDesigns:
       transition={{ duration: 0.5, ease: "easeInOut" }}
       className="fixed bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-gray-100/90 dark:from-black/90 to-transparent px-4 py-6 transition-colors duration-500"
     >
-      <h2 className="text-gray-500 dark:text-white/50 text-xl font-bold ml-2 mb-2 text-right border-b border-gray-200 dark:border-gray-800 pb-4 transition-colors duration-500">تصاميم أخرى قد تعجبك</h2>
+      <h2 className={`text-gray-500 dark:text-white/50 text-xl font-bold ml-2 mb-2 ${isRTL ? "text-right" : "text-left"} border-b border-gray-200 dark:border-gray-800 pb-4 transition-colors duration-500`}>{t("designCardScroll.title")}</h2>
       <div
         ref={scrollRef}
         className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide"
@@ -99,7 +109,7 @@ export default function DesignFooterMotion({ relatedDesigns }: { relatedDesigns:
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-gray-200 dark:from-gray-950 via-transparent to-transparent opacity-70 group-hover:opacity-80 transition-opacity duration-300 transition-colors duration-500" />
-              <p className="absolute bottom-4 right-4 text-sm text-black dark:text-white font-semibold truncate max-w-[calc(100%-20px)] z-10 transition-colors duration-500">{related.title}</p>
+              <p className={`absolute bottom-4 ${isRTL ? "right-4" : "right-4"} text-sm text-black dark:text-white font-semibold truncate max-w-[calc(100%-20px)] z-10 transition-colors duration-500`}>{related.title}</p>
             </div>
           </Link>
         ))}

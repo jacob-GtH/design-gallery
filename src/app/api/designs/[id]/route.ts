@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { client } from "@/sanity/design-cms/lib/client"
+import { client } from "@/lib/sanity.client"
 
 export async function GET(
   req: NextRequest,
@@ -15,8 +15,11 @@ export async function GET(
         description,
         publishedAt,
         likes,
+        "createdAt": _createdAt,
+        viewsCount,
+        rating,
         backgroundColor,
-        "designer": designer->name,
+        "designer": designer->{_id, name},
         "tags": tags[]->title,
         media[] {
           url,
@@ -61,24 +64,41 @@ export async function PATCH(
   const { id } = await params;
   const data = await req.json();
 
-  if (!data.title ) {
+  if (!data.title) {
     return NextResponse.json({ error: "الحقول المطلوبة غير مكتملة" }, { status: 400 });
   }
 
   try {
-    const updatedTags = data.tags ? data.tags.map((tag: { _ref: string }) => ({
-      _type: "reference",
-      _ref: tag._ref,
-    })) : [];
+    // بناء كائن نظيف فقط بالحقول المطلوبة (منع حقول الواجهة القذرة)
+    const cleanData: Record<string, unknown> = {
+      title: data.title,
+      description: data.description ?? "",
+      backgroundColor: data.backgroundColor || "#f9fafb",
+      publishedAt: data.publishedAt || new Date().toISOString(),
+    };
 
-    await client
-      .patch(id)
-      .set({
-        ...data,
-        tags: updatedTags,
-        publishedAt: data.publishedAt || new Date().toISOString(),
-      })
-      .commit();
+    // تحويل الوسوم إلى مراجع
+    if (data.tags && Array.isArray(data.tags)) {
+      cleanData.tags = data.tags.map((tag: { _ref: string }) => ({
+        _type: "reference",
+        _ref: tag._ref,
+      }));
+    }
+
+    // تحويل designerId إلى مرجع مصمم
+    if (data.designerId) {
+      cleanData.designer = {
+        _type: "reference",
+        _ref: data.designerId,
+      };
+    }
+
+    // تحديث الوسائط إن وُجدت
+    if (data.media && Array.isArray(data.media)) {
+      cleanData.media = data.media;
+    }
+
+    await client.patch(id).set(cleanData).commit();
 
     return NextResponse.json({ message: "تم التحديث بنجاح" });
   } catch (error: unknown) {

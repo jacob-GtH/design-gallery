@@ -2,23 +2,33 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
-import { FiInstagram, FiTwitter, FiLinkedin, FiGithub, FiMail } from "react-icons/fi";
+import { FiInstagram, FiTwitter, FiLinkedin, FiGithub } from "react-icons/fi";
+import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
 
 export default function Footer() {
+  const { t, i18n } = useTranslation();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // إصلاح Hydration: قبل التركيب العميل، نستخدم نفس قيمة SSR
+  const isRTL = mounted && i18n.language?.startsWith("ar");
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
     explore: [
-      { name: "الرئيسية", href: "#home" },
-      { name: "أعمالنا", href: "#case-studies" },
-      { name: "التصاميم", href: "#designs" },
-      { name: "الخدمات", href: "#services" },
+      { name: t("nav.home"), href: "#home" },
+      { name: t("caseStudies.title"), href: "#case-studies" },
+      { name: t("nav.designs"), href: "#designs" },
+      { name: t("nav.services"), href: "#services" },
     ],
     company: [
-      { name: "من نحن", href: "/about" },
-      { name: "تواصل معنا", href: "#contact" },
-      { name: "الخصوصية", href: "/privacy" },
+      { name: t("nav.about"), href: "/about" },
+      { name: t("nav.contact"), href: "#contact" },
+      { name: t("footer.privacy"), href: "/privacy" },
     ],
     social: [
       { icon: <FiInstagram />, href: "#", label: "Instagram" },
@@ -29,29 +39,28 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative bg-white dark:bg-[#050505] pt-24 pb-12 overflow-hidden border-t border-gray-200 dark:border-white/5 z-[100] transition-colors duration-500">
+    <footer className="relative bg-white dark:bg-[#050505] pt-24 pb-12 overflow-hidden border-t border-gray-200 dark:border-white/5 transition-colors duration-500">
       {/* Background Glow */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-indigo-500/3 dark:bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none transition-colors duration-500" />
 
       <div className="container mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20 text-right">
+        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20 ${isRTL ? "text-right" : "text-left"}`}>
           
           {/* Brand Column */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 text-center md:text-start">
             <Link href="/" className="inline-block mb-6">
-              <div className="flex items-center gap-3">
-                
-                <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-700 to-gray-500 dark:from-white dark:via-gray-100 dark:to-gray-400 uppercase tracking-tighter">Design Gallery</span>
+              <div className="flex items-center gap-3 justify-center md:justify-start">
+                <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-700 to-gray-500 dark:from-white dark:via-gray-100 dark:to-gray-400 uppercase tracking-tighter">{t("footer.brand")}</span>
               </div>
             </Link>
-            <p className="text-gray-600 dark:text-gray-500 leading-relaxed max-w-xs transition-colors duration-500">
-              نحن نحول الرؤى الإبداعية إلى تجارب رقمية ملموسة تترك أثراً دائماً. استوديو متخصص في التصميم والابتكار.
+            <p className="text-gray-600 dark:text-gray-500 leading-relaxed max-w-xs mx-auto md:mx-0 transition-colors duration-500">
+              {t("footer.description")}
             </p>
           </div>
 
           {/* Quick Links */}
-          <div>
-            <h4 className="text-black dark:text-white font-bold mb-6 transition-colors duration-500">استكشف</h4>
+          <div className="text-center md:text-start">
+            <h4 className="text-black dark:text-white font-bold mb-6 transition-colors duration-500">{t("footer.explore")}</h4>
             <ul className="space-y-4">
               {footerLinks.explore.map((link) => (
                 <li key={link.name}>
@@ -67,8 +76,8 @@ export default function Footer() {
           </div>
 
           {/* Company Links */}
-          <div>
-            <h4 className="text-black dark:text-white font-bold mb-6 transition-colors duration-500">الشركة</h4>
+          <div className="text-center md:text-start">
+            <h4 className="text-black dark:text-white font-bold mb-6 transition-colors duration-500">{t("footer.company")}</h4>
             <ul className="space-y-4">
               {footerLinks.company.map((link) => (
                 <li key={link.name}>
@@ -84,12 +93,12 @@ export default function Footer() {
           </div>
 
           {/* Newsletter/Contact */}
-          <div>
-            <h4 className="text-black dark:text-white font-bold mb-6 transition-colors duration-500">تواصل معنا</h4>
+          <div className="text-center md:text-start">
+            <h4 className="text-black dark:text-white font-bold mb-6 transition-colors duration-500">{t("footer.contactTitle")}</h4>
             <p className="text-gray-600 dark:text-gray-500 mb-6 transition-colors duration-500">
-              كن أول من يعرف عن أحدث مشاريعنا وابتكاراتنا.
+              {t("footer.newsletter")}
             </p>
-            <div className="flex gap-4 justify-end">
+            <div className="flex gap-4 justify-center md:justify-start">
               {footerLinks.social.map((item, index) => (
                 <motion.a
                   key={index}
@@ -108,14 +117,14 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-12 border-t border-gray-200 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 transition-colors duration-500">
           <div className="flex items-center gap-2 text-gray-600 dark:text-gray-500 text-sm transition-colors duration-500">
-            <span>جميع الحقوق محفوظة © {currentYear}</span>
+            <span>{t("footer.rights")} © {currentYear}</span>
             <span className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-700 transition-colors duration-500" />
-            <span className="font-bold text-gray-500 dark:text-gray-400 transition-colors duration-500">Jakop Studio</span>
+            <span className="font-bold text-gray-500 dark:text-gray-400 transition-colors duration-500">jacob Studio</span>
           </div>
           
           <div className="flex gap-8">
-            <Link href="#" className="text-gray-600 dark:text-gray-600 hover:text-purple-600 dark:hover:text-purple-400 text-xs transition-colors">سياسة الخصوصية</Link>
-            <Link href="#" className="text-gray-600 dark:text-gray-600 hover:text-purple-600 dark:hover:text-purple-400 text-xs transition-colors">شروط الاستخدام</Link>
+            <Link href="#" className="text-gray-600 dark:text-gray-600 hover:text-purple-600 dark:hover:text-purple-400 text-xs transition-colors">{t("footer.privacy")}</Link>
+            <Link href="#" className="text-gray-600 dark:text-gray-600 hover:text-purple-600 dark:hover:text-purple-400 text-xs transition-colors">{t("footer.terms")}</Link>
           </div>
         </div>
 
