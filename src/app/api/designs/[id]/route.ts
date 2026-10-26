@@ -1,11 +1,34 @@
-import { NextRequest, NextResponse } from "next/server"
-import { client } from "@/lib/sanity.client"
+import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
+import { client } from "@/lib/sanity.client";
+import { requireAdmin } from "@/lib/requireAdmin";
+import { firstIssue, idSchema, updateDesignSchema } from "@/lib/schemas";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type Ctx = { params: Promise<{ id: string }> };
+
+/** يتأكد أن المعرّف صالح وأن المستند من نوع design (حتى لا تُستخدم الواجهة لتعديل/حذف مستندات أخرى). */
+async function resolveDesignId(
+  params: Ctx["params"]
+): Promise<{ id: string } | { error: NextResponse }> {
   const { id } = await params;
+  if (!idSchema.safeParse(id).success) {
+    return { error: NextResponse.json({ error: "معرّف غير صالح" }, { status: 400 }) };
+  }
+  const exists = await client.fetch<string | null>(
+    `*[_type == "design" && _id == $id][0]._id`,
+    { id }
+  );
+  if (!exists) {
+    return { error: NextResponse.json({ error: "التصميم غير موجود" }, { status: 404 }) };
+  }
+  return { id };
+}
+
+export async function GET(req: NextRequest, { params }: Ctx) {
+  const { id } = await params;
+  if (!idSchema.safeParse(id).success) {
+    return NextResponse.json({ error: "معرّف غير صالح" }, { status: 400 });
+  }
 
   try {
     const design = await client.fetch(
@@ -38,71 +61,72 @@ export async function GET(
     return NextResponse.json({ id: _id, ...rest });
   } catch (error: unknown) {
     console.error("❌ Failed to fetch design:", error);
-    return NextResponse.json({ error: (error as Error).message || "خطأ غير متوقع" }, { status: 500 });
+    return NextResponse.json({ error: "فشل جلب التصميم" }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
+export async function DELETE(req: NextRequest, { params }: Ctx) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
 
   try {
-    await client.delete(id);
+    const resolved = await resolveDesignId(params);
+    if ("error" in resolved) return resolved.error;
+
+    await client.delete(resolved.id);
+    revalidatePath("/designs/[id]", "page");
     return NextResponse.json({ message: "تم الحذف بنجاح" });
   } catch (error: unknown) {
     console.error("❌ Failed to delete:", error);
-    return NextResponse.json({ error: (error as Error).message || "فشل في الحذف" }, { status: 500 });
+    return NextResponse.json({ error: "فشل في الحذف" }, { status: 500 });
   }
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  const data = await req.json();
+export async function PATCH(req: NextRequest, { params }: Ctx) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
 
-  if (!data.title) {
-    return NextResponse.json({ error: "الحقول المطلوبة غير مكتملة" }, { status: 400 });
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });
   }
 
+  const parsed = updateDesignSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: firstIssue(parsed.error) }, { status: 400 });
+  }
+  const data = parsed.data;
+
   try {
-    // بناء كائن نظيف فقط بالحقول المطلوبة (منع حقول الواجهة القذرة)
+    const resolved = await resolveDesignId(params);
+    if ("error" in resolved) return resolved.error;
+
+    // بناء كائن نظيف فقط بالحقول المسموحة
     const cleanData: Record<string, unknown> = {
       title: data.title,
-      description: data.description ?? "",
-      backgroundColor: data.backgroundColor || "#f9fafb",
-      publishedAt: data.publishedAt || new Date().toISOString(),
+      description: data.description,
+      backgroundColor: data.backgroundColor,
     };
-
-    // تحويل الوسوم إلى مراجع
-    if (data.tags && Array.isArray(data.tags)) {
-      cleanData.tags = data.tags.map((tag: { _ref: string }) => ({
+    if (data.tags) {
+      cleanData.tags = data.tags.map((tag) => ({
         _type: "reference",
         _ref: tag._ref,
       }));
     }
-
-    // تحويل designerId إلى مرجع مصمم
     if (data.designerId) {
-      cleanData.designer = {
-        _type: "reference",
-        _ref: data.designerId,
-      };
+      cleanData.designer = { _type: "reference", _ref: data.designerId };
     }
-
-    // تحديث الوسائط إن وُجدت
-    if (data.media && Array.isArray(data.media)) {
+    if (data.media) {
       cleanData.media = data.media;
     }
 
-    await client.patch(id).set(cleanData).commit();
-
+    await client.patch(resolved.id).set(cleanData).commit();
+    revalidatePath("/designs/[id]", "page");
     return NextResponse.json({ message: "تم التحديث بنجاح" });
   } catch (error: unknown) {
     console.error("❌ Failed to update:", error);
-    return NextResponse.json({ error: (error as Error).message || "فشل في التحديث" }, { status: 500 });
+    return NextResponse.json({ error: "فشل في التحديث" }, { status: 500 });
   }
 }

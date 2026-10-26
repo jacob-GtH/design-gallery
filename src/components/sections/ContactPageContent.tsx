@@ -1,7 +1,9 @@
 // src/components/sections/ContactPageContent.tsx
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { FiMail, FiPhone } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +11,35 @@ import { useTranslation } from 'react-i18next';
 export default function ContactPageContent() {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language?.startsWith("ar");
+    const [form, setForm] = useState({ name: '', email: '', message: '', website: '' });
+    const [sending, setSending] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (sending) return;
+        setSending(true);
+        try {
+            const res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(form),
+            });
+            if (res.ok) {
+                toast.success(t('contact.sentSuccess'));
+                setForm({ name: '', email: '', message: '', website: '' });
+            } else if (res.status === 400) {
+                toast.error(t('contact.invalid'));
+            } else if (res.status === 429) {
+                toast.error(t('contact.tooMany'));
+            } else {
+                toast.error(t('contact.sendError'));
+            }
+        } catch {
+            toast.error(t('contact.sendError'));
+        } finally {
+            setSending(false);
+        }
+    };
     return (
         <section className="relative min-h-screen w-full flex items-center justify-end overflow-hidden bg-white dark:bg-[#050505] transition-colors duration-500">
             
@@ -44,10 +75,27 @@ export default function ContactPageContent() {
                     </motion.p>
 
                     {/* النموذج المبسط */}
-                    <form className="space-y-6 w-full">
+                    <form onSubmit={handleSubmit} className="space-y-6 w-full">
+                        {/* honeypot: مخفي عن المستخدمين، البوتات تملؤه */}
+                        <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+                            <input
+                                type="text"
+                                name="website"
+                                tabIndex={-1}
+                                autoComplete="off"
+                                value={form.website}
+                                onChange={(e) => setForm({ ...form, website: e.target.value })}
+                            />
+                        </div>
                         <div>
                             <input
                                 type="text"
+                                name="name"
+                                required
+                                minLength={2}
+                                maxLength={100}
+                                value={form.name}
+                                onChange={(e) => setForm({ ...form, name: e.target.value })}
                                 placeholder={t("contact.namePlaceholder")}
                                 className="w-full rounded-xl bg-black/60 dark:bg-white/5 border border-black/10 dark:border-white/10 px-6 py-4 focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-200 dark:placeholder:text-gray-00 text-center md:text-right text-black dark:text-white"
                             />
@@ -55,6 +103,11 @@ export default function ContactPageContent() {
                         <div>
                             <input
                                 type="email"
+                                name="email"
+                                required
+                                maxLength={254}
+                                value={form.email}
+                                onChange={(e) => setForm({ ...form, email: e.target.value })}
                                 placeholder={t("contact.emailPlaceholder")}
                                 className="w-full rounded-xl bg-black/60 dark:bg-white/5 border border-black/10 dark:border-white/10 px-6 py-4 focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-200 dark:placeholder:text-gray-600 text-center md:text-right text-black dark:text-white"
                             />
@@ -62,16 +115,24 @@ export default function ContactPageContent() {
                         <div>
                             <textarea
                                 rows={4}
+                                name="message"
+                                required
+                                minLength={10}
+                                maxLength={5000}
+                                value={form.message}
+                                onChange={(e) => setForm({ ...form, message: e.target.value })}
                                 placeholder={t("contact.messagePlaceholder")}
                                 className="w-full rounded-xl bg-black/60 dark:bg-white/5 border border-black/10 dark:border-white/10 px-6 py-4 focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-200 dark:placeholder:text-gray-600 text-center md:text-right text-black dark:text-white resize-none"
                             />
                         </div>
                         <motion.button
+                            type="submit"
+                            disabled={sending}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all"
+                            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-60"
                         >
-                            {t("contact.sendMessage")}
+                            {sending ? t("contact.sending") : t("contact.sendMessage")}
                         </motion.button>
                     </form>
 

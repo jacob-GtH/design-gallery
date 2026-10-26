@@ -18,7 +18,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen overflow-hidden relative">
+    <div className="min-h-screen overflow-hidden relative">
       <Suspense
         fallback={
           <div className="flex items-center justify-center min-h-screen">
@@ -58,6 +58,6 @@ export default function Home() {
           )}
         </AnimatePresence>
       </Suspense>
-    </main>
+    </div>
   );
 }

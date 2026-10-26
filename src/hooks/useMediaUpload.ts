@@ -25,15 +25,25 @@ export const uploadMediaItems = async (
       continue;
     }
 
-    const data = new FormData();
-    data.append("file", item.file);
-    data.append(
-      "upload_preset",
-      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
-    );
-
     try {
-      const result = await uploadWithProgress(data, item.type, index, dispatch);
+      // توقيع من الخادم لكل ملف (يتطلب جلسة المدير)
+      const sig = await getUploadSignature(item.type);
+
+      const data = new FormData();
+      data.append("file", item.file);
+      data.append("api_key", sig.apiKey);
+      data.append("timestamp", String(sig.timestamp));
+      data.append("signature", sig.signature);
+      data.append("folder", sig.folder);
+      data.append("allowed_formats", sig.allowedFormats);
+
+      const result = await uploadWithProgress(
+        data,
+        item.type,
+        sig.cloudName,
+        index,
+        dispatch
+      );
 
       if (result?.secure_url) {
         uploaded.push({
@@ -58,9 +68,30 @@ export const uploadMediaItems = async (
   return uploaded;
 };
 
+type UploadSignature = {
+  cloudName: string;
+  apiKey: string;
+  timestamp: number;
+  signature: string;
+  folder: string;
+  allowedFormats: string;
+};
+
+const getUploadSignature = async (type: string): Promise<UploadSignature> => {
+  const res = await fetch("/api/admin/upload-signature", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type }),
+  });
+  if (res.status === 401) throw new Error("انتهت الجلسة، سجّل الدخول من جديد");
+  if (!res.ok) throw new Error("تعذر الحصول على إذن الرفع");
+  return res.json();
+};
+
 const uploadWithProgress = (
   data: FormData,
   type: string,
+  cloudName: string,
   index: number,
   dispatch: Dispatch<MediaAction>
 ) => {
@@ -72,22 +103,32 @@ const uploadWithProgress = (
     const xhr = new XMLHttpRequest();
 
     xhr.upload.addEventListener("progress", (e) => {
+      if (!e.lengthComputable) return;
       const percent = Math.round((e.loaded / e.total) * 100);
       dispatch({ type: "UPDATE_PROGRESS", index, progress: percent });
     });
 
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(JSON.parse(xhr.responseText));
+        try {
+          resolve(JSON.parse(xhr.responseText));
+        } catch {
+          reject(new Error("استجابة غير صالحة من Cloudinary"));
+        }
       } else {
-        reject(xhr.statusText);
+        // Cloudinary يرجّع سبب الرفض في JSON (صيغة غير مسموحة، توقيع خاطئ...)
+        let msg = xhr.statusText || `HTTP ${xhr.status}`;
+        try {
+          msg = JSON.parse(xhr.responseText)?.error?.message || msg;
+        } catch {}
+        reject(new Error(msg));
       }
     };
 
-    xhr.onerror = () => reject(xhr.statusText);
+    xhr.onerror = () => reject(new Error("خطأ في الاتصال بـ Cloudinary"));
     xhr.open(
       "POST",
-      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/${type}/upload`
+      `https://api.cloudinary.com/v1_1/${cloudName}/${type}/upload`
     );
     xhr.send(data);
   });

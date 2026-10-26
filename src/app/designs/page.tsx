@@ -12,7 +12,7 @@ export default function DesignsPage() {
   const { designs, loading } = useDesigns();
 
   return (
-    <main className="min-h-screen bg-white dark:bg-[#050505] text-black dark:text-white relative overflow-hidden transition-colors duration-500">
+    <div className="min-h-screen bg-white dark:bg-[#050505] text-black dark:text-white relative overflow-hidden transition-colors duration-500">
       {/* Decorative Background Glows */}
       <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-indigo-500/3 dark:bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none transition-colors duration-500" />
       <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-500/3 dark:bg-purple-500/5 blur-[120px] rounded-full pointer-events-none transition-colors duration-500" />
@@ -83,6 +83,6 @@ export default function DesignsPage() {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }

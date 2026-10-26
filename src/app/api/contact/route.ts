@@ -1,71 +1,98 @@
 // src/app/api/contact/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { validateInput } from "@/lib/validation"; // تم تحديث المسار
+import { contactSchema } from "@/lib/validation";
+import { escapeHtml } from "@/lib/escapeHtml";
+import { getClientIp, rateLimit } from "@/lib/rateLimit";
 
-export async function POST(req: Request) {
-  // التحقق من نوع الطلب
-  if (req.method !== "POST") {
+const MAX_BODY_BYTES = 20 * 1024;
+
+export async function POST(req: NextRequest) {
+  // 1) حد الطلبات: 5 رسائل في الساعة لكل عنوان
+  const rl = rateLimit(`contact:${getClientIp(req)}`, 5, 60 * 60 * 1000);
+  if (!rl.ok) {
     return NextResponse.json(
-      { error: "الطريقة غير مسموح بها" },
-      { status: 405 }
+      { error: "محاولات كثيرة، حاول لاحقاً" },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSeconds) } }
     );
   }
 
+  // 2) حجم الطلب
+  const declared = Number(req.headers.get("content-length") ?? 0);
+  if (declared > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "الطلب كبير جداً" }, { status: 413 });
+  }
+
+  // 3) التحقق من المدخلات
+  let body: unknown;
   try {
-    // التحقق من صحة البيانات
-    const body = await req.json();
-    const { name, email, message } = body;
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });
+  }
+  const parsed = contactSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" },
+      { status: 400 }
+    );
+  }
+  const { name, email, message, website } = parsed.data;
 
-    const validationError = validateInput({ name, email, message });
-    if (validationError) {
-      return NextResponse.json({ error: validationError }, { status: 400 });
-    }
+  // 4) honeypot: نُظهر نجاحاً وهمياً للبوتات دون إرسال شيء
+  if (website) {
+    return NextResponse.json({ success: true, message: "تم إرسال الرسالة بنجاح" });
+  }
 
-    // تكوين ناقل البريد (Transporter)
+  // 5) إعدادات البريد
+  const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+  const toAddress = process.env.EMAIL_TO;
+  if (!fromAddress || !toAddress) {
+    console.error("❌ EMAIL_FROM/EMAIL_USER أو EMAIL_TO غير مضبوطين");
+    return NextResponse.json({ error: "الخادم غير مهيأ" }, { status: 500 });
+  }
+
+  try {
     const transporter = nodemailer.createTransport({
       service: process.env.EMAIL_SERVICE,
       host: process.env.EMAIL_HOST,
-      port: parseInt(process.env.EMAIL_PORT || "587"),
+      port: parseInt(process.env.EMAIL_PORT || "587", 10),
       secure: process.env.EMAIL_SECURE === "true",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
-      tls: {
-        rejectUnauthorized: false, // فقط للتطوير، إزالة في الإنتاج
-      },
+      // ملاحظة: أُزيل tls.rejectUnauthorized=false؛ التحقق من الشهادة مفعّل الآن.
     });
 
-    // خيارات البريد
-    const mailOptions = {
-      from: `"${name}" <${process.env.EMAIL_FROM || email}>`,
+    const siteName = process.env.SITE_NAME || "Design Gallery";
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safeMessage = escapeHtml(message).replace(/\r?\n/g, "<br>");
+
+    await transporter.sendMail({
+      // المرسل دائماً عنوانك أنت؛ اسم الزائر يظهر كاسم عرض فقط
+      from: { name, address: fromAddress },
       replyTo: email,
-      to: process.env.EMAIL_TO,
-      subject: `رسالة جديدة من ${name} - ${process.env.SITE_NAME}`,
-      text: message,
+      to: toAddress,
+      subject: `رسالة جديدة من ${name} - ${siteName}`,
+      text: `الاسم: ${name}\nالبريد: ${email}\n\n${message}`,
       html: `
         <div dir="rtl">
-          <h2>رسالة جديدة من النموذج الاتصال</h2>
-          <p><strong>الاسم:</strong> ${name}</p>
-          <p><strong>البريد الإلكتروني:</strong> ${email}</p>
+          <h2>رسالة جديدة من نموذج الاتصال</h2>
+          <p><strong>الاسم:</strong> ${safeName}</p>
+          <p><strong>البريد الإلكتروني:</strong> ${safeEmail}</p>
           <p><strong>الرسالة:</strong></p>
-          <p>${message.replace(/\n/g, "<br>")}</p>
+          <p>${safeMessage}</p>
         </div>
       `,
-    };
+    });
 
-    // إرسال البريد
-    await transporter.sendMail(mailOptions);
-
-    return NextResponse.json(
-      { success: true, message: "تم إرسال الرسالة بنجاح" },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, message: "تم إرسال الرسالة بنجاح" });
   } catch (error) {
     console.error("خطأ في إرسال البريد:", error);
     return NextResponse.json(
-      { error: "حدث خطأ أثناء محاولة إرسال الرسالة" },
+      { error: "حدث خطأ أثناء إرسال الرسالة" },
       { status: 500 }
     );
   }

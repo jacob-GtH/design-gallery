@@ -16,7 +16,6 @@ interface DesignEditorBodyProps {
   mode: Mode;
   bgColor?: string;
   formData: FormState;
-  editorRef?: React.RefObject<unknown>;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   mediaItems: MediaItem[];
@@ -98,7 +97,7 @@ const DesignEditorBody: React.FC<DesignEditorBodyProps> = ({
           <input
             id="file-upload"
             type="file"
-            accept="image/*,video/*"
+            accept="image/jpeg,image/png,image/gif,image/webp,image/avif,video/mp4,video/webm,video/quicktime"
             multiple
             onChange={handleFileChange}
             className="hidden"

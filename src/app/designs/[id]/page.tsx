@@ -1,8 +1,13 @@
 import { notFound } from "next/navigation";
-import { client } from "@/sanity/design-cms/lib/client";
+import { client } from "@/lib/sanity.client";
 import Link from "next/link";
 import { FiArrowLeft, FiHeart, FiCalendar, FiUser } from "react-icons/fi";
 import DesignFooterMotion from "@/components/designs/DesignCardScroll";
+import { sanitizeCaption } from "@/lib/sanitize";
+
+// شبكة أمان: تُعاد توليد الصفحة كل 60 ثانية كحد أقصى (يغطي التعديلات من Sanity Studio مباشرة).
+// وعند التعديل من لوحة الإدارة تُبطَل الصفحات فوراً عبر revalidatePath في الـ API.
+export const revalidate = 60;
 
 export async function generateStaticParams() {
   const designs = await client.fetch(`*[_type == "design"]{ _id }`);
@@ -53,11 +58,10 @@ export default async function DesignPage({
     "ar-EG",
     { year: "numeric", month: "long", day: "numeric" }
   );
-  console.log("background color:", design.backgroundColor);
 
 
   return (
-    <main className="w-full min-h-screen overflow-x-hidden" style={{ backgroundColor: design.backgroundColor }}>
+    <div className="w-full min-h-screen overflow-x-hidden" style={{ backgroundColor: design.backgroundColor }}>
       {/* تفاصيل التصميم */}
       <div className="pb-12 pt-14 max-w-sm md:max-w-7xl mx-auto">
         <h1 className="text-black dark:text-white text-4xl font-bold mb-4 transition-colors duration-500">{design.title}</h1>
@@ -95,7 +99,7 @@ export default async function DesignPage({
               {item.caption && (
                 <div
                   className="text-gray-600 dark:text-gray-300 leading-relaxed prose prose-neutral dark:prose-invert max-w-none transition-colors duration-500"
-                  dangerouslySetInnerHTML={{ __html: item.caption }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeCaption(item.caption) }}
                 />
               )}
             </div>
@@ -132,6 +136,6 @@ export default async function DesignPage({
           <DesignFooterMotion relatedDesigns={design.relatedDesigns} />
         )}
       </div>
-    </main>
+    </div>
   );
 }

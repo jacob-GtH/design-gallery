@@ -4,11 +4,9 @@ import React, {
   Suspense,
   useEffect,
   useReducer,
-  useRef,
   useState,
 } from "react";
 import { IDesign } from "@/interfaces/Design";
-import ReactQuill from "react-quill-new";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -71,7 +69,6 @@ export default function DesignFormCore({
     initialMediaState
   );
   const { backgroundColor } = formState;
-  const editorRef = useRef<ReactQuill>(null);
   const [toolbarFocused, setToolbarFocused] = React.useState(false);
 
   // مزامنة mediaItems في formState كلما تغير mediaItems
@@ -394,7 +391,6 @@ export default function DesignFormCore({
         handleCaptionChange={handleCaptionChange}
         dispatch={mediaDispatch}
         formDispatch={formDispatch}
-        editorRef={editorRef}
         toolbarFocused={toolbarFocused}
         onToolbarFocusChange={setToolbarFocused}
         designers={formState.designers}

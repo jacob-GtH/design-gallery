@@ -26,13 +26,20 @@ export const metadata: Metadata = {
     "استوديو إبداعي متخصص في تحويل الرؤى الطموحة إلى تجارب رقمية استثنائية. A creative studio specialized in transforming ambitious visions into exceptional digital experiences.",
 };
 
+// يضبط lang/dir قبل أول رسم للصفحة (يمنع وميض الاتجاه عند اختيار العربية سابقاً).
+// نص ثابت لا يحتوي أي مدخلات خارجية.
+const LANG_INIT_SCRIPT = `try{var l=localStorage.getItem("lang");if(l==="ar"){var d=document.documentElement;d.lang="ar";d.dir="rtl"}}catch(e){}`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html suppressHydrationWarning>
+    <html lang="en" dir="ltr" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: LANG_INIT_SCRIPT }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} relative antialiased`}
       >

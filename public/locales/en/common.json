@@ -123,7 +123,12 @@
     "sendMessage": "Send Message",
     "emailLabel": "Email",
     "phoneLabel": "Phone",
-    "getInTouch": "Get In Touch"
+    "getInTouch": "Get In Touch",
+    "sending": "Sending...",
+    "sentSuccess": "Your message was sent. We will get back to you soon.",
+    "sendError": "Could not send your message. Please try again later.",
+    "invalid": "Please check your details and try again.",
+    "tooMany": "Too many attempts. Please try again later."
   },
   "cta": {
     "badge": "Let's Start a New Journey",
@@ -192,10 +197,8 @@
     "uploading": "Uploading...",
     "saveChanges": "Save Changes",
     "publishDesign": "Publish Design",
-    "projectTitle": "Project Name...",
-    "projectTitlePlaceholder": "Creative Project Title...",
-    "projectDescription": "Project Description...",
-    "projectDescriptionPlaceholder": "Write an inspiring description for the project...",
+    "projectTitle": "Project name...",
+    "projectDescription": "Project description...",
     "dragDrop": "Drag and drop files here or click to upload",
     "supportedFormats": "Supports: JPG, PNG, MP4 (max 10MB)",
     "designer": "Designer:",
@@ -217,6 +220,14 @@
     "filterByTag": "Filter by tag",
     "allDesigners": "All designers",
     "allTags": "All tags",
-    "noResults": "No matching results"
+    "noResults": "No matching results",
+    "loginTitle": "Admin sign in",
+    "loginDescription": "Enter the password to access the dashboard",
+    "passwordPlaceholder": "Password",
+    "loginButton": "Sign in",
+    "loggingIn": "Signing in...",
+    "loginError": "Incorrect password",
+    "loginTooMany": "Too many attempts. Try again shortly.",
+    "logout": "Sign out"
   }
 }

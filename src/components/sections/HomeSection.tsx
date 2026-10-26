@@ -37,7 +37,7 @@ export default function HomeSection({
   };
 
   return (
-    <main className="min-h-screen overflow-hidden relative bg-white dark:bg-[#050505] transition-colors duration-500">
+    <div className="min-h-screen overflow-hidden relative bg-white dark:bg-[#050505] transition-colors duration-500">
       {/* شريط تقدم التمرير العلوي الفاخر */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 origin-[0%] z-[9999]"
@@ -100,6 +100,6 @@ export default function HomeSection({
           <ContactSection />
         </motion.div>
       </Suspense>
-    </main>
+    </div>
   );
 }

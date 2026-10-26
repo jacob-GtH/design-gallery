@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Pencil, Trash2, Calendar, Search } from "lucide-react";
 import Image from "next/image";
@@ -29,6 +30,7 @@ const DesignFormPage = dynamic(
 
 export default function HomePage() {
   const { t } = useTranslation();
+  const router = useRouter();
   const { designs, loading, error, retry: fetchDesigns } = useDesigns();
   const [showForm, setShowForm] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -64,6 +66,15 @@ export default function HomePage() {
     return matchesSearch && matchesDesigner && matchesTag;
   });
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } finally {
+      router.replace("/admin/login");
+      router.refresh();
+    }
+  };
+
   const confirmDelete = async () => {
     if (!deleteTargetId) return;
 
@@ -86,12 +97,20 @@ export default function HomePage() {
   };
 
   return (
-    <main className="min-h-screen bg-white dark:bg-[#050505] text-black dark:text-white py-20 px-4 sm:px-6 lg:px-20 relative overflow-hidden transition-colors duration-500">
+    <div className="min-h-screen bg-white dark:bg-[#050505] text-black dark:text-white py-20 px-4 sm:px-6 lg:px-20 relative overflow-hidden transition-colors duration-500">
       {/* Background Decorative Glows */}
       <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-indigo-500/3 dark:bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none transition-colors duration-500" />
       <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-purple-500/3 dark:bg-purple-500/5 blur-[120px] rounded-full pointer-events-none transition-colors duration-500" />
 
       <div className="relative z-10 max-w-7xl mx-auto">
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 text-sm rounded-xl border border-gray-200 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+          >
+            {t("admin.logout")}
+          </button>
+        </div>
         
         {/* Section Header الموحد */}
         <SectionHeader
@@ -311,6 +330,6 @@ export default function HomePage() {
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTargetId(null)}
       />
-    </main>
+    </div>
   );
 }

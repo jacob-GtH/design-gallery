@@ -1,7 +1,10 @@
 // src/app/api/designs/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { client } from "@/lib/sanity.client";
 import { IDesign } from "@/interfaces/Design";
+import { requireAdmin } from "@/lib/requireAdmin";
+import { createDesignSchema, firstIssue, makeSlug } from "@/lib/schemas";
 
 export async function GET() {
   try {
@@ -15,30 +18,30 @@ export async function GET() {
       "createdAt": _createdAt,
       viewsCount,
       rating,
-       backgroundColor,
-       "designer":  designer->{_id, name},
-       "tags": tags[]->title,
-       media[]{
-         url,
-         type,
-         caption
-       }
-     }`);
+      backgroundColor,
+      "designer": designer->{_id, name},
+      "tags": tags[]->title,
+      media[]{
+        url,
+        type,
+        caption
+      }
+    }`);
 
     const designs = rawDesigns.map((d: IDesign & { _id: string }) => ({
       id: d._id,
       title: d.title,
-       description: d.description,
-       publishedAt: d.publishedAt,
-       likes: d.likes ?? 0,
-       createdAt: d.createdAt,
-       viewsCount: d.viewsCount ?? 0,
-       rating: d.rating ?? 0,
-       backgroundColor: d.backgroundColor || '#f9fafb',
-       designer: d.designer,
-       tags: d.tags ?? [],
-       media: d.media ?? [],
-     }));
+      description: d.description,
+      publishedAt: d.publishedAt,
+      likes: d.likes ?? 0,
+      createdAt: d.createdAt,
+      viewsCount: d.viewsCount ?? 0,
+      rating: d.rating ?? 0,
+      backgroundColor: d.backgroundColor || "#f9fafb",
+      designer: d.designer,
+      tags: d.tags ?? [],
+      media: d.media ?? [],
+    }));
 
     return NextResponse.json(designs);
   } catch (error) {
@@ -51,59 +54,48 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  // طبقة حماية ثانية (الأولى في middleware)
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
+
+  let body: unknown;
   try {
-    const { title, description, media, designerId, backgroundColor, tags } = await req.json();
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });
+  }
 
-    // تحقق موسع من الصحة
-    if (!title || !title.trim()) {
-      return NextResponse.json({ error: "العنوان مطلوب" }, { status: 400 });
-    }
+  const parsed = createDesignSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: firstIssue(parsed.error) }, { status: 400 });
+  }
+  const { title, description, media, designerId, backgroundColor, tags } =
+    parsed.data;
 
-    if (!media || !Array.isArray(media) || media.length === 0) {
-      return NextResponse.json({ error: "الوسائط مطلوبة" }, { status: 400 });
-    }
-
-    if (!designerId) {
-      return NextResponse.json({ error: "المصمم مطلوب" }, { status: 400 });
-    }
-
-    // إنشاء كائن التصميم
+  try {
     const newDesign = {
       _type: "design",
       title,
       description,
-      backgroundColor: backgroundColor || '#f9fafb',
-      slug: {
-        _type: "slug",
-        current: title.toLowerCase().replace(/\s+/g, "-").slice(0, 96),
-      },
+      backgroundColor,
+      slug: { _type: "slug", current: makeSlug(title) },
       media,
       publishedAt: new Date().toISOString(),
-      designer: {
-        _type: "reference",
-        _ref: designerId,
-      },
-      tags: tags ? tags.map((tag: { _ref: string }) => ({
-        _type: "reference",
-        _ref: tag._ref,
-      })) : [],
+      designer: { _type: "reference", _ref: designerId },
+      tags: tags.map((tag) => ({ _type: "reference", _ref: tag._ref })),
     };
 
     const created = await client.create(newDesign);
+    revalidatePath("/designs/[id]", "page");
     return NextResponse.json({
       success: true,
-      design: {
-        id: created._id,
-        ...newDesign
-      }
+      design: { id: created._id, ...newDesign },
     });
   } catch (error) {
+    // التفاصيل تُسجَّل في الخادم فقط ولا تُرسل للعميل
     console.error("❌ Failed to create design:", error);
     return NextResponse.json(
-      { 
-        error: "Failed to create design",
-        details: error instanceof Error ? error.message : String(error)
-      },
+      { error: "Failed to create design" },
       { status: 500 }
     );
   }

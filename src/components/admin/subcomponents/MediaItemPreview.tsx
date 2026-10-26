@@ -4,6 +4,7 @@ import { useRef, useEffect } from "react";
 import { FiTrash2, FiChevronUp, FiChevronDown } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import { Props } from "../Types";
+import { sanitizeCaption } from "@/lib/sanitize";
 
 const MediaItemPreview = ({
   item,
@@ -112,7 +113,7 @@ const MediaItemPreview = ({
       {item.caption && !readonly && (
         <div
           className="text-gray-600 dark:text-gray-300 leading-relaxed prose prose-neutral dark:prose-invert max-w-none mt-4"
-          dangerouslySetInnerHTML={{ __html: item.caption }}
+          dangerouslySetInnerHTML={{ __html: sanitizeCaption(item.caption) }}
         />
       )}
 
