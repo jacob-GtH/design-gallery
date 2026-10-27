@@ -7,7 +7,7 @@ import {
   SESSION_MAX_AGE_SECONDS,
   createSessionToken,
 } from "@/lib/auth";
-import { getClientIp, rateLimit } from "@/lib/rateLimit";
+import { getClientIp, rateLimit, resetRateLimit } from "@/lib/rateLimit";
 
 const bodySchema = z.object({ password: z.string().min(1).max(256) });
 
@@ -20,7 +20,8 @@ function safeEqual(a: string, b: string): boolean {
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
-  const rl = rateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
+  const rlKey = `login:${ip}`;
+  const rl = rateLimit(rlKey, 5, 15 * 60 * 1000);
   if (!rl.ok) {
     return NextResponse.json(
       { error: "محاولات كثيرة، حاول لاحقاً" },
@@ -51,6 +52,13 @@ export async function POST(req: NextRequest) {
   if (!safeEqual(parsed.data.password, adminPassword)) {
     return NextResponse.json({ error: "كلمة المرور غير صحيحة" }, { status: 401 });
   }
+
+  if (adminPassword.length < 12) {
+    console.warn("⚠️ ADMIN_PASSWORD أقصر من 12 حرفاً؛ استخدم كلمة مرور أطول.");
+  }
+
+  // الدخول الناجح لا يُحتسب ضمن المحاولات الفاشلة
+  resetRateLimit(rlKey);
 
   const res = NextResponse.json({ success: true });
   res.cookies.set({

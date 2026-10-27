@@ -26,7 +26,12 @@ export async function POST(req: NextRequest) {
   // 3) التحقق من المدخلات
   let body: unknown;
   try {
-    body = await req.json();
+    const raw = await req.text();
+    // فحص فعلي للحجم (الترويسة قد تغيب مع chunked)
+    if (Buffer.byteLength(raw, "utf8") > MAX_BODY_BYTES) {
+      return NextResponse.json({ error: "الطلب كبير جداً" }, { status: 413 });
+    }
+    body = JSON.parse(raw);
   } catch {
     return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });
   }

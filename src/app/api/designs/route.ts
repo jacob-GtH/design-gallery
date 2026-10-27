@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { client } from "@/lib/sanity.client";
 import { IDesign } from "@/interfaces/Design";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { createDesignSchema, firstIssue, makeSlug } from "@/lib/schemas";
+import { createDesignSchema, firstIssue, makeKey, makeSlug } from "@/lib/schemas";
 
 export async function GET() {
   try {
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       media,
       publishedAt: new Date().toISOString(),
       designer: { _type: "reference", _ref: designerId },
-      tags: tags.map((tag) => ({ _type: "reference", _ref: tag._ref })),
+      tags: tags.map((tag) => ({ _key: makeKey(), _type: "reference", _ref: tag._ref })),
     };
 
     const created = await client.create(newDesign);

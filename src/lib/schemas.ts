@@ -11,13 +11,31 @@ const EXTRA_MEDIA_HOSTS = (process.env.ALLOWED_MEDIA_HOSTS ?? "")
   .filter(Boolean);
 const ALLOWED_MEDIA_HOSTS = new Set([...BASE_MEDIA_HOSTS, ...EXTRA_MEDIA_HOSTS]);
 
+const CLOUDINARY_HOST = "res.cloudinary.com";
+const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+
 function isAllowedMediaUrl(value: string): boolean {
   try {
     const u = new URL(value);
-    return u.protocol === "https:" && ALLOWED_MEDIA_HOSTS.has(u.hostname.toLowerCase());
+    if (u.protocol !== "https:") return false;
+    const host = u.hostname.toLowerCase();
+    if (!ALLOWED_MEDIA_HOSTS.has(host)) return false;
+
+    // Cloudinary: يُقبل حسابك أنت فقط (المسار يبدأ بـ /<cloud_name>/)،
+    // وليس أي حساب آخر على نفس النطاق. إن لم يُضبط الاسم نرفض (fail closed).
+    if (host === CLOUDINARY_HOST) {
+      if (!CLOUDINARY_CLOUD_NAME) return false;
+      return u.pathname.startsWith(`/${CLOUDINARY_CLOUD_NAME}/`);
+    }
+    return true;
   } catch {
     return false;
   }
+}
+
+/** مفتاح _key لعناصر المصفوفات في Sanity (مطلوب لتعمل Studio دون تحذيرات). */
+export function makeKey(): string {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 12);
 }
 
 // ---- حقول مشتركة ----
@@ -42,7 +60,7 @@ const mediaItemSchema = z
     caption: z.string().max(20000).optional(),
   })
   .transform((m) => ({
-    _key: m._key ?? crypto.randomUUID().replace(/-/g, "").slice(0, 12),
+    _key: m._key ?? makeKey(),
     url: m.url,
     type: m.type,
     // تنظيف الـ HTML عند الحفظ (وسيُنظَّف أيضاً عند العرض)
@@ -66,9 +84,10 @@ export const createDesignSchema = z.object({
 
 export const updateDesignSchema = z.object({
   title,
-  description: description.optional().default(""),
+  // بلا default عمداً: الحقل الغائب لا يُمسّ (PATCH جزئي)
+  description: description.optional(),
   designerId: idSchema.optional(),
-  backgroundColor: hexColor.optional().default("#f9fafb"),
+  backgroundColor: hexColor.optional(),
   tags: z.array(tagRefSchema).max(30).optional(),
   media: z.array(mediaItemSchema).min(1).max(50).optional(),
   // publishedAt يُتجاهل عمداً: التعديل لا يغيّر تاريخ النشر

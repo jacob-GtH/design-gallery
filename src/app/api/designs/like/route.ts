@@ -20,10 +20,13 @@ export async function POST(req: NextRequest) {
   const { id } = parsed.data;
 
   // لايك واحد لكل تصميم من نفس العنوان كل ساعة + سقف عام لكل عنوان
-  const perDesign = rateLimit(`like:${ip}:${id}`, 1, 60 * 60 * 1000);
+  // السقف العام أولاً؛ وعدّاد التصميم لا يُستهلك إذا رُفض الطلب بسببه
   const overall = rateLimit(`like:${ip}`, 60, 60 * 60 * 1000);
+  const perDesign = overall.ok
+    ? rateLimit(`like:${ip}:${id}`, 1, 60 * 60 * 1000)
+    : { ok: false, retryAfterSeconds: 0 };
   if (!perDesign.ok || !overall.ok) {
-    const retry = Math.max(perDesign.retryAfterSeconds, overall.retryAfterSeconds);
+    const retry = Math.max(perDesign.retryAfterSeconds, overall.retryAfterSeconds, 1);
     return NextResponse.json(
       { error: "Too many requests" },
       { status: 429, headers: { "Retry-After": String(retry) } }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { client } from "@/lib/sanity.client";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { firstIssue, idSchema, updateDesignSchema } from "@/lib/schemas";
+import { firstIssue, idSchema, makeKey, updateDesignSchema } from "@/lib/schemas";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -104,13 +104,12 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     if ("error" in resolved) return resolved.error;
 
     // بناء كائن نظيف فقط بالحقول المسموحة
-    const cleanData: Record<string, unknown> = {
-      title: data.title,
-      description: data.description,
-      backgroundColor: data.backgroundColor,
-    };
+    const cleanData: Record<string, unknown> = { title: data.title };
+    if (data.description !== undefined) cleanData.description = data.description;
+    if (data.backgroundColor !== undefined) cleanData.backgroundColor = data.backgroundColor;
     if (data.tags) {
       cleanData.tags = data.tags.map((tag) => ({
+        _key: makeKey(),
         _type: "reference",
         _ref: tag._ref,
       }));

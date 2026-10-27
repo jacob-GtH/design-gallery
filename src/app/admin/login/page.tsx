@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 function getSafeNext(next: string | null): string {
   if (
     next &&
-    next.startsWith("/admin") &&
+    (next === "/admin" || next.startsWith("/admin/")) &&
     !next.startsWith("//") &&
     !next.includes("\\")
   ) {
