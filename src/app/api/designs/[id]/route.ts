@@ -2,26 +2,29 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { client } from "@/lib/sanity.client";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { firstIssue, idSchema, makeKey, updateDesignSchema } from "@/lib/schemas";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
+import { MEDIA_FULL, NOT_DRAFT } from "@/lib/queries";
+import { firstIssue, idSchema, updateDesignSchema } from "@/lib/schemas";
 
 type Ctx = { params: Promise<{ id: string }> };
+type Existing = { _id: string; status?: "draft" | "published"; publishedAt?: string };
 
-/** يتأكد أن المعرّف صالح وأن المستند من نوع design (حتى لا تُستخدم الواجهة لتعديل/حذف مستندات أخرى). */
-async function resolveDesignId(
+/** يتأكد أن المعرّف صالح وأن المستند من نوع design، ويرجع حالته الحالية. */
+async function resolveDesign(
   params: Ctx["params"]
-): Promise<{ id: string } | { error: NextResponse }> {
+): Promise<{ id: string; existing: Existing } | { error: NextResponse }> {
   const { id } = await params;
   if (!idSchema.safeParse(id).success) {
     return { error: NextResponse.json({ error: "معرّف غير صالح" }, { status: 400 }) };
   }
-  const exists = await client.fetch<string | null>(
-    `*[_type == "design" && _id == $id][0]._id`,
+  const existing = await client.fetch<Existing | null>(
+    `*[_type == "design" && _id == $id][0]{ _id, status, publishedAt }`,
     { id }
   );
-  if (!exists) {
+  if (!existing) {
     return { error: NextResponse.json({ error: "التصميم غير موجود" }, { status: 404 }) };
   }
-  return { id };
+  return { id, existing };
 }
 
 export async function GET(req: NextRequest, { params }: Ctx) {
@@ -31,8 +34,12 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   }
 
   try {
+    // المسودة لا يراها إلا المدير
+    const isAdmin = await verifySessionToken(req.cookies.get(SESSION_COOKIE)?.value);
+    const draftFilter = isAdmin ? "" : ` && ${NOT_DRAFT}`;
+
     const design = await client.fetch(
-      `*[_type == "design" && _id == $id][0]{
+      `*[_type == "design" && _id == $id${draftFilter}][0]{
         _id,
         title,
         description,
@@ -42,13 +49,11 @@ export async function GET(req: NextRequest, { params }: Ctx) {
         viewsCount,
         rating,
         backgroundColor,
+        status,
+        coverKey,
         "designer": designer->{_id, name},
         "tags": tags[]->title,
-        media[] {
-          url,
-          type,
-          caption
-        }
+        ${MEDIA_FULL}
       }`,
       { id }
     );
@@ -58,7 +63,13 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     }
 
     const { _id, ...rest } = design;
-    return NextResponse.json({ id: _id, ...rest });
+    return NextResponse.json({
+      id: _id,
+      ...rest,
+      status: design.status ?? "published",
+      coverKey: design.coverKey ?? null,
+      media: design.media ?? [],
+    });
   } catch (error: unknown) {
     console.error("❌ Failed to fetch design:", error);
     return NextResponse.json({ error: "فشل جلب التصميم" }, { status: 500 });
@@ -70,7 +81,7 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
   if (denied) return denied;
 
   try {
-    const resolved = await resolveDesignId(params);
+    const resolved = await resolveDesign(params);
     if ("error" in resolved) return resolved.error;
 
     await client.delete(resolved.id);
@@ -100,28 +111,39 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   const data = parsed.data;
 
   try {
-    const resolved = await resolveDesignId(params);
+    const resolved = await resolveDesign(params);
     if ("error" in resolved) return resolved.error;
+    const { existing } = resolved;
 
     // بناء كائن نظيف فقط بالحقول المسموحة
-    const cleanData: Record<string, unknown> = { title: data.title };
-    if (data.description !== undefined) cleanData.description = data.description;
-    if (data.backgroundColor !== undefined) cleanData.backgroundColor = data.backgroundColor;
+    const set: Record<string, unknown> = {
+      title: data.title,
+      description: data.description,
+      backgroundColor: data.backgroundColor,
+    };
     if (data.tags) {
-      cleanData.tags = data.tags.map((tag) => ({
-        _key: makeKey(),
-        _type: "reference",
-        _ref: tag._ref,
-      }));
+      set.tags = data.tags.map((tag) => ({ _type: "reference", _ref: tag._ref }));
     }
     if (data.designerId) {
-      cleanData.designer = { _type: "reference", _ref: data.designerId };
+      set.designer = { _type: "reference", _ref: data.designerId };
     }
-    if (data.media) {
-      cleanData.media = data.media;
+    if (data.media) set.media = data.media;
+
+    // الحالة وتاريخ النشر: يُحدَّد تاريخ النشر عند أول نشر فقط (أو عند الانتقال من مسودة)
+    const nextStatus = data.status ?? existing.status ?? "published";
+    set.status = nextStatus;
+    if (nextStatus === "published" && (existing.status === "draft" || !existing.publishedAt)) {
+      set.publishedAt = new Date().toISOString();
     }
 
-    await client.patch(resolved.id).set(cleanData).commit();
+    const unset: string[] = [];
+    if (data.coverKey) set.coverKey = data.coverKey;
+    else if (data.coverKey === null || data.media) unset.push("coverKey");
+
+    let patch = client.patch(resolved.id).set(set);
+    if (unset.length) patch = patch.unset(unset);
+    await patch.commit();
+
     revalidatePath("/designs/[id]", "page");
     return NextResponse.json({ message: "تم التحديث بنجاح" });
   } catch (error: unknown) {

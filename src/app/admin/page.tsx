@@ -3,10 +3,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import CoverMedia from "@/components/designs/CoverMedia";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Pencil, Trash2, Calendar, Search } from "lucide-react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -15,7 +15,7 @@ import FloatingAddButton from "@/components/ui/ButtonHart";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 
-// تحميل نموذج التصميم بشكل ديناميكي (react-quill ثقيل)
+// تحميل نموذج التصميم بشكل ديناميكي (المحرر ثقيل)
 const DesignFormPage = dynamic(
   () => import("@/components/admin/DesignFormPage"),
   {
@@ -31,7 +31,7 @@ const DesignFormPage = dynamic(
 export default function HomePage() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { designs, loading, error, retry: fetchDesigns } = useDesigns();
+  const { designs, loading, error, retry: fetchDesigns } = useDesigns({ includeDrafts: true });
   const [showForm, setShowForm] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -251,24 +251,18 @@ export default function HomePage() {
                   </div>
 
                   {/* محتوى وسائط التصميم */}
-                  <Link href={`/designs/${design.id}`} className="block relative overflow-hidden aspect-video">
-                    {design.media[0]?.type === "image" ? (
-                      <Image
-                        src={design.media[0].url}
-                        alt={design.title}
-                        fill
-                        unoptimized
-                        className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                      />
-                    ) : (
-                      <video
-                        src={design.media[0].url}
-                        muted
-                        autoPlay
-                        loop
-                        playsInline
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                      />
+                  <Link href={design.status === "draft" ? `/admin/view/${design.id}` : `/designs/${design.id}`} className="block relative overflow-hidden aspect-video">
+                    <CoverMedia
+                      media={design.media}
+                      coverKey={design.coverKey}
+                      alt={design.title}
+                      imageClassName="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                      videoClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                    />
+                    {design.status === "draft" && (
+                      <span className="absolute top-3 left-3 z-10 rounded-full bg-amber-400 px-3 py-1 text-xs font-bold text-black shadow">
+                        {t("admin.draftBadge")}
+                      </span>
                     )}
                     {/* طبقة تظليل جمالية سفلية للصورة */}
                     <div className="absolute inset-0 bg-gradient-to-t from-gray-100 dark:from-gray-950 via-transparent to-transparent opacity-60 transition-colors duration-500" />
@@ -309,9 +303,9 @@ export default function HomePage() {
         <DesignFormPage
           mode="create"
           onSuccess={async () => {
+            // التوست يعرضه النموذج نفسه (يميّز بين النشر والمسودة)
             await fetchDesigns();
             setShowForm(false);
-            toast.success(t("admin.addedSuccess"));
           }}
           onClose={() => setShowForm(false)}
         />

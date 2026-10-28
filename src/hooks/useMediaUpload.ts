@@ -1,72 +1,20 @@
-import { Dispatch } from "react";
-import { MediaItem, MediaType } from "@/components/admin/Types";
-import { MediaAction } from "@/hooks/mediaAction";
+// hooks/useMediaUpload.ts
+import type { Dispatch } from "react";
+import type { Block } from "@/components/admin/Types";
+import type { BlockAction } from "@/hooks/blocksReducer";
 
-export const uploadMediaItems = async (
-  mediaItems: MediaItem[],
-  dispatch: Dispatch<MediaAction>
-): Promise<{ _key: string; url: string; type: MediaType; caption?: string }[]> => {
-  const uploaded: { _key: string; url: string; type: MediaType; caption?: string }[] = [];
-  const errors: string[] = [];
-
-  for (const [index, item] of mediaItems.entries()) {
-    if (item.uploadedUrl) {
-      uploaded.push({
-        _key: item._key,
-        url: item.uploadedUrl,
-        type: item.type,
-        caption: item.caption,
-      });
-      continue;
-    }
-
-    if (!item.file) {
-      errors.push(`الوسيط ${index + 1}: لا يوجد ملف`);
-      continue;
-    }
-
-    try {
-      // توقيع من الخادم لكل ملف (يتطلب جلسة المدير)
-      const sig = await getUploadSignature(item.type);
-
-      const data = new FormData();
-      data.append("file", item.file);
-      data.append("api_key", sig.apiKey);
-      data.append("timestamp", String(sig.timestamp));
-      data.append("signature", sig.signature);
-      data.append("folder", sig.folder);
-      data.append("allowed_formats", sig.allowedFormats);
-
-      const result = await uploadWithProgress(
-        data,
-        item.type,
-        sig.cloudName,
-        index,
-        dispatch
-      );
-
-      if (result?.secure_url) {
-        uploaded.push({
-          _key: item._key,
-          url: result.secure_url,
-          type: item.type,
-          caption: item.caption,
-        });
-      } else {
-        errors.push(`الوسيط ${index + 1}: استجابة غير صالحة من الخادم`);
-      }
-    } catch (err) {
-      errors.push(`الوسيط ${index + 1}: ${(err as Error).message || "فشل الرفع"}`);
-    }
-  }
-
-  // إذا فشل أي وسيط، ارمِ خطأً مجمعاً
-  if (errors.length > 0) {
-    throw new Error(`فشل رفع ${errors.length} وسيط:\n${errors.join("\n")}`);
-  }
-
-  return uploaded;
-};
+/** الشكل الذي يُرسل للـ API (يطابق مخطط zod في الخادم). */
+export type PayloadBlock =
+  | { _key: string; type: "image" | "video"; url: string; caption: string }
+  | { _key: string; type: "text"; caption: string }
+  | { _key: string; type: "embed"; url: string; caption: string }
+  | {
+      _key: string;
+      type: "grid";
+      columns: number;
+      items: { _key: string; url: string }[];
+      caption: string;
+    };
 
 type UploadSignature = {
   cloudName: string;
@@ -77,7 +25,7 @@ type UploadSignature = {
   allowedFormats: string;
 };
 
-const getUploadSignature = async (type: string): Promise<UploadSignature> => {
+const getUploadSignature = async (type: "image" | "video"): Promise<UploadSignature> => {
   const res = await fetch("/api/admin/upload-signature", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -90,22 +38,15 @@ const getUploadSignature = async (type: string): Promise<UploadSignature> => {
 
 const uploadWithProgress = (
   data: FormData,
-  type: string,
+  type: "image" | "video",
   cloudName: string,
-  index: number,
-  dispatch: Dispatch<MediaAction>
-) => {
-  return new Promise<{
-    secure_url: string;
-    original_filename: string;
-    resource_type: string;
-  }>((resolve, reject) => {
+  onProgress: (percent: number) => void
+) =>
+  new Promise<{ secure_url: string }>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
     xhr.upload.addEventListener("progress", (e) => {
-      if (!e.lengthComputable) return;
-      const percent = Math.round((e.loaded / e.total) * 100);
-      dispatch({ type: "UPDATE_PROGRESS", index, progress: percent });
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
     });
 
     xhr.onload = () => {
@@ -126,10 +67,79 @@ const uploadWithProgress = (
     };
 
     xhr.onerror = () => reject(new Error("خطأ في الاتصال بـ Cloudinary"));
-    xhr.open(
-      "POST",
-      `https://api.cloudinary.com/v1_1/${cloudName}/${type}/upload`
-    );
+    xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/${type}/upload`);
     xhr.send(data);
   });
-};
+
+/** يرفع ملفاً واحداً بتوقيع من الخادم ويرجع الرابط الآمن. */
+async function uploadFile(
+  file: File,
+  type: "image" | "video",
+  onProgress: (percent: number) => void
+): Promise<string> {
+  const sig = await getUploadSignature(type);
+  const data = new FormData();
+  data.append("file", file);
+  data.append("api_key", sig.apiKey);
+  data.append("timestamp", String(sig.timestamp));
+  data.append("signature", sig.signature);
+  data.append("folder", sig.folder);
+  data.append("allowed_formats", sig.allowedFormats);
+  const result = await uploadWithProgress(data, type, sig.cloudName, onProgress);
+  return result.secure_url;
+}
+
+/**
+ * يرفع كل ملفات الكتل التي لم تُرفع بعد، ويرجع حمولة الـ API.
+ * ما رُفع يُحفظ في الحالة (UPLOADED) فلا يُعاد رفعه إن فشلت خطوة لاحقة.
+ */
+export async function uploadBlocks(
+  blocks: Block[],
+  dispatch: Dispatch<BlockAction>
+): Promise<PayloadBlock[]> {
+  const payload: PayloadBlock[] = [];
+
+  for (const b of blocks) {
+    switch (b.type) {
+      case "image":
+      case "video": {
+        let url = b.uploadedUrl;
+        if (!url) {
+          if (!b.file) throw new Error("ملف مفقود");
+          url = await uploadFile(b.file, b.type, (p) =>
+            dispatch({ type: "PROGRESS", key: b._key, progress: p })
+          );
+          dispatch({ type: "UPLOADED", key: b._key, url });
+        }
+        payload.push({ _key: b._key, type: b.type, url, caption: b.caption });
+        break;
+      }
+
+      case "grid": {
+        const items: { _key: string; url: string }[] = [];
+        for (const it of b.items) {
+          let url = it.uploadedUrl;
+          if (!url) {
+            if (!it.file) throw new Error("ملف مفقود");
+            url = await uploadFile(it.file, "image", (p) =>
+              dispatch({ type: "PROGRESS", key: b._key, itemKey: it._key, progress: p })
+            );
+            dispatch({ type: "UPLOADED", key: b._key, itemKey: it._key, url });
+          }
+          items.push({ _key: it._key, url });
+        }
+        payload.push({ _key: b._key, type: "grid", columns: b.columns, items, caption: b.caption });
+        break;
+      }
+
+      case "embed":
+        payload.push({ _key: b._key, type: "embed", url: b.url, caption: b.caption });
+        break;
+
+      case "text":
+        payload.push({ _key: b._key, type: "text", caption: b.caption });
+        break;
+    }
+  }
+  return payload;
+}

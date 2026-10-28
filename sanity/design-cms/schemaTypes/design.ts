@@ -25,45 +25,102 @@ export default {
       title: 'Designer',
       type: 'reference',
       to: [{type: 'designer'}],
-      validation: (Rule: {required: () => any}) => Rule.required(),
+      validation: (Rule: any) =>
+        Rule.custom((value: unknown, ctx: any) =>
+          ctx.document?.status === 'draft' || value ? true : 'Designer is required',
+        ),
+    },
+    {
+      name: 'status',
+      title: 'Status',
+      type: 'string',
+      description: 'Drafts are hidden from the public site. Documents without a status are treated as published.',
+      options: {
+        list: [
+          {title: 'Published', value: 'published'},
+          {title: 'Draft', value: 'draft'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'published',
+    },
+    {
+      name: 'coverKey',
+      title: 'Cover block key',
+      type: 'string',
+      description: 'The _key of the media block used as the card cover. Empty = first image/video.',
     },
 
-    // خاص بالصوره مع الخصائص المضافه اليها
+    // كتل المحتوى: image / video / text / embed (YouTube, Vimeo) / grid
+    // caption يحمل HTML منظَّفاً (وفي كتلة text هو المحتوى نفسه)
     {
       name: 'media',
-      title: 'Media Files',
+      title: 'Content blocks',
       type: 'array',
       of: [
         {
           type: 'object',
+          name: 'block',
           fields: [
             {
-              name: 'url',
-              title: 'Media URL',
-              type: 'url',
-              validation: (Rule: any) => Rule.required(),
-            },
-            {
               name: 'type',
-              title: 'Media Type',
+              title: 'Block Type',
               type: 'string',
               options: {
                 list: [
                   {title: 'Image', value: 'image'},
                   {title: 'Video', value: 'video'},
+                  {title: 'Text', value: 'text'},
+                  {title: 'Embed (YouTube / Vimeo)', value: 'embed'},
+                  {title: 'Image grid', value: 'grid'},
                 ],
               },
               validation: (Rule: any) => Rule.required(),
             },
             {
+              name: 'url',
+              title: 'URL',
+              type: 'url',
+              hidden: ({parent}: any) => parent?.type === 'text' || parent?.type === 'grid',
+              validation: (Rule: any) =>
+                Rule.custom((value: unknown, ctx: any) => {
+                  const type = ctx.parent?.type
+                  return type === 'text' || type === 'grid' || value ? true : 'URL is required'
+                }),
+            },
+            {
               name: 'caption',
-              title: 'Caption',
-              type: 'string',
+              title: 'Caption / Text (HTML)',
+              type: 'text',
+            },
+            {
+              name: 'columns',
+              title: 'Grid columns',
+              type: 'number',
+              hidden: ({parent}: any) => parent?.type !== 'grid',
+              validation: (Rule: any) => Rule.min(1).max(4).integer(),
+            },
+            {
+              name: 'items',
+              title: 'Grid images',
+              type: 'array',
+              hidden: ({parent}: any) => parent?.type !== 'grid',
+              of: [
+                {
+                  type: 'object',
+                  fields: [{name: 'url', title: 'Image URL', type: 'url', validation: (Rule: any) => Rule.required()}],
+                },
+              ],
             },
           ],
         },
       ],
-      validation: (Rule: any) => Rule.required(),
+      validation: (Rule: any) =>
+        Rule.custom((value: unknown, ctx: any) =>
+          ctx.document?.status === 'draft' || (Array.isArray(value) && value.length > 0)
+            ? true
+            : 'At least one block is required',
+        ),
     },
 
     {

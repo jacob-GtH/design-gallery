@@ -4,29 +4,37 @@ import { revalidatePath } from "next/cache";
 import { client } from "@/lib/sanity.client";
 import { IDesign } from "@/interfaces/Design";
 import { requireAdmin } from "@/lib/requireAdmin";
-import { createDesignSchema, firstIssue, makeKey, makeSlug } from "@/lib/schemas";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
+import { MEDIA_LITE, NOT_DRAFT } from "@/lib/queries";
+import { createDesignSchema, firstIssue, makeSlug } from "@/lib/schemas";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const rawDesigns =
-      await client.fetch(`*[_type == "design"] | order(_createdAt desc){
-      _id,
-      title,
-      description,
-      publishedAt,
-      likes,
-      "createdAt": _createdAt,
-      viewsCount,
-      rating,
-      backgroundColor,
-      "designer": designer->{_id, name},
-      "tags": tags[]->title,
-      media[]{
-        url,
-        type,
-        caption
-      }
-    }`);
+    // المسودات لا تُعاد إلا للمدير وعند طلبها صراحةً (?drafts=1)
+    const wantsDrafts = req.nextUrl.searchParams.get("drafts") === "1";
+    const includeDrafts =
+      wantsDrafts &&
+      (await verifySessionToken(req.cookies.get(SESSION_COOKIE)?.value));
+    const draftFilter = includeDrafts ? "" : ` && ${NOT_DRAFT}`;
+
+    const rawDesigns = await client.fetch(
+      `*[_type == "design"${draftFilter}] | order(_createdAt desc){
+        _id,
+        title,
+        description,
+        publishedAt,
+        likes,
+        "createdAt": _createdAt,
+        viewsCount,
+        rating,
+        backgroundColor,
+        status,
+        coverKey,
+        "designer": designer->{_id, name},
+        "tags": tags[]->title,
+        ${MEDIA_LITE}
+      }`
+    );
 
     const designs = rawDesigns.map((d: IDesign & { _id: string }) => ({
       id: d._id,
@@ -38,6 +46,8 @@ export async function GET() {
       viewsCount: d.viewsCount ?? 0,
       rating: d.rating ?? 0,
       backgroundColor: d.backgroundColor || "#f9fafb",
+      status: d.status ?? "published",
+      coverKey: d.coverKey ?? null,
       designer: d.designer,
       tags: d.tags ?? [],
       media: d.media ?? [],
@@ -69,23 +79,25 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: firstIssue(parsed.error) }, { status: 400 });
   }
-  const { title, description, media, designerId, backgroundColor, tags } =
+  const { title, description, media, designerId, backgroundColor, tags, status, coverKey } =
     parsed.data;
 
   try {
-    const newDesign = {
+    const newDesign: Record<string, unknown> = {
       _type: "design",
       title,
       description,
       backgroundColor,
       slug: { _type: "slug", current: makeSlug(title) },
       media,
-      publishedAt: new Date().toISOString(),
-      designer: { _type: "reference", _ref: designerId },
-      tags: tags.map((tag) => ({ _key: makeKey(), _type: "reference", _ref: tag._ref })),
+      status,
+      tags: tags.map((tag) => ({ _type: "reference", _ref: tag._ref })),
     };
+    if (designerId) newDesign.designer = { _type: "reference", _ref: designerId };
+    if (coverKey) newDesign.coverKey = coverKey;
+    if (status === "published") newDesign.publishedAt = new Date().toISOString();
 
-    const created = await client.create(newDesign);
+    const created = await client.create(newDesign as { _type: string } & Record<string, unknown>);
     revalidatePath("/designs/[id]", "page");
     return NextResponse.json({
       success: true,

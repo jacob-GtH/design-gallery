@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { IDesign } from "@/interfaces/Design";
 import DesignFormPage from "@/components/admin/DesignFormPage";
-import { toast } from "sonner";
 
 export default function EditPage() {
   const { id } = useParams(); // الحصول على 'id' من الرابط
@@ -54,7 +53,6 @@ export default function EditPage() {
           mode="edit"
           initialData={design}
           onSuccess={() => {
-            toast.success("تم تعديل التصميم بنجاح");
             router.push(`/admin/view/${design.id}`);
           }}
           onClose={() => router.push("/admin")}

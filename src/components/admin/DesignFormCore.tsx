@@ -1,418 +1,379 @@
-// components/DesignForm/DesignFormCore.tsx
+// components/admin/DesignFormCore.tsx
 "use client";
-import React, {
-  Suspense,
-  useEffect,
-  useReducer,
-  useState,
-} from "react";
-import { IDesign } from "@/interfaces/Design";
-import { motion } from "framer-motion";
+
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
 import { useTranslation } from "react-i18next";
-import { isDarkColor } from "@/lib/utils/colorUtils";
-import { getOrCreateTag } from "@/lib/actions";
-
-import { fetchDesigners } from "@/components/admin/designerService";
+import { Loader2, X } from "lucide-react";
+import type { IDesign } from "@/interfaces/Design";
 import { formReducer } from "@/hooks/formAction";
-import { mediaReducer } from "@/hooks/mediaAction";
-import { uploadMediaItems } from "@/hooks/useMediaUpload";
-import { DesignFormViewMode, MediaItem, FormState } from "./Types";
-import DesignEditorBody from "@/components/admin/DesignEditorBody";
+import { blocksReducer } from "@/hooks/blocksReducer";
+import { uploadBlocks } from "@/hooks/useMediaUpload";
+import { getOrCreateTag } from "@/lib/actions";
+import { effectiveCoverKey } from "@/lib/cover";
+import { isDarkColor } from "@/lib/utils/colorUtils";
+import { blocksFromPersisted, isVisualBlock } from "@/components/editor/blockFactory";
+import { ActiveEditorProvider } from "@/components/editor/EditorContext";
+import FormatToolbar from "@/components/editor/FormatToolbar";
+import BlocksEditor from "@/components/editor/BlocksEditor";
+import SettingsPanel from "@/components/editor/SettingsPanel";
+import { fetchDesigners } from "./designerService";
+import type { Block, DesignFormViewMode, FormState } from "./Types";
 
-
-type DesignFormCoreProps = {
+type Props = {
   mode: DesignFormViewMode;
   initialData?: IDesign;
+  modeTitle: string;
   onSuccess?: () => void;
+  onClose?: () => void;
 };
-// ----------- أنواع الحالة Action و State -----------
-const initialFormState: FormState = {
+
+const LOCAL_DRAFT_KEY = "designFormDraft";
+
+const initialForm: FormState = {
   title: "",
   description: "",
   designerId: "",
   tags: [],
   backgroundColor: "#f9fafb",
-  mediaItems: [],
+  coverKey: "",
   designers: [],
   currentTagInput: "",
   error: "",
   loading: false,
 };
-const initialMediaState: MediaItem[] = [];
-// ----------- مكون DesignFormCore -----------
-// هذا المكون هو الجزء الأساسي من نموذج التصميم
-// حيث يتم إدارة الحالة وتقديم الوظائف الأساسية للنموذج
-// يتم استخدامه في وضع العرض أو التعديل
-// بناءً على قيمة `mode` الممررة إليه
-// يمكن استخدامه لعرض التصميمات أو تعديلها
-// أو إضافة تصميم جديد
-// يتم استخدامه في صفحة تصميمات الإدارة
-// ويمكن استخدامه في أي مكان آخر يحتاج إلى نموذج تصميم
-const DesignFloatingToolbar = React.lazy(
-  () => import("@/components/admin/DesignFloatingToolbar")
-);
 
-export default function DesignFormCore({
-  mode,
-  initialData,
-  onSuccess,
-}: DesignFormCoreProps) {
+type Status = "draft" | "published";
+
+export default function DesignFormCore({ mode, initialData, modeTitle, onSuccess, onClose }: Props) {
   const { t } = useTranslation();
-  const [initialLoadedData, setInitialLoadedData] = useState<FormState | null>(
-    null
-  );
-  const [formState, formDispatch] = useReducer(formReducer, initialFormState);
-  const [mediaItems, mediaDispatch] = useReducer(
-    mediaReducer,
-    initialMediaState
-  );
-  const { backgroundColor } = formState;
-  const [toolbarFocused, setToolbarFocused] = React.useState(false);
+  const [form, formDispatch] = useReducer(formReducer, initialForm);
+  const [blocks, blocksDispatch] = useReducer(blocksReducer, [] as Block[]);
+  const [version, setVersion] = useState(0);
+  const snapshot = useRef<{ form: Partial<FormState>; blocks: Block[] }>({ form: {}, blocks: [] });
 
-  // مزامنة mediaItems في formState كلما تغير mediaItems
+  const readOnly = mode === "view";
+  const isEdit = mode === "edit" && !!initialData;
+  const wasPublished = isEdit && (initialData?.status ?? "published") === "published";
+  const dark = isDarkColor(form.backgroundColor);
+
+  // ---------- تحميل البيانات الأولية (تعديل/عرض) ----------
   useEffect(() => {
-    formDispatch({
-      type: "SET_FIELD",
-      field: "mediaItems",
-      value: mediaItems,
-    });
-  }, [mediaItems]);
+    if (!initialData) return;
+    const loaded = blocksFromPersisted(initialData.media);
+    const data: Partial<FormState> = {
+      title: initialData.title || "",
+      description: initialData.description || "",
+      designerId:
+        typeof initialData.designer === "string"
+          ? initialData.designer
+          : initialData.designer?._id || "",
+      tags: (initialData.tags ?? []).filter((x): x is string => typeof x === "string"),
+      backgroundColor: initialData.backgroundColor || "#f9fafb",
+      coverKey: initialData.coverKey ?? "",
+      currentTagInput: "",
+      error: "",
+    };
+    formDispatch({ type: "LOAD_INITIAL", data });
+    blocksDispatch({ type: "SET", blocks: loaded });
+    snapshot.current = { form: data, blocks: loaded };
+    setVersion((v) => v + 1);
+  }, [initialData]);
 
-  // ============ حفظ تلقائي للمسودة ============
-  // حفظ تلقائي كل 10 ثوانٍ عند وجود بيانات في وضع الإنشاء
+  // ---------- المصممون ----------
+  useEffect(() => {
+    fetchDesigners()
+      .then((designers) => formDispatch({ type: "SET_DESIGNERS", designers }))
+      .catch((err) => console.error("فشل في جلب المصممين", err));
+  }, []);
+
+  // ---------- مسودة محلية تلقائية (حقول النموذج فقط) ----------
   useEffect(() => {
     if (mode !== "create") return;
-    if (!formState.title && !formState.description && mediaItems.length === 0) return;
-
+    if (!form.title && !form.description && blocks.length === 0) return;
     const timer = setTimeout(() => {
-      const draft = {
-        title: formState.title,
-        description: formState.description,
-        designerId: formState.designerId,
-        tags: formState.tags,
-        backgroundColor: formState.backgroundColor,
-        savedAt: new Date().toISOString(),
-      };
-      localStorage.setItem("designFormDraft", JSON.stringify(draft));
+      try {
+        localStorage.setItem(
+          LOCAL_DRAFT_KEY,
+          JSON.stringify({
+            title: form.title,
+            description: form.description,
+            designerId: form.designerId,
+            tags: form.tags,
+            backgroundColor: form.backgroundColor,
+            savedAt: new Date().toISOString(),
+          })
+        );
+      } catch {}
     }, 10000);
-
     return () => clearTimeout(timer);
-  }, [formState, mediaItems, mode]);
+  }, [form.title, form.description, form.designerId, form.tags, form.backgroundColor, blocks.length, mode]);
 
-  // استرجاع المسودة المحفوظة عند فتح نموذج الإنشاء
   useEffect(() => {
     if (mode !== "create" || initialData) return;
-
-    const savedDraft = localStorage.getItem("designFormDraft");
-    if (savedDraft) {
-      try {
-        const draft = JSON.parse(savedDraft);
-        if (draft.title || draft.description || draft.tags?.length > 0) {
-          formDispatch({
-            type: "LOAD_INITIAL",
-            data: {
-              ...initialFormState,
-              title: draft.title || "",
-              description: draft.description || "",
-              designerId: draft.designerId || "",
-              tags: draft.tags || [],
-              backgroundColor: draft.backgroundColor || "#f9fafb",
-            },
-          });
-          toast.info(t("admin.draftRestored"));
-        }
-      } catch (err) {
-        console.error("فشل استرجاع المسودة:", err);
+    try {
+      const raw = localStorage.getItem(LOCAL_DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (draft.title || draft.description || draft.tags?.length > 0) {
+        formDispatch({
+          type: "LOAD_INITIAL",
+          data: {
+            title: draft.title || "",
+            description: draft.description || "",
+            designerId: draft.designerId || "",
+            tags: Array.isArray(draft.tags) ? draft.tags : [],
+            backgroundColor: draft.backgroundColor || "#f9fafb",
+          },
+        });
+        toast.info(t("admin.draftRestored"));
       }
+    } catch (err) {
+      console.error("فشل استرجاع المسودة:", err);
     }
   }, [mode, initialData, t]);
 
-  // دالة لتحويل الوسائط من البيانات الأولية
-  const mapMediaItemsFromInitial = (media: { _key?: string; _id?: string; url: string; type: "image" | "video"; caption?: string }[]): MediaItem[] => {
-    return media.map((item) => ({
-      _key: item._key || uuidv4(), // استخدام uuidv4 إذا لم يكن المفتاح موجودًا
-      id: item._id || uuidv4(), // استخدام _id أو إنشاء معرف جديد
-      file: null, // لا نحتاج الملف هنا لأنه تم رفعه مسبقاً
-      previewUrl: item.url,
-      type: item.type,
-      caption: item.caption || "",
-      uploadProgress: undefined, // لا نحتاج التقدم هنا لأنه تم رفعه مسبقاً
-      showToolbar: false,
-      showEditor: false,
-      timeoutId: undefined,
-      uploadedUrl: item.url, // تخزين الرابط المرفوع
-    }));
+  // ---------- الغلاف ----------
+  const coverKey = useMemo(() => effectiveCoverKey(blocks, form.coverKey), [blocks, form.coverKey]);
+
+  // ---------- الأخطاء ----------
+  const showError = (message: string) => {
+    formDispatch({ type: "SET_ERROR", message });
+    toast.error(message);
   };
 
-  // تحميل البيانات الأولية عند وجود initialData
-  useEffect(() => {
-    if (initialData) {
-      const mappedMedia = mapMediaItemsFromInitial(initialData.media || [])
-      const mapped = {
-        title: initialData.title || "",
-        description: initialData.description || "",
-        designerId: typeof initialData.designer === "string" ? initialData.designer : initialData.designer?._id || "",
-        tags: (initialData.tags as (string | { title: string })[] || [])
-          .filter((tag) => tag && (typeof tag === "string" || (typeof tag === "object" && "title" in tag)))
-          .map((tag) => (typeof tag === "string" ? tag : tag.title)),
-        backgroundColor: initialData.backgroundColor || "#f9fafb",
-        // إذا كان backgroundColor غير موجود، استخدم اللون الافتراضي
-        // يمكنك تغيير اللون الافتراضي حسب الحاجة
-        designers: [],
-        mediaItems: mappedMedia,
-        // تحويل الوسائط من البيانات الأولية
-        currentTagInput: "",
-        error: "",
-        loading: false,
-      };
-      formDispatch({
-        type: "LOAD_INITIAL",
-        data: mapped,
-      });
-      setInitialLoadedData(mapped);
-      mediaDispatch({ type: "SET_MEDIA", items: mappedMedia }); // تحديث حالة mediaItems
+  const validate = (status: Status): string => {
+    if (!form.title.trim()) return t("formErrors.titleRequired");
+    if (status === "published") {
+      if (!form.designerId) return t("formErrors.designerRequired");
+      if (!blocks.some(isVisualBlock)) return t("formErrors.visualRequired");
     }
-  }, [initialData]);
-
-  //  تحميل المصممين عند بداية تحميل النموذج
-  useEffect(() => {
-    const loadDesigners = async () => {
-      try {
-        const data = await fetchDesigners();
-        formDispatch({ type: "SET_DESIGNERS", designers: data });
-      } catch (err) {
-        console.error("فشل في جلب المصممين", err);
-      }
-    };
-    loadDesigners();
-  }, []);
-
-  // دالة للتعامل مع تغير الحقول
-  const handleChange = <K extends keyof Omit<FormState, "mediaItems">>(
-    field: K,
-    value: FormState[K]
-  ) => {
-    if (mode === "view") return; // منع التعديل في وضع العرض فقط
-    formDispatch({ type: "SET_FIELD", field, value });
+    return "";
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  // ---------- الحفظ ----------
+  const submit = async (status: Status) => {
+    if (readOnly || form.loading) return;
 
-    const validFiles = files.filter((file) => {
-      const maxSize = 10 * 1024 * 1024; // 10MB
-      if (file.size > maxSize) {
-        formDispatch({
-          type: "SET_ERROR",
-          message: `الملف ${file.name} يتجاوز الحد الأقصى للحجم (10MB)`,
-        });
-        return false;
-      }
-      if (!file.type.match(/image\/.*|video\/.*/)) {
-        formDispatch({
-          type: "SET_ERROR",
-          message: `نوع الملف ${file.name} غير مدعوم`,
-        });
-        return false;
-      }
-      return true;
-    });
-
-    const newItems = validFiles.map((file) => ({
-      _key: uuidv4(), // استخدام uuidv4 لإنشاء مفتاح فريد
-      id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
-      file,
-      previewUrl: URL.createObjectURL(file),
-      type: file.type.startsWith("video")
-        ? ("video" as const)
-        : ("image" as const),
-      caption: "",
-      uploadProgress: undefined,
-      showToolbar: false,
-    }));
-
-    mediaDispatch({ type: "ADD_MEDIA", items: newItems });
-    // بعد قراءة الملفات
-    e.target.value = "";
-  };
-
-  function handleCaptionChange(index: number, value: string): void {
-    if (mode === "view") return;
-    mediaDispatch({ type: "UPDATE_CAPTION", index, caption: value });
-  }
-
-  function handleRemoveTag(index: number): void {
-    if (mode === "view") return;
-    formDispatch({ type: "REMOVE_TAG", index });
-  }
-
-  function handleAddTag(e: React.KeyboardEvent<HTMLInputElement>): void {
-    if (mode === "view") return;
-
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const tag = formState.currentTagInput?.trim();
-      if (tag && !formState.tags.includes(tag)) {
-        formDispatch({ type: "ADD_TAG", tag });
-        formDispatch({
-          type: "SET_FIELD",
-          field: "currentTagInput",
-          value: "",
-        }); // مسح حقل الإدخال بعد الإضافة
-      }
-    }
-  }
-
-  // ============ رفع الملفات ============
-
-  const validateForm = () => {
-    if (!formState.title.trim()) return t("formErrors.titleRequired");
-    if (!formState.designerId) return t("formErrors.designerRequired");
-    if (mediaItems.length === 0) return t("formErrors.mediaRequired");
-    return null;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    if (formState.loading) return;
-    e.preventDefault();
-    if (mode === "view") return; // منع الإرسال في وضع العرض فقط
-
-    const validation = validateForm();
-    if (validation) {
-      formDispatch({ type: "SET_ERROR", message: validation });
+    const problem = validate(status);
+    if (problem) {
+      showError(problem);
       return;
     }
+    if (status === "draft" && wasPublished && !window.confirm(t("editor.confirmUnpublish"))) return;
 
-    formDispatch({ type: "SET_LOADING", loading: true });
     formDispatch({ type: "SET_ERROR", message: "" });
+    formDispatch({ type: "SET_LOADING", loading: true });
 
     try {
-      const uploadedMedia = await uploadMediaItems(mediaItems, mediaDispatch);
+      const media = await uploadBlocks(blocks, blocksDispatch);
 
-      // 🔁 تحويل الوسوم إلى مراجع بعد التأكد من وجودها أو إنشائها
-      const tagRefs = await Promise.all(
-        formState.tags.map(async (tag: string) => {
-          return await getOrCreateTag(tag);
-        })
-      );
+      const refs = await Promise.all(form.tags.map((tag) => getOrCreateTag(tag)));
+      if (refs.some((r) => !r)) throw new Error(t("formErrors.tagError"));
 
-      const validTags = tagRefs.filter(Boolean);
+      const chosenCover =
+        form.coverKey && blocks.some((b) => b._key === form.coverKey && isVisualBlock(b))
+          ? form.coverKey
+          : null;
 
-     // 🌟 تجهيز البيانات الأساسية فقط ومنع إرسال حقول الواجهة المشوهة
- 
-
-      // بناء كائن نظيف فقط بالحقول المطلوبة (منع حقول الواجهة القذرة)
-      const cleanPayload = {
-        title: formState.title,
-        description: formState.description,
-        designerId: formState.designerId,
-        backgroundColor: formState.backgroundColor,
-        tags: validTags, // ← تم استبدالها بالمراجع الصحيحة
-        media: uploadedMedia,
-        publishedAt: new Date().toISOString(),
+      const body = {
+        title: form.title.trim(),
+        description: form.description,
+        designerId: form.designerId || undefined,
+        backgroundColor: form.backgroundColor,
+        tags: refs,
+        media,
+        coverKey: chosenCover,
+        status,
       };
 
-      const res = await fetch(
-        initialData ? `/api/designs/${initialData.id}` : "/api/designs",
-        {
-          method: initialData ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(cleanPayload),
-        }
+      const res = await fetch(isEdit ? `/api/designs/${initialData!.id}` : "/api/designs", {
+        method: isEdit ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        let serverMsg = "";
+        try {
+          serverMsg = (await res.json())?.error ?? "";
+        } catch {}
+        throw new Error(
+          res.status === 401 ? t("formErrors.sessionExpired") : serverMsg || t("formErrors.saveError")
+        );
+      }
+
+      try {
+        localStorage.removeItem(LOCAL_DRAFT_KEY);
+      } catch {}
+      toast.success(
+        status === "draft"
+          ? t("editor.draftSaved")
+          : isEdit
+            ? t("formErrors.updateSuccess")
+            : t("admin.addedSuccess")
       );
-      if (!res.ok) throw new Error(await res.text());
-
-      toast.success(initialData ? t("formErrors.updateSuccess") : t("formErrors.createSuccess"));
-      localStorage.removeItem("designFormDraft");
-
-      if (onSuccess) await onSuccess();
+      onSuccess?.();
     } catch (err) {
-      console.error("Submit error:", err);
-      toast.error(t("formErrors.saveError"));
+      showError(err instanceof Error && err.message ? err.message : t("formErrors.saveError"));
     } finally {
       formDispatch({ type: "SET_LOADING", loading: false });
     }
   };
-  function resetForm() {
-    if (
-      confirm(
-        "هل تريد حقًا إعادة تعيين النموذج؟ سيتم فقدان جميع التغييرات غير المحفوظة."
-      )
-    ) {
-      formDispatch({
-        type: "LOAD_INITIAL",
-        data: initialLoadedData || initialFormState,
-      });
-      localStorage.removeItem("designFormDraft");
-    }
-  }
-  // هذه الدالة الجديدة تتوافق مع التوقيع المطلوب من DesignEditorBody
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    handleChange(name as keyof Omit<FormState, "mediaItems">, value);
+
+  const resetForm = () => {
+    if (readOnly || !window.confirm(t("editor.confirmReset"))) return;
+    formDispatch({
+      type: "LOAD_INITIAL",
+      data: {
+        title: "",
+        description: "",
+        designerId: "",
+        tags: [],
+        backgroundColor: "#f9fafb",
+        coverKey: "",
+        currentTagInput: "",
+        error: "",
+        ...snapshot.current.form,
+      },
+    });
+    blocksDispatch({ type: "SET", blocks: snapshot.current.blocks });
+    setVersion((v) => v + 1);
+    try {
+      localStorage.removeItem(LOCAL_DRAFT_KEY);
+    } catch {}
   };
 
-  useEffect(() => {
-    const local = localStorage.getItem("backgroundColor");
-    if (initialData?.backgroundColor) {
-      formDispatch({
-        type: "SET_FIELD",
-        field: "backgroundColor",
-        value: initialData.backgroundColor,
-      });
-    } else if (local) {
-      formDispatch({
-        type: "SET_FIELD",
-        field: "backgroundColor",
-        value: local,
-      });
-    }
-  }, [initialData]);
+  const statusLabel = isEdit
+    ? (initialData?.status ?? "published") === "draft"
+      ? t("admin.draftBadge")
+      : t("editor.published")
+    : "";
 
   return (
-    <motion.div
-      className="flex flex-col md:flex-row h-full justify-center"
-      style={{
-        backgroundColor,
-        color: isDarkColor(backgroundColor) ? "white" : "black",
-      }}
-    >
-      <DesignEditorBody
-        mode={mode}
-        bgColor={backgroundColor}
-        formData={formState}
-        handleInputChange={handleInputChange}
-        handleFileChange={handleFileChange}
-        mediaItems={mediaItems}
-        handleCaptionChange={handleCaptionChange}
-        dispatch={mediaDispatch}
-        formDispatch={formDispatch}
-        toolbarFocused={toolbarFocused}
-        onToolbarFocusChange={setToolbarFocused}
-        designers={formState.designers}
-        handleRemoveTag={handleRemoveTag}
-        handleAddTag={handleAddTag}
-      />
-      <Suspense
-        fallback={<div className="text-center p-2">Loading toolbar...</div>}
-      >
-        <DesignFloatingToolbar
-          formData={formState}
-          dispatch={formDispatch}
-          bgColor={backgroundColor}
-          setBgColor={(color) => handleChange("backgroundColor", color)}
-          handleSubmit={handleSubmit}
-          loading={formState.loading}
-          error={formState.error}
-          initialData={initialData}
-          resetForm={resetForm}
-          mode={mode}
-        />
-      </Suspense>
-    </motion.div>
+    <ActiveEditorProvider>
+      <div className="flex min-h-full flex-col bg-neutral-100 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+        {/* ---------- الرأس ---------- */}
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b border-black/10 bg-white/90 px-2 backdrop-blur sm:px-4 dark:border-white/10 dark:bg-neutral-900/90">
+          <div className="flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t("admin.close")}
+              title={t("admin.close")}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10"
+            >
+              <X size={20} />
+            </button>
+            <h1 className="hidden truncate text-base font-bold sm:block">{modeTitle}</h1>
+            {statusLabel && (
+              <span className="shrink-0 rounded-full bg-amber-400/90 px-2.5 py-0.5 text-xs font-bold text-black">
+                {statusLabel}
+              </span>
+            )}
+          </div>
+
+          {!readOnly && (
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                disabled={form.loading}
+                onClick={() => submit("draft")}
+                className="rounded-lg border border-black/15 px-3 py-2 text-sm font-medium hover:bg-black/5 disabled:opacity-50 dark:border-white/20 dark:hover:bg-white/10"
+              >
+                {wasPublished ? t("editor.unpublish") : t("editor.saveDraft")}
+              </button>
+              <button
+                type="button"
+                disabled={form.loading}
+                onClick={() => submit("published")}
+                className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-500 disabled:opacity-60"
+              >
+                {form.loading && <Loader2 size={16} className="animate-spin" />}
+                {wasPublished ? t("admin.saveChanges") : t("admin.publishDesign")}
+              </button>
+            </div>
+          )}
+        </header>
+
+        {/* ---------- شريط التنسيق الواحد ---------- */}
+        {!readOnly && (
+          <div className="sticky top-14 z-20 px-2 pt-2 sm:px-4">
+            <div className="mx-auto max-w-6xl">
+              <FormatToolbar />
+            </div>
+          </div>
+        )}
+
+        {form.error && (
+          <p
+            role="alert"
+            className="mx-auto mt-3 w-full max-w-6xl rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300"
+          >
+            {form.error}
+          </p>
+        )}
+
+        <div className="mx-auto grid w-full max-w-6xl flex-1 gap-4 px-2 py-4 pb-24 sm:px-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
+          {/* ---------- منطقة المحتوى ---------- */}
+          <main
+            className={`min-w-0 rounded-2xl p-3 shadow-sm transition-colors sm:p-6 ${dark ? "text-white" : "text-gray-900"}`}
+            style={{ backgroundColor: form.backgroundColor }}
+          >
+            <input
+              type="text"
+              dir="auto"
+              value={form.title}
+              readOnly={readOnly}
+              maxLength={200}
+              placeholder={t("admin.projectTitle")}
+              aria-label={t("admin.projectTitle")}
+              onChange={(e) => formDispatch({ type: "SET_FIELD", field: "title", value: e.target.value })}
+              className="w-full bg-transparent px-2 py-2 text-3xl font-bold outline-none placeholder:opacity-40 sm:text-4xl"
+            />
+            <textarea
+              dir="auto"
+              value={form.description}
+              readOnly={readOnly}
+              rows={2}
+              maxLength={5000}
+              placeholder={t("admin.projectDescription")}
+              aria-label={t("admin.projectDescription")}
+              onChange={(e) => formDispatch({ type: "SET_FIELD", field: "description", value: e.target.value })}
+              className="mb-4 w-full resize-y bg-transparent px-2 py-2 text-base outline-none placeholder:opacity-40"
+            />
+
+            <BlocksEditor
+              blocks={blocks}
+              dispatch={blocksDispatch}
+              readOnly={readOnly}
+              coverKey={coverKey}
+              onSetCover={(key) => formDispatch({ type: "SET_FIELD", field: "coverKey", value: key })}
+              version={version}
+              onError={showError}
+            />
+          </main>
+
+          {/* ---------- الإعدادات (تحت المحتوى على الموبايل) ---------- */}
+          <aside className="lg:sticky lg:top-[7.5rem] lg:self-start">
+            <SettingsPanel
+              readOnly={readOnly}
+              designers={form.designers}
+              designerId={form.designerId}
+              onDesigner={(id) => formDispatch({ type: "SET_FIELD", field: "designerId", value: id })}
+              tags={form.tags}
+              tagInput={form.currentTagInput}
+              onTagInput={(v) => formDispatch({ type: "SET_FIELD", field: "currentTagInput", value: v })}
+              onAddTag={(tag) => formDispatch({ type: "ADD_TAG", tag })}
+              onRemoveTag={(index) => formDispatch({ type: "REMOVE_TAG", index })}
+              backgroundColor={form.backgroundColor}
+              onBackground={(c) => formDispatch({ type: "SET_FIELD", field: "backgroundColor", value: c })}
+              createdAt={initialData?.createdAt}
+              onReset={resetForm}
+            />
+          </aside>
+        </div>
+      </div>
+    </ActiveEditorProvider>
   );
 }

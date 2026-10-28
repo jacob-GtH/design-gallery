@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { IDesign } from "@/interfaces/Design";
 
-export function useDesigns() {
+/** includeDrafts: للوحة الإدارة فقط (يتطلب جلسة مدير، وإلا يتجاهله الخادم). */
+export function useDesigns(options: { includeDrafts?: boolean } = {}) {
+  const { includeDrafts = false } = options;
   const [designs, setDesigns] = useState<IDesign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -12,7 +14,9 @@ export function useDesigns() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/designs");
+      const response = await fetch(
+        includeDrafts ? "/api/designs?drafts=1" : "/api/designs"
+      );
       if (!response.ok) {
         throw new Error("فشل تحميل التصاميم");
       }
@@ -23,7 +27,7 @@ export function useDesigns() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [includeDrafts]);
 
   useEffect(() => {
     fetchDesigns();

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Cairo, Tajawal } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import DynamicLogo from "@/components/layout/logo/DynamicLogo";
@@ -18,6 +18,20 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// خطوط عربية متاحة في قائمة الخط داخل المحرر. القيمة المخزنة في المحتوى: var(--font-cairo) / var(--font-tajawal)
+const cairo = Cairo({
+  variable: "--font-cairo",
+  subsets: ["arabic", "latin"],
+  display: "swap",
+});
+
+const tajawal = Tajawal({
+  variable: "--font-tajawal",
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -41,7 +55,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: LANG_INIT_SCRIPT }} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} relative antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${cairo.variable} ${tajawal.variable} relative antialiased`}
       >
         <ThemeProvider
           attribute="class"

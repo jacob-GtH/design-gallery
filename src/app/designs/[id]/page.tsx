@@ -3,14 +3,16 @@ import { client } from "@/lib/sanity.client";
 import Link from "next/link";
 import { FiArrowLeft, FiHeart, FiCalendar, FiUser } from "react-icons/fi";
 import DesignFooterMotion from "@/components/designs/DesignCardScroll";
-import { sanitizeCaption } from "@/lib/sanitize";
+import MediaBlocks from "@/components/designs/MediaBlocks";
+import { getCover } from "@/lib/cover";
+import { MEDIA_FULL, MEDIA_LITE, NOT_DRAFT } from "@/lib/queries";
 
 // شبكة أمان: تُعاد توليد الصفحة كل 60 ثانية كحد أقصى (يغطي التعديلات من Sanity Studio مباشرة).
 // وعند التعديل من لوحة الإدارة تُبطَل الصفحات فوراً عبر revalidatePath في الـ API.
 export const revalidate = 60;
 
 export async function generateStaticParams() {
-  const designs = await client.fetch(`*[_type == "design"]{ _id }`);
+  const designs = await client.fetch(`*[_type == "design" && ${NOT_DRAFT}]{ _id }`);
   return designs.map((design: { _id: string }) => ({ id: design._id }));
 }
 
@@ -22,7 +24,7 @@ export default async function DesignPage({
   const { id } = await params;
 
   const design = await client.fetch(
-    `*[_type == "design" && _id == $id][0]{
+    `*[_type == "design" && _id == $id && ${NOT_DRAFT}][0]{
       _id,
       title,
       description,
@@ -31,21 +33,18 @@ export default async function DesignPage({
       backgroundColor,
       "designer":  designer->{_id, name, slug},
       "tags": tags[]->title,
-      media[]{
-        url,
-        type,
-        caption,
-      },
+      ${MEDIA_FULL},
       "relatedDesigns": *[
         _type == "design" &&
         references(^.designer._ref) &&
         _id != ^._id &&
+        ${NOT_DRAFT} &&
         count(media) > 0
       ][0..20]{
         title,
         "id": _id,
-        "mediaUrl": media[0].url,
-        "mediaType": media[0].type
+        coverKey,
+        ${MEDIA_LITE}
       }
     }`,
     { id },
@@ -54,11 +53,21 @@ export default async function DesignPage({
 
   if (!design) return notFound();
 
-  const formattedDate = new Date(design.publishedAt).toLocaleDateString(
-    "ar-EG",
-    { year: "numeric", month: "long", day: "numeric" }
-  );
+  const formattedDate = design.publishedAt
+    ? new Date(design.publishedAt).toLocaleDateString("ar-EG", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "";
 
+  // التصاميم المشابهة: نحوّل كل تصميم إلى غلافه (الغلاف المختار أو أول كتلة مرئية)
+  const relatedDesigns = (design.relatedDesigns ?? [])
+    .map((r: { id: string; title: string; coverKey?: string | null; media?: { _key?: string; type: string; url?: string; items?: { url: string }[] | null }[] }) => {
+      const cover = getCover(r.media, r.coverKey);
+      return cover ? { id: r.id, title: r.title, mediaUrl: cover.url, mediaType: cover.type } : null;
+    })
+    .filter(Boolean) as { id: string; title: string; mediaUrl: string; mediaType: string }[];
 
   return (
     <div className="w-full min-h-screen overflow-x-hidden" style={{ backgroundColor: design.backgroundColor }}>
@@ -74,36 +83,7 @@ export default async function DesignPage({
 
         {/* ✅ الوسائط الكاملة */}
         <section className="pb-12 h-full">
-          {design.media?.map((item: { url: string; type: string; caption?: string }, index: number) => (
-            <div key={index}>
-              <div className="relative group w-full overflow-hidden">
-                {item.type === "image" ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={item.url}
-                    alt={`media-${index}`}
-                    className="w-full h-auto object-contain mx-auto"
-                  />
-                ) : (
-                  <video
-                    src={item.url}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-auto object-contain mx-auto"
-                  />
-                )}
-              </div>
-
-              {item.caption && (
-                <div
-                  className="text-gray-600 dark:text-gray-300 leading-relaxed prose prose-neutral dark:prose-invert max-w-none transition-colors duration-500"
-                  dangerouslySetInnerHTML={{ __html: sanitizeCaption(item.caption) }}
-                />
-              )}
-            </div>
-          ))}
+          <MediaBlocks blocks={design.media ?? []} />
         </section>
         <div className="flex flex-wrap items-center gap-4 text-gray-500 dark:text-gray-400 text-sm mb-8 transition-colors duration-500">
           <span className="flex items-center gap-2">
@@ -132,8 +112,8 @@ export default async function DesignPage({
         </Link>
 
         {/* ✅ التصاميم المشابهة */}
-        {design.relatedDesigns?.length > 0 && (
-          <DesignFooterMotion relatedDesigns={design.relatedDesigns} />
+        {relatedDesigns.length > 0 && (
+          <DesignFooterMotion relatedDesigns={relatedDesigns} />
         )}
       </div>
     </div>

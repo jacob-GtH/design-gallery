@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import CoverMedia from "@/components/designs/CoverMedia";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { useTranslation } from "react-i18next";
 import { useDesigns } from "@/hooks/useDesigns";
@@ -42,24 +42,13 @@ export default function DesignsPage() {
                   
                   {/* Media Container with Zoom Hover Effect */}
                   <div className="relative w-full h-[45vh] md:h-[70vh] overflow-hidden">
-                    {design.media[0]?.type === "image" ? (
-                      <Image
-                        src={design.media[0]?.url}
-                        alt={design.title}
-                        fill
-                        unoptimized
-                        className="object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
-                      />
-                    ) : (
-                      <video
-                        src={design.media[0]?.url}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
-                      />
-                    )}
+                    <CoverMedia
+                      media={design.media}
+                      coverKey={design.coverKey}
+                      alt={design.title}
+                      imageClassName="object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
+                      videoClassName="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000 ease-out"
+                    />
                     
                     {/* Premium Hover Overlay Gradient */}
                     <div className="absolute inset-0 bg-gradient-to-t from-gray-100/90 dark:from-gray-950 via-gray-100/20 dark:via-gray-950/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500 transition-colors duration-500" />

@@ -9,6 +9,7 @@ import { FiUser, FiPlay, FiPause, FiHeart, FiShare2 } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 import MediaError from "./subcomponents/MediaError";
 import MediaPlaceholder from "./subcomponents/MediaPlaceholder";
+import { getCover } from "@/lib/cover";
 
 interface DesignCardProps {
   design: IDesign;
@@ -36,10 +37,11 @@ export default function DesignCard({ design, priority = false }: DesignCardProps
     }
   }, [isHovered]);
 
-  const hasMedia = design.media && Array.isArray(design.media) && design.media.length > 0;
-  const firstMedia = hasMedia ? design.media[0] : null;
-  const isVideo = firstMedia?.type === "video";
-  const isImage = firstMedia?.type === "image";
+  const cover = getCover(design.media, design.coverKey);
+  const hasMedia = !!cover;
+  const coverUrl = cover?.url ?? "";
+  const isVideo = cover?.type === "video";
+  const isImage = cover?.type === "image";
 
   const toggleVideo = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -73,7 +75,7 @@ export default function DesignCard({ design, priority = false }: DesignCardProps
               <MediaError />
             ) : (
               <Image
-                src={firstMedia.url}
+                src={coverUrl}
                 alt={design.title || t("designCard.noTitle")}
                 fill
                 className={`object-cover w-full h-full transition-all duration-500 ${
@@ -90,7 +92,7 @@ export default function DesignCard({ design, priority = false }: DesignCardProps
           <div className="relative w-full h-full">
             <video
               ref={videoRef}
-              src={firstMedia.url}
+              src={coverUrl}
               muted
               loop
               playsInline
