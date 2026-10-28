@@ -28,5 +28,5 @@
     "**/*.ts",
     "**/*.tsx"
   ],
-  "exclude": ["node_modules", "sanity"]
+  "exclude": ["node_modules", "sanity", "tests", "vitest.config.ts"]
 }

@@ -4,10 +4,15 @@ import { client } from "@/lib/sanity.client";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { MEDIA_FULL, NOT_DRAFT } from "@/lib/queries";
-import { firstIssue, idSchema, updateDesignSchema } from "@/lib/schemas";
+import { firstIssue, hasVisual, idSchema, newKey, updateDesignSchema } from "@/lib/schemas";
 
 type Ctx = { params: Promise<{ id: string }> };
-type Existing = { _id: string; status?: "draft" | "published"; publishedAt?: string };
+type Existing = {
+  _id: string;
+  status?: "draft" | "published";
+  publishedAt?: string;
+  hasDesigner?: boolean;
+};
 
 /** يتأكد أن المعرّف صالح وأن المستند من نوع design، ويرجع حالته الحالية. */
 async function resolveDesign(
@@ -18,7 +23,7 @@ async function resolveDesign(
     return { error: NextResponse.json({ error: "معرّف غير صالح" }, { status: 400 }) };
   }
   const existing = await client.fetch<Existing | null>(
-    `*[_type == "design" && _id == $id][0]{ _id, status, publishedAt }`,
+    `*[_type == "design" && _id == $id][0]{ _id, status, publishedAt, "hasDesigner": defined(designer) }`,
     { id }
   );
   if (!existing) {
@@ -115,14 +120,25 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     if ("error" in resolved) return resolved.error;
     const { existing } = resolved;
 
-    // بناء كائن نظيف فقط بالحقول المسموحة
-    const set: Record<string, unknown> = {
-      title: data.title,
-      description: data.description,
-      backgroundColor: data.backgroundColor,
-    };
+    // الحالة بعد التعديل (حالة الطلب إن وُجدت وإلا الحالية)
+    const nextStatus = data.status ?? existing.status ?? "published";
+
+    // (تحقق حسب الحالة الفعلية) المستند المنشور يجب أن يبقى مكتملاً حتى لو لم يُرسل status
+    if (nextStatus === "published") {
+      if (data.media && !hasVisual(data.media)) {
+        return NextResponse.json({ error: "أضف صورة أو فيديو واحداً على الأقل" }, { status: 400 });
+      }
+      if (!data.designerId && !existing.hasDesigner) {
+        return NextResponse.json({ error: "المصمم مطلوب" }, { status: 400 });
+      }
+    }
+
+    // بناء كائن نظيف فقط بالحقول المسموحة (الحقول الغائبة لا تُمسّ)
+    const set: Record<string, unknown> = { title: data.title };
+    if (data.description !== undefined) set.description = data.description;
+    if (data.backgroundColor !== undefined) set.backgroundColor = data.backgroundColor;
     if (data.tags) {
-      set.tags = data.tags.map((tag) => ({ _type: "reference", _ref: tag._ref }));
+      set.tags = data.tags.map((tag) => ({ _key: newKey(), _type: "reference", _ref: tag._ref }));
     }
     if (data.designerId) {
       set.designer = { _type: "reference", _ref: data.designerId };
@@ -130,7 +146,6 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     if (data.media) set.media = data.media;
 
     // الحالة وتاريخ النشر: يُحدَّد تاريخ النشر عند أول نشر فقط (أو عند الانتقال من مسودة)
-    const nextStatus = data.status ?? existing.status ?? "published";
     set.status = nextStatus;
     if (nextStatus === "published" && (existing.status === "draft" || !existing.publishedAt)) {
       set.publishedAt = new Date().toISOString();

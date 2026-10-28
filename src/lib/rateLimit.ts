@@ -63,8 +63,10 @@ export function resetRateLimit(key: string): void {
  * - تشغيل مباشر بلا proxy: اضبط TRUSTED_PROXY_HOPS=0 لتجاهل الترويسة.
  */
 export function getClientIp(req: Request): string {
-  const hopsRaw = Number(process.env.TRUSTED_PROXY_HOPS ?? 1);
-  const hops = Number.isInteger(hopsRaw) && hopsRaw >= 0 ? hopsRaw : 1;
+  // قيمة فارغة أو غير صالحة => الافتراضي 1 (وليس 0 الذي يوحّد كل الزوار في عنوان واحد)
+  const raw = process.env.TRUSTED_PROXY_HOPS?.trim();
+  const parsed = raw ? Number(raw) : 1;
+  const hops = Number.isInteger(parsed) && parsed >= 0 ? parsed : 1;
 
   if (hops > 0) {
     const fwd = req.headers.get("x-forwarded-for");

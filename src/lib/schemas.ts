@@ -12,16 +12,30 @@ const EXTRA_MEDIA_HOSTS = (process.env.ALLOWED_MEDIA_HOSTS ?? "")
   .filter(Boolean);
 const ALLOWED_MEDIA_HOSTS = new Set([...BASE_MEDIA_HOSTS, ...EXTRA_MEDIA_HOSTS]);
 
+const CLOUDINARY_HOST = "res.cloudinary.com";
+const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+
 function isAllowedMediaUrl(value: string): boolean {
   try {
     const u = new URL(value);
-    return u.protocol === "https:" && ALLOWED_MEDIA_HOSTS.has(u.hostname.toLowerCase());
+    if (u.protocol !== "https:") return false;
+    const host = u.hostname.toLowerCase();
+    if (!ALLOWED_MEDIA_HOSTS.has(host)) return false;
+
+    // Cloudinary: يُقبل حسابك أنت فقط (المسار يبدأ بـ /<cloud_name>/) وليس أي حساب آخر.
+    // إن لم يُضبط اسم الحساب نرفض (fail closed).
+    if (host === CLOUDINARY_HOST) {
+      if (!CLOUDINARY_CLOUD_NAME) return false;
+      return u.pathname.startsWith(`/${CLOUDINARY_CLOUD_NAME}/`);
+    }
+    return true;
   } catch {
     return false;
   }
 }
 
-const newKey = () => crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+/** مفتاح _key لعناصر المصفوفات في Sanity. */
+export const newKey = () => crypto.randomUUID().replace(/-/g, "").slice(0, 12);
 
 /** هل الـ HTML بلا محتوى فعلي (نص أو فاصل)؟ */
 export function isEmptyHtml(html: string): boolean {
@@ -98,7 +112,26 @@ const mediaBlocks = z
   .array(z.discriminatedUnion("type", [imageVideoBlock, textBlock, embedBlock, gridBlock]))
   .max(60, "عدد الأقسام كبير جداً")
   .superRefine((blocks, ctx) => {
+    // _key يجب أن يكون فريداً داخل المصفوفة (Sanity يعتمد عليه)
+    const seen = new Set<string>();
     blocks.forEach((b, i) => {
+      if (!b._key) return;
+      if (seen.has(b._key)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "مفتاح مكرر في الأقسام", path: [i, "_key"] });
+      }
+      seen.add(b._key);
+    });
+    blocks.forEach((b, i) => {
+      if (b.type === "grid") {
+        const itemKeys = new Set<string>();
+        b.items.forEach((it, j) => {
+          if (!it._key) return;
+          if (itemKeys.has(it._key)) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "مفتاح مكرر في الشبكة", path: [i, "items", j, "_key"] });
+          }
+          itemKeys.add(it._key);
+        });
+      }
       if (b.type === "embed" && !parseEmbedUrl(b.url)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -136,7 +169,7 @@ const mediaBlocks = z
     })
   );
 
-const hasVisual = (blocks: PersistedBlock[]) =>
+export const hasVisual = (blocks: PersistedBlock[]) =>
   blocks.some((b) => b.type === "image" || b.type === "video" || b.type === "grid");
 
 /** يبقي coverKey فقط إذا كان يشير إلى كتلة مرئية موجودة. */
@@ -183,9 +216,10 @@ export const createDesignSchema = z
 export const updateDesignSchema = z
   .object({
     title,
-    description: description.optional().default(""),
+    // بلا default عمداً: الحقل الغائب لا يُمسّ (PATCH جزئي)
+    description: description.optional(),
     designerId: optionalId,
-    backgroundColor: hexColor.optional().default("#f9fafb"),
+    backgroundColor: hexColor.optional(),
     tags: z.array(z.object({ _ref: idSchema })).max(30).optional(),
     media: mediaBlocks.optional(),
     coverKey: z.string().max(64).nullish(), // null = إزالة الغلاف المختار

@@ -6,7 +6,7 @@ import { IDesign } from "@/interfaces/Design";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 import { MEDIA_LITE, NOT_DRAFT } from "@/lib/queries";
-import { createDesignSchema, firstIssue, makeSlug } from "@/lib/schemas";
+import { createDesignSchema, firstIssue, makeSlug, newKey } from "@/lib/schemas";
 
 export async function GET(req: NextRequest) {
   try {
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
       slug: { _type: "slug", current: makeSlug(title) },
       media,
       status,
-      tags: tags.map((tag) => ({ _type: "reference", _ref: tag._ref })),
+      tags: tags.map((tag) => ({ _key: newKey(), _type: "reference", _ref: tag._ref })),
     };
     if (designerId) newDesign.designer = { _type: "reference", _ref: designerId };
     if (coverKey) newDesign.coverKey = coverKey;
