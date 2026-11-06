@@ -1,18 +1,36 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useEffect, useState } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useMotionValue,
+  useMotionTemplate,
+} from "framer-motion";
+import { useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { SectionBadge } from "../ui/SectionBadge";
 import { useTranslation } from "react-i18next";
 
 export default function HeroSection({
   animateStart,
+  instant = false,
 }: {
   animateStart: boolean;
+  /** زائر عائد في نفس الجلسة: لا انتظار لشاشة البداية، ظهور سريع بدل الانزلاق الطويل */
+  instant?: boolean;
 }) {
   const { t } = useTranslation();
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // تتبّع الماوس عبر MotionValue: لا إعادة رسم لـ React عند كل حركة
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const spotlight = useMotionTemplate`radial-gradient(800px circle at ${mouseX}px ${mouseY}px, rgba(99, 102, 241, 0.15), transparent 80%)`;
+
+  // توقيتات الظهور مرتبطة بشاشة البداية؛ في الوضع الفوري تُقصَّر
+  const delay = (seconds: number) =>
+    instant ? Math.max(0, (seconds - 1.7) * 0.5 + 0.1) : seconds;
 
   const { scrollY } = useScroll();
   
@@ -21,26 +39,36 @@ export default function HeroSection({
   const opacity = useTransform(scrollY, [0, 400], [1, 0]);
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+    // مؤشر دقيق فقط (الماوس): لا حاجة للمستمع على شاشات اللمس
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    const onMove = (e: PointerEvent) => {
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
     };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, [mouseX, mouseY]);
 
   return (
     <motion.section
       id="home"
-      initial={{ y: "100%" }}
+      initial={instant ? false : { y: "100%" }}
       animate={animateStart ? { y: 0 } : {}}
       transition={{ duration: 1.2, ease: [0.76, 0, 0.24, 1] }}
       className="relative h-screen w-full flex items-center justify-end overflow-hidden bg-white dark:bg-[#050505] transition-colors duration-500"
     >
       {/* Background Image - Strongly aligned to the start side */}
-      <div
-        className="absolute inset-0 z-0 bg-cover bg-left md:bg-[left_center] bg-no-repeat opacity-100 dark:opacity-60 transition-opacity duration-500"
-        style={{ backgroundImage: `url("/images/bgHome.png")` }}
-      />
+      <div className="absolute inset-0 z-0 opacity-100 dark:opacity-60 transition-opacity duration-500">
+        <Image
+          src="/images/bgHome.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          quality={75}
+          className="object-cover object-left md:object-[left_center]"
+        />
+      </div>
       
       {/* Gradient Overlays - Clear the start side, darken the end side */}
       <div className="absolute inset-0 z-1 bg-gradient-to-r from-transparent via-white/0 dark:via-black/20 to-white/7 dark:to-black/90 hidden md:block rtl:bg-gradient-to-l rtl:from-white/7 rtl:dark:from-black/90 rtl:via-white/0 rtl:dark:via-black/20 rtl:to-transparent" />
@@ -49,9 +77,7 @@ export default function HeroSection({
       {/* Interactive Spotlight Glow */}
       <motion.div
         className="absolute inset-0 z-2 pointer-events-none dark:opacity-20 opacity-40 transition-opacity duration-500"
-        animate={{
-          background: `radial-gradient(800px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(99, 102, 241, 0.15), transparent 80%)`,
-        }}
+        style={{ background: spotlight }}
       />
 
       {/* Content Container - Dynamic alignment based on language */}
@@ -66,7 +92,7 @@ export default function HeroSection({
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={animateStart ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 1.7, duration: 0.8 }}
+            transition={{ delay: delay(1.7), duration: 0.8 }}
             className="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white dark:text-white leading-[1.1] mb-8 text-center md:text-start"
           >
             {t("hero.title1")} <br />
@@ -79,7 +105,7 @@ export default function HeroSection({
           <motion.p
             initial={{ opacity: 0, y: 15 }}
             animate={animateStart ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 1.9, duration: 0.8 }}
+            transition={{ delay: delay(1.9), duration: 0.8 }}
             className="text-indigo-200 dark:text-gray-400 text-base md:text-lg lg:text-xl max-w-lg mb-10 font-light leading-relaxed text-center md:text-start"
           >
             {t("hero.description")}
@@ -89,7 +115,7 @@ export default function HeroSection({
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={animateStart ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 2.1, duration: 0.8 }}
+            transition={{ delay: delay(2.1), duration: 0.8 }}
             className="flex flex-col sm:flex-row gap-4 items-center md:items-start"
           >
             <Link
@@ -116,7 +142,7 @@ export default function HeroSection({
       <motion.div
         initial={{ opacity: 0 }}
         animate={animateStart ? { opacity: 1 } : {}}
-        transition={{ delay: 2.5, duration: 1 }}
+        transition={{ delay: delay(2.5), duration: 1 }}
         className="absolute bottom-8 flex flex-col items-center gap-2 start-8 md:start-12"
       >
         <div className="w-[1px] h-10 bg-gradient-to-b from-purple-500 to-transparent" />

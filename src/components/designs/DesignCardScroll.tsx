@@ -4,6 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import {
+  cloudinaryVideoPoster,
+  optimizeCloudinaryImage,
+  optimizeCloudinaryVideo,
+} from "@/lib/cloudinaryUrl";
 import { useTranslation } from "react-i18next";
 
 export default function DesignFooterMotion({ relatedDesigns }: { relatedDesigns: { id: string, title: string, mediaUrl: string, mediaType: string }[] }) {
@@ -92,7 +97,7 @@ export default function DesignFooterMotion({ relatedDesigns }: { relatedDesigns:
             <div className="relative aspect-square bg-gray-200/40 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-xl transition-colors duration-500">
               {related.mediaType === "image" ? (
                 <Image
-                  src={related.mediaUrl}
+                  src={optimizeCloudinaryImage(related.mediaUrl, 400)}
                   alt={related.title}
                   width={400}
                   height={400}
@@ -101,7 +106,9 @@ export default function DesignFooterMotion({ relatedDesigns }: { relatedDesigns:
                 />
               ) : (
                 <video
-                  src={related.mediaUrl}
+                  src={optimizeCloudinaryVideo(related.mediaUrl, 400)}
+                  poster={cloudinaryVideoPoster(related.mediaUrl, 400)}
+                  preload="none"
                   muted
                   loop
                   playsInline

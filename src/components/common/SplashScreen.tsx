@@ -3,12 +3,19 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+// ضجيج خفيف مضمَّن (بدل تحميل صورة من موقع خارجي في كل زيارة)
+const NOISE_SVG =
+  "<svg viewBox='0 0 250 250' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>";
+const NOISE_BG = `url("data:image/svg+xml,${encodeURIComponent(NOISE_SVG)}")`;
 
 type SplashScreenProps = {
   onComplete: () => void;
 };
 
 export default function SplashScreen({ onComplete }: SplashScreenProps) {
+  const { t } = useTranslation();
   const [showSplash, setShowSplash] = useState(true);
   const [progress, setProgress] = useState(0);
 
@@ -36,6 +43,15 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
     };
   }, [onComplete]);
 
+  // Esc لتخطي شاشة البداية
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onComplete();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onComplete]);
+
   const title = "Design Gallery";
   const letters = Array.from(title);
 
@@ -55,7 +71,10 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/5 dark:bg-indigo-500/10 blur-[120px] rounded-full transition-colors duration-500" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/5 dark:bg-purple-500/10 blur-[120px] rounded-full transition-colors duration-500" />
-            <div className="absolute inset-0 bg-[url(https://grainy-gradients.vercel.app/noise.svg)] opacity-[0.05] dark:opacity-[0.03] brightness-100 contrast-150 transition-opacity duration-500" />
+            <div
+              className="absolute inset-0 opacity-[0.05] dark:opacity-[0.03] brightness-100 contrast-150 transition-opacity duration-500"
+              style={{ backgroundImage: NOISE_BG }}
+            />
           </div>
 
           <div className="relative z-10 flex flex-col items-center">
@@ -134,6 +153,14 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           >
             © 2024 DESIGN GALLERY STUDIO
           </motion.div>
+
+          <button
+            type="button"
+            onClick={onComplete}
+            className="absolute top-6 end-6 z-20 rounded-full border border-black/15 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-black/5 dark:border-white/20 dark:text-gray-300 dark:hover:bg-white/10"
+          >
+            {t("splash.skip")}
+          </button>
         </motion.div>
       )}
     </AnimatePresence>

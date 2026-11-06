@@ -10,6 +10,11 @@ import { useTranslation } from "react-i18next";
 import MediaError from "./subcomponents/MediaError";
 import MediaPlaceholder from "./subcomponents/MediaPlaceholder";
 import { getCover } from "@/lib/cover";
+import {
+  cloudinaryVideoPoster,
+  optimizeCloudinaryImage,
+  optimizeCloudinaryVideo,
+} from "@/lib/cloudinaryUrl";
 
 interface DesignCardProps {
   design: IDesign;
@@ -40,6 +45,10 @@ export default function DesignCard({ design, priority = false }: DesignCardProps
   const cover = getCover(design.media, design.coverKey);
   const hasMedia = !!cover;
   const coverUrl = cover?.url ?? "";
+  // أقصى عرض للبطاقة 800px: نطلب من Cloudinary نسخة بهذا الحجم لا الأصل
+  const imageSrc = optimizeCloudinaryImage(coverUrl, 900);
+  const videoSrc = optimizeCloudinaryVideo(coverUrl, 900);
+  const posterSrc = cloudinaryVideoPoster(coverUrl, 900);
   const isVideo = cover?.type === "video";
   const isImage = cover?.type === "image";
 
@@ -75,9 +84,10 @@ export default function DesignCard({ design, priority = false }: DesignCardProps
               <MediaError />
             ) : (
               <Image
-                src={coverUrl}
+                src={imageSrc}
                 alt={design.title || t("designCard.noTitle")}
                 fill
+                sizes="(min-width: 1280px) 800px, (min-width: 768px) 600px, 300px"
                 className={`object-cover w-full h-full transition-all duration-500 ${
                   imageLoaded ? "opacity-100" : "opacity-0"
                 } ${isHovered ? "scale-105" : "scale-100"}`}
@@ -92,7 +102,9 @@ export default function DesignCard({ design, priority = false }: DesignCardProps
           <div className="relative w-full h-full">
             <video
               ref={videoRef}
-              src={coverUrl}
+              src={videoSrc}
+              poster={posterSrc}
+              preload="none"
               muted
               loop
               playsInline

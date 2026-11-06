@@ -297,5 +297,8 @@
     "confirmUnpublish": "This design will be hidden from the site and moved to drafts. Continue?",
     "confirmReset": "Reset the form? Unsaved changes will be lost.",
     "draftSaved": "Draft saved"
+  },
+  "splash": {
+    "skip": "Skip"
   }
 }

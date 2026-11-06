@@ -4,6 +4,12 @@ import { sanitizeCaption } from "@/lib/sanitize";
 import { parseEmbedUrl } from "@/lib/embed";
 import type { IMediaBlock } from "@/interfaces/Design";
 import { GRID_COLS } from "./gridClasses";
+import LazyVideo from "./LazyVideo";
+import {
+  cloudinaryVideoPoster,
+  optimizeCloudinaryImage,
+  optimizeCloudinaryVideo,
+} from "@/lib/cloudinaryUrl";
 
 function Rich({ html, className = "" }: { html?: string; className?: string }) {
   const clean = sanitizeCaption(html);
@@ -58,9 +64,10 @@ export default function MediaBlocks({ blocks }: { blocks: IMediaBlock[] }) {
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     key={it._key ?? j}
-                    src={it.url}
+                    src={optimizeCloudinaryImage(it.url, 800)}
                     alt=""
                     loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                 ))}
@@ -77,14 +84,19 @@ export default function MediaBlocks({ blocks }: { blocks: IMediaBlock[] }) {
             <div className="relative group w-full overflow-hidden">
               {b.type === "image" ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={b.url} alt="" loading="lazy" className="w-full h-auto object-contain mx-auto" />
+                <img
+                  src={optimizeCloudinaryImage(b.url, 1600)}
+                  alt=""
+                  // أول كتلة هي الأرجح أن تكون أكبر عنصر ظاهر: تُحمَّل فوراً بأولوية
+                  loading={i === 0 ? "eager" : "lazy"}
+                  fetchPriority={i === 0 ? "high" : undefined}
+                  decoding="async"
+                  className="w-full h-auto object-contain mx-auto"
+                />
               ) : (
-                <video
-                  src={b.url}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
+                <LazyVideo
+                  src={optimizeCloudinaryVideo(b.url, 1280)}
+                  poster={cloudinaryVideoPoster(b.url, 1280)}
                   className="w-full h-auto object-contain mx-auto"
                 />
               )}

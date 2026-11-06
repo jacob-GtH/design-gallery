@@ -505,3 +505,8 @@ html {
   unicode-bidi: plaintext;
   text-align: start;
 }
+
+/* زائر عائد في نفس الجلسة أو يفضّل تقليل الحركة: لا شاشة بداية (يعلّمها سكربت layout.tsx) */
+html[data-splash="seen"] #splash-root {
+  display: none !important;
+}

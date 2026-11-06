@@ -13,8 +13,10 @@ import { useDesigns } from "@/hooks/useDesigns";
 
 export default function HomeSection({
   animateStart = true,
+  instant = false,
 }: {
   animateStart?: boolean;
+  instant?: boolean;
 }) {
   const { designs, loading, error, retry } = useDesigns();
 
@@ -52,7 +54,7 @@ export default function HomeSection({
         }
       >
         {/* الشاشة الرئيسية */}
-        <HeroSection animateStart={animateStart} />
+        <HeroSection animateStart={animateStart} instant={instant} />
 
         {/* قسم أحدث التصاميم مع أنميشن ظهور سلس */}
         <motion.section

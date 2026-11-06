@@ -27,7 +27,7 @@ export default function SectionCaseStudies() {
       titleKey: "caseStudies.items.0.title",
       categoryKey: "caseStudies.items.0.category",
       descriptionKey: "caseStudies.items.0.description",
-      imageUrl: "/images/bgHome.png",
+      imageUrl: "/images/bgHome.webp",
       resultsKeys: ["caseStudies.items.0.results.0", "caseStudies.items.0.results.1", "caseStudies.items.0.results.2"],
       accentColor: "indigo"
     },
@@ -36,7 +36,7 @@ export default function SectionCaseStudies() {
       titleKey: "caseStudies.items.1.title",
       categoryKey: "caseStudies.items.1.category",
       descriptionKey: "caseStudies.items.1.description",
-      imageUrl: "/images/bgHome.png",
+      imageUrl: "/images/bgHome.webp",
       resultsKeys: ["caseStudies.items.1.results.0", "caseStudies.items.1.results.1", "caseStudies.items.1.results.2"],
       accentColor: "purple"
     },
@@ -45,7 +45,7 @@ export default function SectionCaseStudies() {
       titleKey: "caseStudies.items.2.title",
       categoryKey: "caseStudies.items.2.category",
       descriptionKey: "caseStudies.items.2.description",
-      imageUrl: "/images/bgHome.png",
+      imageUrl: "/images/bgHome.webp",
       resultsKeys: ["caseStudies.items.2.results.0", "caseStudies.items.2.results.1", "caseStudies.items.2.results.2"],
       accentColor: "emerald"
     },

@@ -25,6 +25,7 @@ const cairo = Cairo({
   variable: "--font-cairo",
   subsets: ["arabic", "latin"],
   display: "swap",
+  preload: false, // يُحمَّل عند الاستعمال فقط (محتوى كتبه المحرر)، لا على كل صفحة
 });
 
 const tajawal = Tajawal({
@@ -32,6 +33,7 @@ const tajawal = Tajawal({
   subsets: ["arabic", "latin"],
   weight: ["400", "500", "700"],
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -40,9 +42,10 @@ export const metadata: Metadata = {
     "استوديو إبداعي متخصص في تحويل الرؤى الطموحة إلى تجارب رقمية استثنائية. A creative studio specialized in transforming ambitious visions into exceptional digital experiences.",
 };
 
-// يضبط lang/dir قبل أول رسم للصفحة (يمنع وميض الاتجاه عند اختيار العربية سابقاً).
+// يعمل قبل أول رسم: (1) يضبط lang/dir لمن اختار العربية سابقاً، (2) يعلّم الزائر العائد في نفس الجلسة
+// أو من يفضّل تقليل الحركة لتخطي شاشة البداية (انظر html[data-splash] في globals.css).
 // نص ثابت لا يحتوي أي مدخلات خارجية.
-const LANG_INIT_SCRIPT = `try{var l=localStorage.getItem("lang");if(l==="ar"){var d=document.documentElement;d.lang="ar";d.dir="rtl"}}catch(e){}`;
+const LANG_INIT_SCRIPT = `try{var d=document.documentElement;if(localStorage.getItem("lang")==="ar"){d.lang="ar";d.dir="rtl"}}catch(e){}try{var d2=document.documentElement;if(matchMedia("(prefers-reduced-motion: reduce)").matches||sessionStorage.getItem("splashSeen")==="1"){d2.setAttribute("data-splash","seen")}}catch(e){}`;
 
 export default function RootLayout({
   children,

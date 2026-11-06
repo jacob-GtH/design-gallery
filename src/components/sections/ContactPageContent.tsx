@@ -46,7 +46,7 @@ export default function ContactPageContent() {
             {/* Background Image - Full screen, matching HeroSection */}
             <div 
                 className="absolute inset-0 z-0 bg-cover bg-left md:bg-[left_center] bg-no-repeat opacity-100 dark:opacity-60 transition-opacity duration-500"
-                style={{ backgroundImage: `url("/images/bgHome.png")` }}
+                style={{ backgroundImage: `url("/images/bgHome.webp")` }}
             />
             
             {/* Gradient Overlays - Darken the right side for content clarity */}
