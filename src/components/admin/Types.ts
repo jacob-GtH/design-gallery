@@ -8,7 +8,6 @@ export type Designer = {
 
 /** عنصر داخل كتلة الشبكة */
 export type GridItem = {
-  caption: string;
   _key: string;
   file: File | null; // null إذا كان مرفوعاً مسبقاً
   previewUrl: string;
