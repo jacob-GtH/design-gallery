@@ -9,6 +9,7 @@ import CustomCursor from "@/components/ui/CustomCursor";
 import I18nProvider from "@/components/I18nProvider";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -79,6 +80,7 @@ export default function RootLayout({
             </ErrorBoundary>
           </I18nProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
